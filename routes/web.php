@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Vendor\VendorDashboardController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -35,3 +35,7 @@ Route::prefix('admin')
         Route::get('/users', [AdminUserController::class, 'index'])
             ->name('users.index');
     });
+
+Route::prefix('vendor')->middleware(['vendor'])->group(function () {
+    Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('vendor.dashboard');
+});

@@ -35,6 +35,9 @@ class AuthController extends Controller
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
+        if ($user->role === 'vendor') {
+            return redirect()->route('vendor.dashboard');
+        }
 
         return redirect()->route('home')->with('success', 'Login successful');
     }
