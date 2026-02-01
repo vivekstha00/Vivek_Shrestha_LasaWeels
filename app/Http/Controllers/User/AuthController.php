@@ -32,9 +32,16 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        // Block if not approved
+        if ($user->status !== 'approved') {
+            Auth::logout();
+            return back()->withErrors(['email' => 'Your account is pending approval.']);
+        }
+
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
+
         if ($user->role === 'vendor') {
             return redirect()->route('vendor.dashboard');
         }

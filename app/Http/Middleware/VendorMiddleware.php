@@ -24,8 +24,11 @@ class VendorMiddleware
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            abort(403);
+            
+           return redirect()->route('login')
+                ->withErrors(['email' => 'Access denied. Vendor only.']);
         }
+
         return $next($request);
     }
 }

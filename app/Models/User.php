@@ -64,4 +64,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
+
+    public function vendorProfile()
+    {
+        return $this->hasOne(\App\Models\VendorProfile::class);
+    }
+
 }
