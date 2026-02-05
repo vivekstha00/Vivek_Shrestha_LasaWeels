@@ -9,11 +9,11 @@
         </li>
 
         {{-- Add later --}}
-        {{-- <li class="nav-item">
-            <a class="nav-link text-white" href="#">
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{{ route('vendor.vehicles.index') }}">
                 <i class="fas fa-car me-2"></i>My Vehicles
             </a>
-        </li> --}}
+        </li>
 
         <li class="nav-item mt-3">
             <form action="{{ route('logout') }}" method="POST">

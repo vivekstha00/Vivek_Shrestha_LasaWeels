@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorApplicationController;
-
+use App\Http\Controllers\Vendor\VendorVehicleController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -49,6 +49,19 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/vendors/{id}/resubmit', [AdminVendorController::class, 'resubmit'])
         ->name('admin.vendors.resubmit');
 });
+
+Route::prefix('vendor')
+    ->name('vendor.')
+    ->middleware(['auth', 'vendor'])
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return view('vendor.pages.dashboard');
+        })->name('dashboard');
+
+        Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
+        Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
+        Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
+    });
 
 // Vendor
 Route::prefix('vendor')->middleware(['auth', 'vendor'])->group(function () {
