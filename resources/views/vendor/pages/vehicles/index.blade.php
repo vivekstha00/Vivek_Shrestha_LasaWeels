@@ -1,66 +1,82 @@
 @extends('vendor.layouts.master')
 
 @section('vendor-content')
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">My Vehicles</h4>
-        <a href="{{ route('vendor.vehicles.create') }}" class="btn btn-primary">
-            + Add Vehicle
-        </a>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">My Vehicles</h3>
+        <a href="{{ route('vendor.vehicles.create') }}" class="btn btn-primary">+ Add Vehicle</a>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="card">
-        <div class="card-body p-0">
-            <table class="table table-bordered mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Location</th>
-                        <th>Price / Day</th>
-                        <th>Status</th>
-                        <th>Active</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($vehicles as $vehicle)
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $vehicle->title }}</td>
-                            <td>{{ $vehicle->vehicle_type }}</td>
-                            <td>{{ $vehicle->location_city }}</td>
-                            <td>{{ $vehicle->currency }} {{ number_format($vehicle->price_per_day, 2) }}</td>
-                            <td>
-                                <span class="badge
-                                    @if($vehicle->status === 'approved') bg-success
-                                    @elseif($vehicle->status === 'rejected') bg-danger
-                                    @else bg-warning text-dark
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Price / Day</th>
+                            <th>Status</th>
+                            <th>Active</th>
+                            <th style="width:220px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($vehicles as $i => $v)
+                            <tr>
+                                <td>{{ $vehicles->firstItem() + $i }}</td>
+                                <td>{{ $v->title }}</td>
+                                <td>{{ $v->vehicle_type }}</td>
+                                <td>{{ $v->location_city }}</td>
+                                <td>{{ number_format($v->price_per_day, 2) }} {{ $v->currency }}</td>
+                                <td>
+                                    @if($v->status === 'pending')
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @elseif($v->status === 'approved')
+                                        <span class="badge bg-success">Approved</span>
+                                    @else
+                                        <span class="badge bg-danger">Rejected</span>
+                                        @if($v->reject_reason)
+                                            <div class="small text-muted mt-1">Reason: {{ $v->reject_reason }}</div>
+                                        @endif
                                     @endif
-                                ">
-                                    {{ ucfirst($vehicle->status) }}
-                                </span>
-                            </td>
-                            <td>
-                                {{ $vehicle->is_active ? 'Yes' : 'No' }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-4">
-                                No vehicles added yet.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                                <td>{{ $v->is_active ? 'Yes' : 'No' }}</td>
+                                <td class="d-flex gap-2">
+                                    <a class="btn btn-sm btn-outline-dark"
+                                       href="{{ route('vendor.vehicles.edit', $v->id) }}">
+                                        Edit
+                                    </a>
+
+                                    <form method="POST" action="{{ route('vendor.vehicles.destroy', $v->id) }}"
+                                          onsubmit="return confirm('Delete this vehicle?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">No vehicles yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                {{ $vehicles->links() }}
+            </div>
         </div>
     </div>
+
 </div>
 @endsection

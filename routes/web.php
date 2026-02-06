@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorApplicationController;
 use App\Http\Controllers\Vendor\VendorVehicleController;
+use App\Http\Controllers\Admin\AdminVehicleController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -48,22 +49,42 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::post('/vendors/{id}/resubmit', [AdminVendorController::class, 'resubmit'])
         ->name('admin.vendors.resubmit');
+
+    Route::get('/vehicles', [AdminVehicleController::class, 'index'])
+        ->name('admin.vehicles.index');
+
+    Route::post('/vehicles/{vehicle}/approve', [AdminVehicleController::class, 'approve'])
+        ->name('admin.vehicles.approve');
+
+    Route::post('/vehicles/{vehicle}/reject', [AdminVehicleController::class, 'reject'])
+        ->name('admin.vehicles.reject');
+
+    Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class, 'toggleActive'])
+        ->name('admin.vehicles.toggleActive');
 });
 
-Route::prefix('vendor')
-    ->name('vendor.')
-    ->middleware(['auth', 'vendor'])
-    ->group(function () {
-        Route::get('/dashboard', function () {
-            return view('vendor.pages.dashboard');
-        })->name('dashboard');
+Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
 
-        Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
-        Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
-        Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
-    });
+    // Dashboard
+    Route::get('/dashboard', [VendorDashboardController::class, 'index'])
+        ->name('dashboard');
 
-// Vendor
-Route::prefix('vendor')->middleware(['auth', 'vendor'])->group(function () {
-    Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('vendor.dashboard');
+    // Vehicle CRUD
+    Route::get('/vehicles', [VendorVehicleController::class, 'index'])
+        ->name('vehicles.index');
+
+    Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])
+        ->name('vehicles.create');
+
+    Route::post('/vehicles', [VendorVehicleController::class, 'store'])
+        ->name('vehicles.store');
+
+    Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])
+        ->name('vehicles.edit');
+
+    Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])
+        ->name('vehicles.update');
+
+    Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])
+        ->name('vehicles.destroy');
 });

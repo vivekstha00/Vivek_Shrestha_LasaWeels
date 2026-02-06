@@ -28,5 +28,13 @@
                 Manage Vendors
             </a>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}"
+            href="{{ route('admin.vehicles.index') }}">
+                <i class="fas fa-car me-2"></i>Manage Vehicles
+            </a>
+        </li>
+
     </ul>
 </div>
