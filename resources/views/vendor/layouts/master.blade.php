@@ -4,12 +4,14 @@
 
 <body>
 
+    {{-- Sidebar --}}
     @include('vendor.layouts.header.sidebar')
 
-    <div class="flex-grow-1 d-flex flex-column" style="margin-left: 280px;">
+    {{-- Content --}}
+    <div class="vendor-content">
         @include('vendor.layouts.header.navbar')
 
-        <main class="p-4">
+        <main class="vendor-main p-4">
             @yield('vendor-content')
         </main>
     </div>

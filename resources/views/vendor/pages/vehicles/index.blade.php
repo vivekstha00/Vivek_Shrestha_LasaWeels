@@ -38,11 +38,11 @@
                                 <td>{{ number_format($v->price_per_day, 2) }} {{ $v->currency }}</td>
                                 <td>
                                     @if($v->status === 'pending')
-                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        <span class="badge badge-soft badge-pending">Pending</span>
                                     @elseif($v->status === 'approved')
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge badge-soft badge-approved">Approved</span>
                                     @else
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="badge badge-soft badge-rejected">Rejected</span>
                                         @if($v->reject_reason)
                                             <div class="small text-muted mt-1">Reason: {{ $v->reject_reason }}</div>
                                         @endif

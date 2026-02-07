@@ -1,0 +1,69 @@
+:root{
+  --sidebar-w: 260px;
+}
+
+body{
+  background: #f6f7fb;
+}
+
+/* Sidebar */
+.vendor-sidebar{
+  width: var(--sidebar-w);
+  background: #0f172a;
+}
+
+.vendor-sidebar .brand{
+  text-decoration: none;
+}
+
+.vendor-sidebar .nav-link{
+  color: rgba(255,255,255,.85);
+  border-radius: 0.75rem;
+  padding: .65rem .75rem;
+}
+
+.vendor-sidebar .nav-link:hover{
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+.vendor-sidebar .nav-link.active{
+  background: rgba(13,110,253,.20);
+  color: #fff;
+}
+
+/* Content area */
+.vendor-content{
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+/* Topbar */
+.vendor-topbar{
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Cards */
+.card-soft{
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,.06);
+}
+
+/* Table */
+.table thead th{
+  font-size: .85rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Status badges */
+.badge-soft{
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.badge-pending{ background:#fff3cd; color:#664d03; }
+.badge-approved{ background:#d1e7dd; color:#0f5132; }
+.badge-rejected{ background:#f8d7da; color:#842029; }

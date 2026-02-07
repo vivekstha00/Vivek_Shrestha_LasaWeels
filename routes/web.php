@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorApplicationController;
 use App\Http\Controllers\Vendor\VendorVehicleController;
+use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Admin\AdminVehicleController;
 
 Route::view('/', 'user.pages.home')->name('home');
@@ -87,4 +88,11 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
 
     Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])
         ->name('vehicles.destroy');
+
+    Route::get('/users', [VendorUserController::class, 'index'])
+    ->name('users.index');
+
+    Route::get('/users/{user}', [VendorUserController::class, 'show'])
+        ->name('users.show');
+
 });
