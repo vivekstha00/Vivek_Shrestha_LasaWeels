@@ -1,14 +1,18 @@
-<nav class="navbar navbar-dark admin-navbar px-3">
-    <a class="navbar-brand" href="{{ route('admin.dashboard') }}">LasaWheels Admin</a>
+<nav class="navbar navbar-light bg-white border-bottom px-3">
+    <div class="container-fluid">
+        <span class="fw-bold">Admin Panel</span>
 
-    <div class="ms-auto d-flex align-items-center text-white">
-        <span class="me-3">Hi, <strong>{{ Auth::user()->name ?? 'Guest' }}</strong></span>
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-outline-light btn-sm">
-                Logout
-            </button>
-        </form>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">
+                Hi, <strong>{{ Auth::user()->name ?? 'Admin' }}</strong>
+            </span>
 
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-dark">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                </button>
+            </form>
+        </div>
     </div>
 </nav>

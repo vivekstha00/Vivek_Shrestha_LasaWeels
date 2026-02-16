@@ -2,13 +2,18 @@
 <html lang="en">
 @include('admin.layouts.header.index')
 
-<body>
+<body class="bg-light">
+
+    {{-- Sidebar --}}
     @include('admin.layouts.header.sidebar')
 
-    <div class="flex-grow-1 d-flex flex-column" style="margin-left: 180px;">
+    {{-- Main content --}}
+    <div class="main-content">
+        {{-- Navbar --}}
         @include('admin.layouts.header.navbar')
 
-        <main class="p-4">
+        {{-- Page Content --}}
+        <main class="container-fluid py-4">
             @yield('admin-content')
         </main>
     </div>

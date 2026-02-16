@@ -27,42 +27,26 @@ Route::get('/corporate-rent', [VendorApplicationController::class, 'create'])->n
 Route::post('/corporate-rent', [VendorApplicationController::class, 'store'])->name('vendor.apply');
 
 // Admin
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])
-        ->name('admin.dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class,'index'])->name('dashboard');
 
+    Route::get('/users', [AdminUserController::class,'index'])->name('users.index');
+    Route::post('/users/{id}/approve', [AdminUserController::class,'approve'])->name('users.approve');
+    Route::post('/users/{id}/reject', [AdminUserController::class,'reject'])->name('users.reject');
 
-    Route::get('/users', [AdminUserController::class, 'index'])
-        ->name('admin.users.index');
+    Route::get('/vendors', [AdminVendorController::class,'index'])->name('vendors.index');
+    Route::get('/vendors/{id}', [AdminVendorController::class,'show'])->name('vendors.show');
+    Route::post('/vendors/{id}/approve', [AdminVendorController::class,'approve'])->name('vendors.approve');
+    Route::post('/vendors/{id}/reject', [AdminVendorController::class,'reject'])->name('vendors.reject');
+    Route::post('/vendors/{id}/resubmit', [AdminVendorController::class,'resubmit'])->name('vendors.resubmit');
 
-    Route::get('/vendors', [AdminVendorController::class, 'index'])
-        ->name('admin.vendors.index');
-
-    Route::get('/vendors/{id}', [AdminVendorController::class, 'show'])
-        ->name('admin.vendors.show');
-
-    Route::post('/vendors/{id}/approve', [AdminVendorController::class, 'approve'])
-        ->name('admin.vendors.approve');
-
-    Route::post('/vendors/{id}/reject', [AdminVendorController::class, 'reject'])
-        ->name('admin.vendors.reject');
-
-    Route::post('/vendors/{id}/resubmit', [AdminVendorController::class, 'resubmit'])
-        ->name('admin.vendors.resubmit');
-
-    Route::get('/vehicles', [AdminVehicleController::class, 'index'])
-        ->name('admin.vehicles.index');
-
-    Route::post('/vehicles/{vehicle}/approve', [AdminVehicleController::class, 'approve'])
-        ->name('admin.vehicles.approve');
-
-    Route::post('/vehicles/{vehicle}/reject', [AdminVehicleController::class, 'reject'])
-        ->name('admin.vehicles.reject');
-
-    Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class, 'toggleActive'])
-        ->name('admin.vehicles.toggleActive');
+    Route::get('/vehicles', [AdminVehicleController::class,'index'])->name('vehicles.index');
+    Route::post('/vehicles/{vehicle}/approve', [AdminVehicleController::class,'approve'])->name('vehicles.approve');
+    Route::post('/vehicles/{vehicle}/reject', [AdminVehicleController::class,'reject'])->name('vehicles.reject');
+    Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class,'toggleActive'])->name('vehicles.toggleActive');
 });
+
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
 

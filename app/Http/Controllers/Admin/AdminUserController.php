@@ -9,11 +9,33 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::where('role', 'user')->get();
-        return view('admin.pages.manage-user', compact('users'));
+        $q = $request->query('q');
+        $status = $request->query('status');
+
+        $users = User::where('role','user')
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($w) use ($q) {
+                    $w->where('name','like',"%{$q}%")
+                    ->orWhere('email','like',"%{$q}%");
+                });
+            })
+            ->when($status, fn($query) => $query->where('status',$status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $counts = [
+            'total'     => User::where('role','user')->count(),
+            'active'    => User::where('role','user')->where('status','approved')->count(),
+            'pending'   => User::where('role','user')->where('status','pending')->count(),
+            'suspended' => User::where('role','user')->where('status','suspended')->count(),
+        ];
+
+        return view('admin.pages.manage-user', compact('users','counts'));
     }
+
 
     public function approve($id)
     {
