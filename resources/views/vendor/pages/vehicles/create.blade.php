@@ -2,95 +2,196 @@
 
 @section('vendor-content')
 <div class="container-fluid py-4">
-    <h3 class="mb-3">Add Vehicle</h3>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form method="POST" action="{{ route('vendor.vehicles.store') }}" enctype="multipart/form-data">
-                @csrf
+    <h3 class="mb-4">Create Vehicle</h3>
 
+    <form method="POST" action="{{ route('vendor.vehicles.store') }}" enctype="multipart/form-data">
+        @csrf
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <strong>General</strong>
+            </div>
+
+            <div class="card-body">
                 <div class="row g-3">
+
+                    {{-- Wheel Type --}}
                     <div class="col-md-6">
-                        <label class="form-label">Title</label>
-                        <input name="title" class="form-control" value="{{ old('title') }}" required>
-                        @error('title') <small class="text-danger">{{ $message }}</small> @enderror
+                        <label class="form-label">Wheel Type *</label>
+                        <select name="wheel_type" class="form-select" required>
+                            @foreach(config('vehicle.wheel_types') as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('wheel_type','4_wheeler') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('wheel_type') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
+                    {{-- Vehicle Type --}}
                     <div class="col-md-6">
-                        <label class="form-label">Vehicle Type</label>
-                        <input name="vehicle_type" class="form-control" value="{{ old('vehicle_type') }}" required>
+                        <label class="form-label">Vehicle Type *</label>
+                        <select name="vehicle_type" class="form-select" required>
+                            <option value="">Select</option>
+                            @foreach(config('vehicle.vehicle_types') as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('vehicle_type') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
                         @error('vehicle_type') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Brand</label>
-                        <input name="brand" class="form-control" value="{{ old('brand') }}" required>
+                    {{-- Brand --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Brand *</label>
+                        <input type="text" name="brand" class="form-control"
+                               value="{{ old('brand') }}" required>
                         @error('brand') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Model</label>
-                        <input name="model" class="form-control" value="{{ old('model') }}" required>
+                    {{-- Model --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Model *</label>
+                        <input type="text" name="model" class="form-control"
+                               value="{{ old('model') }}" required>
                         @error('model') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">City *</label>
+                        <input type="text" name="location_city" class="form-control"
+                            value="{{ old('location_city') }}" required>
+                        @error('location_city') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Registration No</label>
-                        <input name="registration_no" class="form-control" value="{{ old('registration_no') }}" required>
+
+                    {{-- Registration No --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Registration No *</label>
+                        <input type="text" name="registration_no" class="form-control"
+                               value="{{ old('registration_no') }}" required>
                         @error('registration_no') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Fuel Type</label>
-                        <input name="fuel_type" class="form-control" value="{{ old('fuel_type') }}" required>
+                    {{-- Manufacture Year --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Manufacture Year *</label>
+                        <input type="number" name="manufacture_year" class="form-control"
+                               min="1990" max="{{ date('Y') + 1 }}"
+                               value="{{ old('manufacture_year') }}" required>
+                        @error('manufacture_year') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    {{-- Fuel Type --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Fuel Type *</label>
+                        <select name="fuel_type" class="form-select" required>
+                            @foreach(config('vehicle.fuel_types') as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('fuel_type') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
                         @error('fuel_type') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Transmission</label>
-                        <input name="transmission" class="form-control" value="{{ old('transmission') }}" required>
+                    {{-- Transmission --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Transmission *</label>
+                        <select name="transmission" class="form-select" required>
+                            @foreach(config('vehicle.transmissions') as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('transmission') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
                         @error('transmission') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Seats</label>
-                        <input type="number" name="seating_capacity" class="form-control"
-                               value="{{ old('seating_capacity', 4) }}" required>
+                    {{-- Seating Capacity --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Seating Capacity *</label>
+                        <input type="number" name="seating_capacity"
+                               class="form-control"
+                               value="{{ old('seating_capacity',4) }}" required>
                         @error('seating_capacity') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Price / Day</label>
-                        <input type="number" step="0.01" name="price_per_day" class="form-control"
+                    {{-- Mileage --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Mileage per Litre</label>
+                        <input type="number" step="0.01"
+                               name="mileage_per_litre"
+                               class="form-control"
+                               value="{{ old('mileage_per_litre') }}">
+                        @error('mileage_per_litre') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    {{-- Price per Day --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Price per Day *</label>
+                        <input type="number" step="0.01"
+                               name="price_per_day"
+                               class="form-control"
                                value="{{ old('price_per_day') }}" required>
                         @error('price_per_day') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">City</label>
-                        <input name="location_city" class="form-control" value="{{ old('location_city') }}" required>
-                        @error('location_city') <small class="text-danger">{{ $message }}</small> @enderror
+                    {{-- With Driver Price --}}
+                    <div class="col-md-6">
+                        <label class="form-label">With Driver Price per Day</label>
+                        <input type="number" step="0.01"
+                               name="with_driver_price_per_day"
+                               class="form-control"
+                               value="{{ old('with_driver_price_per_day') }}">
+                        @error('with_driver_price_per_day') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-12">
+                    {{-- Images --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Images</label>
+                        <input type="file" name="images[]" multiple class="form-control" accept="image/*">
+                        @error('images') <small class="text-danger">{{ $message }}</small> @enderror
+                        @error('images.*') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    {{-- Status --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Status *</label>
+                        <select name="status" class="form-select" required>
+                            @foreach(config('vehicle.status_options') as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('status','inactive') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('status') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    {{-- Description --}}
+                    <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
+                        <textarea name="description"
+                                  class="form-control"
+                                  rows="4">{{ old('description') }}</textarea>
                         @error('description') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Image (optional)</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        @error('image') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
                 </div>
-
-                <div class="mt-4 d-flex gap-2">
-                    <button class="btn btn-primary">Save</button>
-                    <a href="{{ route('vendor.vehicles.index') }}" class="btn btn-outline-dark">Back</a>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+
+        <div class="mt-4">
+            <button class="btn btn-primary">Save Vehicle</button>
+            <a href="{{ route('vendor.vehicles.index') }}" class="btn btn-outline-dark">Cancel</a>
+        </div>
+    </form>
+
 </div>
 @endsection

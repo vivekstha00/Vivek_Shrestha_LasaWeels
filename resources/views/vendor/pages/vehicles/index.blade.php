@@ -14,42 +14,68 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th style="width:70px;">Image</th>
                             <th>Title</th>
                             <th>Type</th>
-                            <th>Location</th>
+                            <th>City</th>
                             <th>Price / Day</th>
                             <th>Status</th>
                             <th>Active</th>
-                            <th style="width:220px;">Action</th>
+                            <th style="width:260px;">Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @forelse($vehicles as $i => $v)
+                            @php
+                                $thumb = $v->image_url
+                                    ? asset('storage/'.$v->image_url)
+                                    : null;
+                            @endphp
+
                             <tr>
-                                <td>{{ $vehicles->firstItem() + $i }}</td>
-                                <td>{{ $v->title }}</td>
+                                <td>
+                                    @if($thumb)
+                                        <img src="{{ $thumb }}"
+                                             alt="Vehicle"
+                                             style="width:60px;height:40px;object-fit:cover;border-radius:6px;">
+                                    @else
+                                        <div style="width:60px;height:40px;border-radius:6px;"
+                                             class="bg-light d-flex align-items-center justify-content-center small text-muted">
+                                            N/A
+                                        </div>
+                                    @endif
+                                </td>
+
+                                <td class="fw-semibold">{{ $v->title }}</td>
                                 <td>{{ $v->vehicle_type }}</td>
                                 <td>{{ $v->location_city }}</td>
                                 <td>{{ number_format($v->price_per_day, 2) }} {{ $v->currency }}</td>
                                 <td>
                                     @if($v->status === 'pending')
-                                        <span class="badge badge-soft badge-pending">Pending</span>
+                                        <span class="badge bg-warning text-dark">Pending</span>
                                     @elseif($v->status === 'approved')
-                                        <span class="badge badge-soft badge-approved">Approved</span>
+                                        <span class="badge bg-success">Approved</span>
                                     @else
-                                        <span class="badge badge-soft badge-rejected">Rejected</span>
+                                        <span class="badge bg-danger">Rejected</span>
                                         @if($v->reject_reason)
                                             <div class="small text-muted mt-1">Reason: {{ $v->reject_reason }}</div>
                                         @endif
                                     @endif
                                 </td>
                                 <td>{{ $v->is_active ? 'Yes' : 'No' }}</td>
-                                <td class="d-flex gap-2">
+
+                                <td class="d-flex gap-2 flex-wrap">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{{ route('vendor.vehicles.show', $v->id) }}">
+                                        View
+                                    </a>
+
                                     <a class="btn btn-sm btn-outline-dark"
                                        href="{{ route('vendor.vehicles.edit', $v->id) }}">
                                         Edit

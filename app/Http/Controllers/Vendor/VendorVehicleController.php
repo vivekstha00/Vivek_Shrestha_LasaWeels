@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\Storage;
 
 class VendorVehicleController extends Controller
 {
+    public function show(Vehicle $vehicle)
+    {
+        if ($vehicle->vendor_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $vehicle->load('images');
+
+        return view('vendor.pages.vehicles.show', compact('vehicle'));
+    }
+
     public function index()
     {
         $vehicles = Vehicle::where('vendor_id', Auth::id())
@@ -27,52 +38,80 @@ class VendorVehicleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'vehicle_type' => ['required', 'string', 'max:100'],
-            'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:100'],
-            'registration_no' => ['required', 'string', 'max:50', 'unique:vehicles,registration_no'],
-            'fuel_type' => ['required', 'string', 'max:50'],
-            'transmission' => ['required', 'string', 'max:50'],
-            'seating_capacity' => ['required', 'integer', 'min:1', 'max:20'],
-            'price_per_day' => ['required', 'numeric', 'min:0'],
+            'wheel_type' => ['required'],
+            'vehicle_type' => ['required'],
+            'brand' => ['required'],
+            'model' => ['required'],
+            'registration_no' => ['required', 'unique:vehicles,registration_no'],
+            'manufacture_year' => ['required', 'integer'],
+            'fuel_type' => ['required'],
+            'transmission' => ['required'],
+            'seating_capacity' => ['required', 'integer'],
+            'mileage_per_litre' => ['nullable', 'numeric'],
+            'price_per_day' => ['required', 'numeric'],
+            'with_driver_price_per_day' => ['nullable', 'numeric'],
+            'status' => ['required'],
+            'description' => ['nullable'],
             'location_city' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
+
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'max:2048'],
         ]);
+        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
 
-        $imageUrl = null;
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('vehicles', 'public');
-            $imageUrl = $path; // store path in image_url
-        }
-
-        Vehicle::create([
+        // 1️⃣ Create vehicle first
+        $vehicle = Vehicle::create([
             'vendor_id' => Auth::id(),
-            'title' => $data['title'],
+            'title' => $title,
+            'wheel_type' => $data['wheel_type'],
             'vehicle_type' => $data['vehicle_type'],
             'brand' => $data['brand'],
             'model' => $data['model'],
             'registration_no' => $data['registration_no'],
+            'manufacture_year' => $data['manufacture_year'],
             'fuel_type' => $data['fuel_type'],
             'transmission' => $data['transmission'],
             'seating_capacity' => $data['seating_capacity'],
+            'mileage_per_litre' => $data['mileage_per_litre'] ?? null,
             'price_per_day' => $data['price_per_day'],
-            'location_city' => $data['location_city'],
+            'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
+            'status' => $data['status'],
             'description' => $data['description'] ?? null,
-            'image_url' => $imageUrl,
+            'location_city' => $data['location_city'],
 
-            // admin workflow
-            'status' => 'pending',
             'is_active' => true,
             'approved_by' => null,
             'approved_at' => null,
             'reject_reason' => null,
         ]);
 
-        return redirect()->route('vendor.vehicles.index')
-            ->with('success', 'Vehicle added successfully. Waiting for admin approval.');
+        // 2️⃣ Save images
+        if ($request->hasFile('images')) {
+
+            $isFirst = true;
+
+            foreach ($request->file('images') as $img) {
+
+                $path = $img->store('vehicles', 'public');
+
+                $vehicle->images()->create([
+                    'path' => $path,
+                    'is_primary' => $isFirst,
+                ]);
+
+                // store first image in vehicles table for thumbnail
+                if ($isFirst) {
+                    $vehicle->update(['image_url' => $path]);
+                    $isFirst = false;
+                }
+            }
+        }
+
+        return redirect()
+            ->route('vendor.vehicles.index')
+            ->with('success', 'Vehicle added successfully.');
     }
+
 
     public function edit(Vehicle $vehicle)
     {
@@ -102,12 +141,15 @@ class VendorVehicleController extends Controller
             'price_per_day' => ['required', 'numeric', 'min:0'],
             'location_city' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
-        ]);
 
-        // If vendor edits, send to pending again (real-world workflow)
-        $updatePayload = [
-            'title' => $data['title'],
+            'images' => ['nullable', 'array', 'max:10'],
+            'images.*' => ['image', 'max:2048'],
+        ]);
+        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
+        $updatePayload['title'] = $title;
+
+        $vehicle->update([
+            'title' => $title,
             'vehicle_type' => $data['vehicle_type'],
             'brand' => $data['brand'],
             'model' => $data['model'],
@@ -119,22 +161,35 @@ class VendorVehicleController extends Controller
             'location_city' => $data['location_city'],
             'description' => $data['description'] ?? null,
 
+            // re-approval workflow
             'status' => 'pending',
             'approved_by' => null,
             'approved_at' => null,
             'reject_reason' => null,
-        ];
+        ]);
 
-        if ($request->hasFile('image')) {
-            // delete old
-            if ($vehicle->image_url && Storage::disk('public')->exists($vehicle->image_url)) {
-                Storage::disk('public')->delete($vehicle->image_url);
+        // Append new images
+        if ($request->hasFile('images')) {
+            $hasPrimary = $vehicle->images()->where('is_primary', true)->exists();
+
+            foreach ($request->file('images') as $img) {
+                $path = $img->store('vehicles', 'public');
+
+                $makePrimary = false;
+                if (!$hasPrimary) {
+                    $makePrimary = true;
+                    $hasPrimary = true;
+
+                    // keep image_url updated for compatibility
+                    $vehicle->update(['image_url' => $path]);
+                }
+
+                $vehicle->images()->create([
+                    'path' => $path,
+                    'is_primary' => $makePrimary,
+                ]);
             }
-            $path = $request->file('image')->store('vehicles', 'public');
-            $updatePayload['image_url'] = $path;
         }
-
-        $vehicle->update($updatePayload);
 
         return redirect()->route('vendor.vehicles.index')
             ->with('success', 'Vehicle updated. Sent for admin approval again.');
@@ -146,8 +201,11 @@ class VendorVehicleController extends Controller
             abort(403);
         }
 
-        if ($vehicle->image_url && Storage::disk('public')->exists($vehicle->image_url)) {
-            Storage::disk('public')->delete($vehicle->image_url);
+        // delete image files
+        foreach ($vehicle->images as $img) {
+            if ($img->path && Storage::disk('public')->exists($img->path)) {
+                Storage::disk('public')->delete($img->path);
+            }
         }
 
         $vehicle->delete();

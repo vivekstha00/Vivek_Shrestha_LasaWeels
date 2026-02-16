@@ -3,6 +3,8 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -61,5 +63,15 @@ class Vehicle extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+    public function images(): HasMany
+    {
+        return $this->hasMany(VehicleImage::class);
+    }
+
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(VehicleImage::class)->where('is_primary', true);
+    }
+
 }
 

@@ -55,23 +55,15 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
         ->name('dashboard');
 
     // Vehicle CRUD
-    Route::get('/vehicles', [VendorVehicleController::class, 'index'])
-        ->name('vehicles.index');
+    Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
+    Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
 
-    Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])
-        ->name('vehicles.create');
+    Route::get('/vehicles/{vehicle}', [VendorVehicleController::class, 'show'])->name('vehicles.show');
 
-    Route::post('/vehicles', [VendorVehicleController::class, 'store'])
-        ->name('vehicles.store');
-
-    Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])
-        ->name('vehicles.edit');
-
-    Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])
-        ->name('vehicles.update');
-
-    Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])
-        ->name('vehicles.destroy');
+    Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])->name('vehicles.edit');
+    Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])->name('vehicles.update');
+    Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])->name('vehicles.destroy');
 
     Route::get('/users', [VendorUserController::class, 'index'])
     ->name('users.index');
