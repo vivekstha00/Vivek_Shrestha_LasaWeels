@@ -1,63 +1,48 @@
-<nav class="navbar navbar-expand-lg navbar-dark site-navbar">
+<nav class="navbar navbar-expand-lg site-navbar fixed-top" id="navbar">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ route('home') }}">LasaWheels</a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
+            <img src="{{ asset('images/logo.png') }}" alt="LasaWheels"
+                style="height:34px; width:auto;" class="d-inline-block">
+            <span class="fw-bold">LasaWheels</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            {{-- LEFT MENU --}}
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
-                       href="{{ route('home') }}">
-                        Home
-                    </a>
-                </li>
-
-                {{-- Corporate Rent / Vendor --}}
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('corporate.rent') ? 'active' : '' }}"
-                       href="{{ route('corporate.rent') }}">
-                        Corporate Rent
-                    </a>
-                </li>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-1">
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Vehicle</a></li>
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('corporate.rent') ? 'active' : '' }}" href="{{ route('corporate.rent') }}">Corporate Rent</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
             </ul>
 
-            {{-- RIGHT MENU --}}
-            <div class="d-flex gap-2">
+            <div class="d-flex align-items-center gap-3 ms-4">
                 @guest
-                    <a href="{{ route('login') }}" class="btn btn-outline-light">
-                        Login
-                    </a>
-
-                    <a href="{{ route('register') }}" class="btn btn-main">
-                        Sign Up
-                    </a>
+                    <a href="{{ route('login') }}" class="btn btn-login px-4">Login</a>
+                    <a href="{{ route('register') }}" class="btn btn-signin px-4">Sign In</a>
                 @else
-                    <span class="text-white d-flex align-items-center me-2">
-                        Hi, <strong class="ms-1">{{ Auth::user()->name }}</strong>
-                    </span>
-
-                    @if(Auth::user()->role === 'admin')
-                        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light">
-                            Admin
-                        </a>
-                    @elseif(Auth::user()->role === 'vendor')
-                        <a href="{{ route('vendor.dashboard') }}" class="btn btn-outline-light">
-                            Vendor
-                        </a>
-                    @endif
-
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-light">
-                            Logout
+                    <div class="dropdown">
+                        <button class="btn btn-signin dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle me-1"></i> {{ Auth::user()->name }}
                         </button>
-                    </form>
+                        <ul class="dropdown-menu dropdown-menu-end shadow rounded-3">
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="#">Bookings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 @endguest
             </div>
         </div>
     </div>
 </nav>
+
+<div style="height: 80px;"></div>
