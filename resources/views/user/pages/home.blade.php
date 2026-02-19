@@ -2,22 +2,17 @@
 
 @section('title', 'LasaWheels - Looking for a Car?')
 
-@section('content')
+@section('user-content')
 
-{{-- HERO ONLY --}}
-<section class="min-vh-100 d-flex align-items-center position-relative"
-    style="background-image:url('{{ asset('images/hero.jpg') }}'); background-size:cover; background-position:center;">
-
-    {{-- Dark overlay --}}
-    <div class="position-absolute top-0 start-0 end-0 bottom-0 bg-dark opacity-50"></div>
-
-    <div class="container position-relative py-5" style="z-index: 2;">
+<section class="hero-home d-flex align-items-center">
+    <div class="container hero-content">
         <div class="row justify-content-center">
             <div class="col-lg-11 text-white">
 
                 <h1 class="display-3 fw-bold mb-2">
                     Looking for a <span class="text-success">Car</span>?
                 </h1>
+
                 <p class="lead mb-4">
                     Rent a car in just few easy steps.
                 </p>
@@ -31,24 +26,28 @@
                         <div class="row g-4 align-items-start">
                             {{-- Left: service select --}}
                             <div class="col-lg-4">
-                                <div class="fw-bold mb-3">Choose a service</div>
+                                <div class="fw-bold mb-3 fs-5">Choose a service</div>
 
-                                <div class="d-flex gap-3">
+                                <div class="d-flex gap-4">
+
+                                    <!-- Self Drive -->
                                     <button type="button"
-                                            class="btn w-100"
-                                            :class="service==='self' ? 'btn-success' : 'btn-outline-success'"
+                                            class="service-square"
+                                            :class="service === 'self' ? 'active' : ''"
                                             @click="service='self'">
-                                        <i class="fa-solid fa-car me-2"></i>
-                                        Self Drive
+                                        <i class="fa-solid fa-car mb-2"></i>
+                                        <span>Self Drive</span>
                                     </button>
 
+                                    <!-- With Driver -->
                                     <button type="button"
-                                            class="btn w-100"
-                                            :class="service==='driver' ? 'btn-success' : 'btn-outline-success'"
+                                            class="service-square"
+                                            :class="service === 'driver' ? 'active' : ''"
                                             @click="service='driver'">
-                                        <i class="fa-solid fa-user-tie me-2"></i>
-                                        With Driver
+                                        <i class="fa-solid fa-user-tie mb-2"></i>
+                                        <span>With Driver</span>
                                     </button>
+
                                 </div>
                             </div>
 
@@ -58,10 +57,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'From' : 'Pick Up Location'"></label>
-
-                                        <input type="text"
-                                               name="pickup_location"
-                                               class="form-control"
+                                        <input type="text" name="pickup_location" class="form-control"
                                                :readonly="service==='self'"
                                                :value="service==='self' ? 'Pokhara Matepani' : ''"
                                                :placeholder="service==='self' ? 'Pokhara Matepani' : 'Please enter pickup location'"
@@ -71,10 +67,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To' : 'Drop Off Location'"></label>
-
-                                        <input type="text"
-                                               name="drop_location"
-                                               class="form-control"
+                                        <input type="text" name="drop_location" class="form-control"
                                                :placeholder="service==='self' ? 'Please enter to location' : 'Please enter drop location'"
                                                required>
                                     </div>
@@ -82,21 +75,13 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'From Date' : 'Pick Up Date & Time'"></label>
-
-                                        <input type="datetime-local"
-                                               name="pickup_datetime"
-                                               class="form-control"
-                                               required>
+                                        <input type="datetime-local" name="pickup_datetime" class="form-control" required>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To Date' : 'Drop Date & Time'"></label>
-
-                                        <input type="datetime-local"
-                                               name="drop_datetime"
-                                               class="form-control"
-                                               required>
+                                        <input type="datetime-local" name="drop_datetime" class="form-control" required>
                                     </div>
                                 </div>
 

@@ -16,6 +16,7 @@
 
     <style>
         :root {
+            --nav-h: 90px;
             --dark-bg: #0f172a;
             --green-accent: #22c55e;
             --green-dark: #16a34a;
@@ -43,27 +44,17 @@
         .navbar-brand {
             font-weight: 800;
             font-size: 1.8rem;
-            color: white !important;
+            color: rgb(0, 0, 0) !important;
         }
 
         .nav-link {
-            color: white !important;
+            color: rgb(0, 0, 0) !important;
             font-weight: 500;
             padding: 0.75rem 1.2rem !important;
         }
 
         .nav-link:hover, .nav-link.active {
             color: var(--green-accent) !important;
-        }
-
-        .btn-login {
-            color: white;
-            border-color: white;
-            font-weight: 500;
-        }
-
-        .btn-login:hover {
-            background: rgba(255,255,255,0.15);
         }
 
         .btn-signin {
@@ -86,6 +77,33 @@
             color: white;
             position: relative;
         }
+
+        /* HERO: Bootstrap version of Tailwind h-screen bg-cover bg-center */
+        .hero-home{
+            min-height: 100vh;
+            background-image: url('{{ asset('images/hero.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        /* dark overlay */
+        .hero-home::before{
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+        }
+
+        /* push content down so navbar doesn't cover */
+        .hero-home .hero-content{
+            position: relative;
+            z-index: 1;
+            padding-top: var(--nav-h);
+            padding-bottom: 40px;
+        }
+
 
         .search-container {
             background: rgba(255,255,255,0.96);
@@ -120,6 +138,45 @@
         .feature-card:hover {
             transform: translateY(-8px);
         }
+
+        .service-square {
+            width: 150px;
+            height: 150px;
+            border: 2px solid #e5e7eb;
+            border-radius: 18px;
+            background: #ffffff;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 10px;
+            font-weight: 600;
+            font-size: 17px;
+
+            transition: all .2s ease;
+            cursor: pointer;
+        }
+
+        /* icon size */
+        .service-square i {
+            font-size: 28px;
+            color: #16a34a;
+        }
+
+        /* hover */
+        .service-square:hover {
+            border-color: #22c55e;
+            transform: translateY(-2px);
+        }
+
+        /* active state */
+        .service-square.active {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
     </style>
 
     @stack('styles')

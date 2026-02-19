@@ -7,7 +7,7 @@
     @include('user.layouts.header.navbar')
 
     <main>
-        @yield('content')
+        @yield('user-content')
     </main>
 
     <footer class="bg-dark text-light py-5 mt-5">

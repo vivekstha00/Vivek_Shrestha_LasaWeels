@@ -20,7 +20,6 @@
 
             <div class="d-flex align-items-center gap-3 ms-4">
                 @guest
-                    <a href="{{ route('login') }}" class="btn btn-login px-4">Login</a>
                     <a href="{{ route('register') }}" class="btn btn-signin px-4">Sign In</a>
                 @else
                     <div class="dropdown">
@@ -44,5 +43,3 @@
         </div>
     </div>
 </nav>
-
-<div style="height: 80px;"></div>
