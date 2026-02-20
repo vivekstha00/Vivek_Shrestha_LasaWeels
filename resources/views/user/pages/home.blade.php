@@ -20,7 +20,7 @@
                 {{-- Search/Booking Card --}}
                 <div class="bg-white text-dark rounded shadow p-4 p-md-5"
                      x-data="{ service: 'self' }">
-                    <form method="GET" action="#">
+                    <form method="GET" action="{{ route('user.search.vehicles') }}">
                         <input type="hidden" name="service" :value="service">
 
                         <div class="row g-4 align-items-start">

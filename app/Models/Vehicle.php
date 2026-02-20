@@ -73,5 +73,10 @@ class Vehicle extends Model
         return $this->hasOne(VehicleImage::class)->where('is_primary', true);
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'vehicle_id', 'id');
+    }
+
 }
 

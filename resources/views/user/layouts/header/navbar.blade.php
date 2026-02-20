@@ -20,7 +20,7 @@
 
             <div class="d-flex align-items-center gap-3 ms-4">
                 @guest
-                    <a href="{{ route('register') }}" class="btn btn-signin px-4">Sign In</a>
+                    <a href="{{ route('login') }}" class="btn btn-signin px-4">Sign In</a>
                 @else
                     <div class="dropdown">
                         <button class="btn btn-signin dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
