@@ -50,7 +50,6 @@ class VendorVehicleController extends Controller
             'mileage_per_litre' => ['nullable', 'numeric'],
             'price_per_day' => ['required', 'numeric'],
             'with_driver_price_per_day' => ['nullable', 'numeric'],
-            'status' => ['required'],
             'description' => ['nullable'],
             'location_city' => ['required', 'string', 'max:100'],
 
@@ -75,10 +74,10 @@ class VendorVehicleController extends Controller
             'mileage_per_litre' => $data['mileage_per_litre'] ?? null,
             'price_per_day' => $data['price_per_day'],
             'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
-            'status' => $data['status'],
             'description' => $data['description'] ?? null,
             'location_city' => $data['location_city'],
 
+            'status' => 'available',
             'is_active' => true,
             'approved_by' => null,
             'approved_at' => null,

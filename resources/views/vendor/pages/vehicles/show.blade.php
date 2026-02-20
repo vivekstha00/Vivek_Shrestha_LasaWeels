@@ -1,5 +1,9 @@
 @extends('vendor.layouts.master')
 
+@section('title', 'Vehicles - Vendor')
+@section('page_title', 'Vehicles - Details')
+@section('page_subtitle', 'View details of your vehicle listing')
+
 @section('vendor-content')
 <div class="container-fluid py-4">
 

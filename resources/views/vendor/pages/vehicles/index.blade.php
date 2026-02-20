@@ -1,5 +1,9 @@
 @extends('vendor.layouts.master')
 
+@section('title', 'Vehicles - Vendor')
+@section('page_title', 'Vehicles')
+@section('page_subtitle', 'List of all vehicles')
+
 @section('vendor-content')
 <div class="container-fluid py-4">
 
@@ -16,29 +20,29 @@
         <div class="card-body">
 
             <div class="table-responsive">
-                <table class="table table-bordered align-middle">
+                <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:70px;">Image</th>
-                            <th>Title</th>
+                            <th style="width:80px;">Image</th>
                             <th>Type</th>
-                            <th>City</th>
-                            <th>Price / Day</th>
+                            <th>Model</th>
+                            <th>Registration No</th>
+                            <th>Fuel Type</th>
+                            <th>Transmission</th>
                             <th>Status</th>
-                            <th>Active</th>
-                            <th style="width:260px;">Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @forelse($vehicles as $i => $v)
+                        @forelse($vehicles as $v)
                             @php
                                 $thumb = $v->image_url
                                     ? asset('storage/'.$v->image_url)
-                                    : null;
+                                    : ($v->images->first() ? asset('storage/'.$v->images->first()->path) : null);
                             @endphp
 
-                            <tr>
+                            <tr onclick="window.location='{{ route('vendor.vehicles.show', $v->id) }}'"
+                                style="cursor:pointer;" class="vehicle-row">
                                 <td>
                                     @if($thumb)
                                         <img src="{{ $thumb }}"
@@ -47,46 +51,33 @@
                                     @else
                                         <div style="width:60px;height:40px;border-radius:6px;"
                                              class="bg-light d-flex align-items-center justify-content-center small text-muted">
-                                            N/A
+                                            No img
                                         </div>
                                     @endif
                                 </td>
 
-                                <td class="fw-semibold">{{ $v->title }}</td>
                                 <td>{{ $v->vehicle_type }}</td>
-                                <td>{{ $v->location_city }}</td>
-                                <td>{{ number_format($v->price_per_day, 2) }} {{ $v->currency }}</td>
+                                <td>{{ $v->model }}</td>
+                                <td>{{ $v->registration_no }}</td>
+                                <td>{{ $v->fuel_type }}</td>
+                                <td>{{ $v->transmission }}</td>
                                 <td>
-                                    @if($v->status === 'pending')
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    @elseif($v->status === 'approved')
-                                        <span class="badge bg-success">Approved</span>
-                                    @else
-                                        <span class="badge bg-danger">Rejected</span>
-                                        @if($v->reject_reason)
-                                            <div class="small text-muted mt-1">Reason: {{ $v->reject_reason }}</div>
-                                        @endif
-                                    @endif
-                                </td>
-                                <td>{{ $v->is_active ? 'Yes' : 'No' }}</td>
-
-                                <td class="d-flex gap-2 flex-wrap">
-                                    <a class="btn btn-sm btn-outline-primary"
-                                       href="{{ route('vendor.vehicles.show', $v->id) }}">
-                                        View
-                                    </a>
-
-                                    <a class="btn btn-sm btn-outline-dark"
-                                       href="{{ route('vendor.vehicles.edit', $v->id) }}">
-                                        Edit
-                                    </a>
-
-                                    <form method="POST" action="{{ route('vendor.vehicles.destroy', $v->id) }}"
-                                          onsubmit="return confirm('Delete this vehicle?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                                    @switch($v->status)
+                                        @case('available')
+                                            <span class="badge bg-primary">Available</span>
+                                            @break
+                                        @case('rented')
+                                            <span class="badge bg-info text-dark">Rented</span>
+                                            @break
+                                        @case('maintenance')
+                                            <span class="badge bg-secondary">Maintenance</span>
+                                            @break
+                                        @case('inactive')
+                                            <span class="badge bg-dark">Inactive</span>
+                                            @break
+                                        @default
+                                            <span class="badge bg-light text-dark">{{ ucfirst($v->status) }}</span>
+                                    @endswitch
                                 </td>
                             </tr>
                         @empty
@@ -105,4 +96,11 @@
     </div>
 
 </div>
+
+{{-- Hover effect for rows --}}
+<style>
+    .vehicle-row:hover {
+        background-color: #f8f9fc;
+    }
+</style>
 @endsection

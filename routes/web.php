@@ -12,6 +12,7 @@ use App\Http\Controllers\Vendor\VendorVehicleController;
 use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Admin\AdminVehicleController;
 use App\Http\Controllers\User\UserBookingController;
+use App\Http\Controllers\Vendor\VendorProfileController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -58,9 +59,10 @@ Route::middleware('auth')->group(function () {
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
 
     // Dashboard
-    Route::get('/dashboard', [VendorDashboardController::class, 'index'])
-        ->name('dashboard');
-
+    Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
+    // Profile
+    Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
+    Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
     // Vehicle CRUD
     Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');

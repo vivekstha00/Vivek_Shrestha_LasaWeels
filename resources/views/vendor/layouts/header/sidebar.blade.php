@@ -1,11 +1,8 @@
 <aside class="vendor-sidebar position-fixed top-0 start-0 h-100 p-3">
-    <a href="{{ route('vendor.dashboard') }}" class="brand d-flex align-items-center gap-2 text-white mb-3 px-2">
-        <span class="bg-white bg-opacity-10 rounded-3 d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;">
-            <i class="fas fa-car"></i>
-        </span>
+    <a href="{{ route('vendor.dashboard') }}" class="brand d-flex align-items-center gap-2 text-dark mb-3 px-2">
         <div>
             <div class="fw-bold">LasaWheels</div>
-            <small class="text-white-50">Vendor Panel</small>
+            <small class="text-muted">Vendor Panel</small>
         </div>
     </a>
 
@@ -49,11 +46,6 @@
     </ul>
 
     <div class="mt-auto pt-3">
-        <div class="bg-white bg-opacity-10 rounded-3 p-3 text-white small">
-            <div class="fw-semibold">{{ Auth::user()->name ?? 'Vendor' }}</div>
-            <div class="text-white-50">{{ Auth::user()->email ?? '' }}</div>
-        </div>
-
         <form class="mt-2" action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="btn btn-outline-light w-100 mt-2">
