@@ -3,10 +3,9 @@
 @include('user.layouts.header.index')
 
 <body>
-
     @include('user.layouts.header.navbar')
 
-    <main>
+    <main class="pt-4" style="margin-top: 90px;">
         @yield('user-content')
     </main>
 
@@ -21,7 +20,7 @@
 
     <script>
         window.addEventListener('scroll', () => {
-            document.getElementById('navbar').classList.toggle('solid', window.scrollY > 100);
+            document.getElementById('navbar')?.classList.toggle('solid', window.scrollY > 100);
         });
     </script>
 

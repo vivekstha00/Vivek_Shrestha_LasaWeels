@@ -6,13 +6,16 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
+use App\Http\Controllers\Admin\AdminVehicleController;
+
+use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorApplicationController;
 use App\Http\Controllers\Vendor\VendorVehicleController;
 use App\Http\Controllers\Vendor\VendorUserController;
-use App\Http\Controllers\Admin\AdminVehicleController;
+
 use App\Http\Controllers\User\UserBookingController;
-use App\Http\Controllers\Vendor\VendorProfileController;
+use App\Http\Controllers\User\UserVehicleController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -48,8 +51,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/vehicles/{vehicle}/reject', [AdminVehicleController::class,'reject'])->name('vehicles.reject');
     Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class,'toggleActive'])->name('vehicles.toggleActive');
 });
-Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
 
+Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
+Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])
+    ->name('vehicles.show');
 Route::middleware('auth')->group(function () {
     Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
     Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');

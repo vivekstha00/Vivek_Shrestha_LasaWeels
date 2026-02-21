@@ -1,0 +1,192 @@
+@extends('user.layouts.master')
+
+@section('title', ($vehicle->brand.' '.$vehicle->model).' - Details')
+
+@section('user-content')
+@php
+    $service = $service ?? ($search['service'] ?? request('service', 'self'));
+
+    $imgUrls = [];
+
+    if ($vehicle->relationLoaded('images') && $vehicle->images->count()) {
+        foreach ($vehicle->images as $img) {
+            // ✅ your column is `path`
+            if (!empty($img->path)) {
+                $imgUrls[] = asset('storage/' . ltrim($img->path, '/'));
+            }
+        }
+    }
+
+    // fallback to vehicles.image_url
+    if (empty($imgUrls) && $vehicle->image_url) {
+        $imgUrls[] = asset('storage/' . ltrim($vehicle->image_url, '/'));
+    }
+
+    if (empty($imgUrls)) {
+        $imgUrls[] = 'https://via.placeholder.com/1200x700?text=No+Image';
+    }
+@endphp
+
+<div class="container py-4">
+    <div class="row g-4">
+
+        {{-- LEFT: Images + Details --}}
+        <div class="col-lg-8">
+
+            {{-- Images Carousel --}}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div id="vehicleCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+
+                        @foreach($imgUrls as $i => $url)
+                            <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
+                                <img src="{{ $url }}"
+                                     class="d-block w-100"
+                                     style="height: 420px; object-fit: cover;"
+                                     alt="Vehicle image {{ $i+1 }}">
+                            </div>
+                        @endforeach
+
+                    </div>
+
+                    @if(count($imgUrls) > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Thumbs --}}
+                @if(count($imgUrls) > 1)
+                    <div class="p-3 bg-white border-top">
+                        <div class="d-flex gap-2 flex-wrap">
+                            @foreach($imgUrls as $i => $url)
+                                <button type="button"
+                                        class="border rounded-3 p-0 overflow-hidden"
+                                        style="width: 72px; height: 52px;"
+                                        data-bs-target="#vehicleCarousel"
+                                        data-bs-slide-to="{{ $i }}"
+                                        aria-label="Slide {{ $i+1 }}">
+                                    <img src="{{ $url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Vehicle Information --}}
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-body p-4">
+                    <h2 class="fw-bold mb-2">{{ $vehicle->brand }} {{ $vehicle->model }}</h2>
+                    <div class="text-muted mb-3">
+                        {{ $vehicle->title ?? '' }}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+                            {{ ucfirst($vehicle->vehicle_type) }}
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">
+                            {{ ucfirst(str_replace('_',' ', $vehicle->wheel_type ?? '')) }}
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+                            {{ ucfirst($vehicle->fuel_type) }}
+                        </span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4"><strong>Seats:</strong> {{ $vehicle->seating_capacity }}</div>
+                        <div class="col-md-4"><strong>Transmission:</strong> {{ ucfirst($vehicle->transmission) }}</div>
+                        <div class="col-md-4"><strong>Year:</strong> {{ $vehicle->manufacture_year }}</div>
+                        <div class="col-md-6"><strong>Registration:</strong> {{ $vehicle->registration_no }}</div>
+                        <div class="col-md-6"><strong>City:</strong> {{ $vehicle->location_city }}</div>
+
+                        @if($vehicle->mileage_per_litre)
+                            <div class="col-md-6"><strong>Mileage:</strong> {{ $vehicle->mileage_per_litre }} km/l</div>
+                        @endif
+
+                        @if($vehicle->security_deposit)
+                            <div class="col-md-6"><strong>Security Deposit:</strong> Rs. {{ number_format($vehicle->security_deposit, 2) }}</div>
+                        @endif
+                    </div>
+
+                    @if($vehicle->description)
+                        <hr class="my-4">
+                        <h5 class="fw-bold">Description</h5>
+                        <p class="mb-0 text-muted">{{ $vehicle->description }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- RIGHT: Booking summary + CTA --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 position-sticky" style="top: 110px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Booking Detail</h5>
+
+                    <div class="small text-muted mb-3">
+                        Service: <span class="fw-semibold text-dark">{{ $service === 'driver' ? 'With Driver' : 'Self Drive' }}</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="fw-semibold">{{ $service === 'self' ? 'From' : 'Pick Up' }}</div>
+                        <div class="text-muted">{{ $search['pickup_location'] ?? '-' }}</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="fw-semibold">{{ $service === 'self' ? 'To' : 'Drop Off' }}</div>
+                        <div class="text-muted">{{ $search['drop_location'] ?? '-' }}</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="fw-semibold">Start Date</div>
+                        <div class="text-muted">{{ $search['pickup_datetime'] ?? '-' }}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="fw-semibold">End Date</div>
+                        <div class="text-muted">{{ $search['drop_datetime'] ?? '-' }}</div>
+                    </div>
+
+                    {{-- Price preview --}}
+                    @php
+                        $selfPerDay   = (float) ($vehicle->price_per_day ?? 0);
+                        $driverPerDay = (float) ($vehicle->with_driver_price_per_day ?? 0);
+
+                        $perDay = $service === 'driver'
+                            ? ($driverPerDay > 0 ? $driverPerDay : $selfPerDay)
+                            : $selfPerDay;
+                    @endphp
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="text-muted">Price / day</div>
+                        <div class="fw-bold">Rs. {{ number_format($perDay, 2) }}</div>
+                    </div>
+
+                    {{-- CTA --}}
+                    <a class="btn btn-success w-100 py-2 fw-bold"
+                       href="{{ route('user.booking.create', ['vehicle' => $vehicle->id] + ($search ?? []) + ['service' => $service]) }}">
+                        Book Now
+                    </a>
+                    {{-- <a class="btn btn-success w-100 py-2 fw-bold"
+                       href="{{ route('user.booking.create', ['vehicle' => $vehicle->id] + ($search ?? []) + ['service' => $service]) }}">
+                        Book Now
+                    </a> --}}
+
+                    <div class="text-center small text-muted mt-3">
+                        You can change date/time from the search page.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+@endsection
