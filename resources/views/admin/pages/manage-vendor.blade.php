@@ -57,7 +57,8 @@
                                     View
                                 </a>
 
-                                @if($status === 'pending')
+                                {{-- Pending --}}
+                                @if($status === 'pending' || $status === 'resubmit')
                                     <form action="{{ route('admin.vendors.approve', $v->id) }}" method="POST">
                                         @csrf
                                         <button class="btn btn-sm btn-success">Approve</button>
@@ -66,8 +67,26 @@
                                     <form action="{{ route('admin.vendors.reject', $v->id) }}" method="POST" class="d-flex gap-2">
                                         @csrf
                                         <input name="remarks" class="form-control form-control-sm"
-                                               placeholder="Reject note" style="width:140px;">
+                                            placeholder="Reject note" style="width:140px;" required>
                                         <button class="btn btn-sm btn-danger">Reject</button>
+                                    </form>
+                                @endif
+
+                                {{-- Approved --}}
+                                @if($status === 'approved')
+                                    <form action="{{ route('admin.vendors.reject', $v->id) }}" method="POST" class="d-flex gap-2">
+                                        @csrf
+                                        <input name="remarks" class="form-control form-control-sm"
+                                            placeholder="Reason to revoke" style="width:140px;" required>
+                                        <button class="btn btn-sm btn-danger">Revoke</button>
+                                    </form>
+                                @endif
+
+                                {{-- Rejected --}}
+                                @if($status === 'rejected')
+                                    <form action="{{ route('admin.vendors.approve', $v->id) }}" method="POST">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success">Approve</button>
                                     </form>
                                 @endif
                             </div>

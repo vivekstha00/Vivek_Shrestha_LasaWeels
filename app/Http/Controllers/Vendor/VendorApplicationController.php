@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\VendorProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class VendorApplicationController extends Controller
 {
@@ -40,7 +41,8 @@ class VendorApplicationController extends Controller
             'phone'    => $data['phone'],
             'password' => Hash::make($data['password']),
             'role'     => 'vendor',
-            'status'   => 'pending',
+            'status'   => 'approved',
+            'vendor_status' => 'pending',
         ]);
 
         VendorProfile::create([
@@ -66,5 +68,38 @@ class VendorApplicationController extends Controller
 
         return redirect()->route('login')
             ->with('success', 'Vendor request submitted. Wait for admin approval.');
+    }
+    public function verification()
+    {
+        $vendor = Auth::user();
+        return view('vendor.pages.verification', compact('vendor'));
+    }
+
+    public function resubmit(Request $request)
+    {
+        $vendor = Auth::user();
+
+        $request->validate([
+            'document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+        ]);
+
+        $path = $request->file('document')->store('vendor_documents', 'public');
+
+        Document::create([
+            'user_id' => $vendor->id,
+            'type' => 'vendor_business_doc',
+            'file_path' => $path,
+            'status' => 'pending',
+        ]);
+
+        User::where('id', $vendor->id)->update([
+            'vendor_status' => 'pending',
+            'verification_note' => null,
+        ]);
+
+        VendorProfile::where('user_id', $vendor->id)
+            ->update(['status' => 'pending']);
+
+        return back()->with('success', 'Document resubmitted successfully.');
     }
 }

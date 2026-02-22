@@ -32,18 +32,35 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        // Block if not approved
-        if ($user->status !== 'approved') {
-            Auth::logout();
-            return back()->withErrors(['email' => 'Your account is pending approval.']);
-        }
-
+        // Admin
         if ($user->role === 'admin') {
+            if ($user->status !== 'approved') {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Your account is pending approval.']);
+            }
             return redirect()->route('admin.dashboard');
         }
 
+        // Vendor
         if ($user->role === 'vendor') {
+            // status must be approved to login (your rule)
+            if ($user->status !== 'approved') {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Your account is pending approval.']);
+            }
+
+            // if vendor not verified, send to verification page
+            if ($user->vendor_status !== 'approved') {
+                return redirect()->route('vendor.verification');
+            }
+
             return redirect()->route('vendor.dashboard');
+        }
+
+        // Normal User
+        if ($user->status !== 'approved') {
+            Auth::logout();
+            return back()->withErrors(['email' => 'Your account is pending approval.']);
         }
 
         return redirect()->route('home')->with('success', 'Login successful');

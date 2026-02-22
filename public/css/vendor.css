@@ -1,12 +1,12 @@
 /* GLOBAL LAYOUT */
 body {
-  background-color: #f8f9fa;
+  background-color: #f7f5f3;   /* secondary */
   color: #212529;
 }
 
 .vendor-content {
   margin-left: 260px;
-  background-color: #f8f9fa;
+  background-color: #f7f5f3;   /* secondary */
   min-height: 100vh;
   padding-bottom: 40px;
 }
@@ -16,7 +16,7 @@ body {
   background-color: #ffffff;
   width: 260px;
   color: #212529;
-  border-right: 1px solid #e9ecef;
+  border-right: 1px solid #d7cec7;   /* main */
 
   display: flex;
   flex-direction: column;
@@ -51,11 +51,11 @@ body {
 }
 
 .vendor-sidebar .nav-link:hover {
-  background-color: #f1f3f5;
+  background-color: #d7cec7;   /* main */
 }
 
 .vendor-sidebar .nav-link.active {
-  background-color: #e9ecef;
+  background-color: #d7cec7;   /* main */
   font-weight: 600;
 }
 
@@ -67,23 +67,23 @@ body {
 
 .vendor-sidebar .btn-outline-light {
   color: #495057;
-  border-color: #dee2e6;
+  border-color: #d7cec7;        /* main */
 }
 
 .vendor-sidebar .btn-outline-light:hover {
-  background-color: #f1f3f5;
+  background-color: #d7cec7;    /* main */
   color: #212529;
 }
 
 /* CARDS */
 .card {
-  border: 1px solid #e9ecef;
+  border: 1px solid #d7cec7;    /* main */
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .card-soft {
-  border: 1px solid #e9ecef;
+  border: 1px solid #d7cec7;    /* main */
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
@@ -94,10 +94,10 @@ body {
 }
 
 .table thead th {
-  background-color: #f8f9fa;
+  background-color: #f7f5f3;   /* secondary */
   font-weight: 600;
   color: #495057;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #d7cec7;   /* main */
 }
 
 .table td {
@@ -107,6 +107,6 @@ body {
 /* DROPDOWN PROFILE MENU */
 .dropdown-menu {
   border-radius: 0.75rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d7cec7;    /* main */
   box-shadow: 0 6px 20px rgba(0,0,0,0.06);
 }

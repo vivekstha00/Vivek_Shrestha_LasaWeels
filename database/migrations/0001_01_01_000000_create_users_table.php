@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('role')->default('user');
 
             $table->string('status')->default('pending');
+            $table->string('vendor_status')->nullable();
 
             $table->foreignId('verified_by')
                 ->nullable()

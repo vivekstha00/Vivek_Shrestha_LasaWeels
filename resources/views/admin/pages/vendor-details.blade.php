@@ -42,6 +42,10 @@
 
     <div class="card mt-4">
         <div class="card-body">
+            <form action="{{ route('admin.vendors.approve', $profile->id) }}" method="POST" class="mb-2">
+                @csrf
+                <button class="btn btn-success">Approve Vendor</button>
+            </form>
             <form action="{{ route('admin.vendors.resubmit', $profile->id) }}" method="POST" class="mb-2">
                 @csrf
                 <label class="form-label">Request Resubmission Remarks</label>

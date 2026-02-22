@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\User;
 use App\Models\VendorProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminVendorController extends Controller
 {
@@ -30,30 +31,44 @@ class AdminVendorController extends Controller
 
         $profile->update([
             'status'      => 'approved',
-            'reviewed_by' => auth()->id(),
+            'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
             'remarks'     => null,
         ]);
 
-        User::where('id', $profile->user_id)->update(['status' => 'approved']);
+        User::where('id', $profile->user_id)->update([
+            'vendor_status' => 'approved',
+            'verification_note' => null,
+        ]);
 
-        // Optional later: send email notification
+        Document::where('user_id', $profile->user_id)
+            ->update(['status' => 'approved']);
 
         return back()->with('success', 'Vendor approved.');
     }
 
     public function reject(Request $request, $id)
     {
+        $request->validate([
+            'remarks' => ['required', 'string', 'max:500'],
+        ]);
+
         $profile = VendorProfile::findOrFail($id);
 
         $profile->update([
             'status'      => 'rejected',
-            'reviewed_by' => auth()->id(),
+            'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
-            'remarks'     => $request->input('remarks'),
+            'remarks'     => $request->remarks,
         ]);
 
-        User::where('id', $profile->user_id)->update(['status' => 'rejected']);
+        User::where('id', $profile->user_id)->update([
+            'vendor_status' => 'rejected',
+            'verification_note' => $request->remarks,
+        ]);
+
+        Document::where('user_id', $profile->user_id)
+            ->update(['status' => 'rejected']);
 
         return back()->with('success', 'Vendor rejected.');
     }
@@ -64,12 +79,15 @@ class AdminVendorController extends Controller
 
         $profile->update([
             'status'      => 'resubmit',
-            'reviewed_by' => auth()->id(),
+            'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
             'remarks'     => $request->input('remarks'),
         ]);
 
-        User::where('id', $profile->user_id)->update(['status' => 'pending']);
+        User::where('id', $profile->user_id)->update([
+            'vendor_status' => 'resubmit',
+            'verification_note' => $request->input('remarks'),
+        ]);
 
         return back()->with('success', 'Marked as resubmit requested.');
     }

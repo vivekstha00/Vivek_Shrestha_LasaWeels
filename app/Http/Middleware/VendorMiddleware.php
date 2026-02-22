@@ -9,24 +9,32 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VendorMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        if (Auth::user()->role !== 'vendor') {
+        $user = Auth::user();
+
+        // Ensure role is vendor
+        if ($user->role !== 'vendor') {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            
-           return redirect()->route('login')
+
+            return redirect()->route('login')
                 ->withErrors(['email' => 'Access denied. Vendor only.']);
+        }
+
+        // 🔒 If vendor not verified, allow only verification routes
+        if ($user->vendor_status !== 'approved') {
+
+            if (!$request->routeIs('vendor.verification') &&
+                !$request->routeIs('vendor.verification.resubmit')) {
+
+                return redirect()->route('vendor.verification');
+            }
         }
 
         return $next($request);

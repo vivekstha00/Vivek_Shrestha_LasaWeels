@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+        'vendor_status',
         'verified_by',
         'verified_at',
         'verification_note',

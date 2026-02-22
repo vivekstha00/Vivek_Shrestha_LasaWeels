@@ -61,28 +61,52 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
 });
 
+// Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
+
+//     // ✅ accessible for pending/resubmit
+//     Route::get('/verification', [VendorApplicationController::class, 'verification'])->name('verification');
+//     Route::post('/verification/resubmit', [VendorApplicationController::class, 'resubmit'])->name('verification.resubmit');
+
+//     // ✅ protected routes (approved vendors only)
+//     Route::middleware(['vendor.approved'])->group(function () {
+//         Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
+//         // Profile
+//         Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
+//         Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
+//         // Vehicle CRUD
+//         Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
+//         Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
+//         Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
+
+//         Route::get('/vehicles/{vehicle}', [VendorVehicleController::class, 'show'])->name('vehicles.show');
+
+//         Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])->name('vehicles.edit');
+//         Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])->name('vehicles.update');
+//         Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])->name('vehicles.destroy');
+
+//         Route::get('/users', [VendorUserController::class, 'index'])
+//         ->name('users.index');
+
+//         Route::get('/users/{user}', [VendorUserController::class, 'show'])
+//             ->name('users.show');
+
+//     });
+// });
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
 
-    // Dashboard
+    Route::get('/verification', [VendorApplicationController::class, 'verification'])->name('verification');
+    Route::post('/verification/resubmit', [VendorApplicationController::class, 'resubmit'])->name('verification.resubmit');
+
     Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
-    // Profile
     Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
     Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
-    // Vehicle CRUD
     Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
-
     Route::get('/vehicles/{vehicle}', [VendorVehicleController::class, 'show'])->name('vehicles.show');
-
     Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])->name('vehicles.edit');
     Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])->name('vehicles.destroy');
-
-    Route::get('/users', [VendorUserController::class, 'index'])
-    ->name('users.index');
-
-    Route::get('/users/{user}', [VendorUserController::class, 'show'])
-        ->name('users.show');
-
+    Route::get('/users', [VendorUserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [VendorUserController::class, 'show'])->name('users.show');
 });
