@@ -17,6 +17,7 @@ use App\Http\Controllers\Vendor\VendorUserController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
+use App\Http\Controllers\User\UserBlogController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -27,10 +28,21 @@ Route::get('/register', [AuthController::class, 'registerForm'])->name('register
 Route::post('/register', [AuthController::class, 'registerStore'])->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
+Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
+Route::middleware('auth')->group(function () {
+    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
+    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');
+    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
+});
+
 
 // Corporate rent -> vendor request
 Route::get('/corporate-rent', [VendorApplicationController::class, 'create'])->name('corporate.rent');
 Route::post('/corporate-rent', [VendorApplicationController::class, 'store'])->name('vendor.apply');
+
+Route::get('/blog', [UserBlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [UserBlogController::class, 'show'])->name('blog.show');
 
 // Admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -54,15 +66,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class,'toggleActive'])->name('vehicles.toggleActive');
 
     Route::resource('blog', BlogController::class);
-});
-
-Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
-Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])
-    ->name('vehicles.show');
-Route::middleware('auth')->group(function () {
-    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
-    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');
-    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
