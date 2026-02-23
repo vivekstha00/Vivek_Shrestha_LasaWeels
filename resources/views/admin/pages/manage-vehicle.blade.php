@@ -5,8 +5,7 @@
 
     <div class="d-flex align-items-end justify-content-between mb-3">
         <div>
-            <h2 class="fw-bold mb-1">Verifications</h2>
-            <p class="text-muted mb-0">Review and approve vehicles and submissions</p>
+            <h2 class="fw-bold mb-1">Vehicles</h2>
         </div>
 
         <form method="GET" action="{{ route('admin.vehicles.index') }}" class="d-flex gap-2">

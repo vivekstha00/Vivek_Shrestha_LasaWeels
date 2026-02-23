@@ -7,6 +7,7 @@ use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\AdminVehicleController;
+use App\Http\Controllers\Admin\BlogController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -41,7 +42,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/users/{id}/reject', [AdminUserController::class,'reject'])->name('users.reject');
 
     Route::get('/vendors', [AdminVendorController::class,'index'])->name('vendors.index');
-    Route::get('/vendors/{id}', [AdminVendorController::class,'show'])->name('vendors.show');
+    Route::delete('/vendors/{id}', [AdminVendorController::class,'delete'])->name('vendors.delete');
+    Route::get('/vendors/{id}', [AdminVendorController::class, 'show'])->name('vendors.show');
     Route::post('/vendors/{id}/approve', [AdminVendorController::class,'approve'])->name('vendors.approve');
     Route::post('/vendors/{id}/reject', [AdminVendorController::class,'reject'])->name('vendors.reject');
     Route::post('/vendors/{id}/resubmit', [AdminVendorController::class,'resubmit'])->name('vendors.resubmit');
@@ -50,6 +52,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/vehicles/{vehicle}/approve', [AdminVehicleController::class,'approve'])->name('vehicles.approve');
     Route::post('/vehicles/{vehicle}/reject', [AdminVehicleController::class,'reject'])->name('vehicles.reject');
     Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class,'toggleActive'])->name('vehicles.toggleActive');
+
+    Route::resource('blog', BlogController::class);
 });
 
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
@@ -61,37 +65,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
 });
 
-// Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
-
-//     // ✅ accessible for pending/resubmit
-//     Route::get('/verification', [VendorApplicationController::class, 'verification'])->name('verification');
-//     Route::post('/verification/resubmit', [VendorApplicationController::class, 'resubmit'])->name('verification.resubmit');
-
-//     // ✅ protected routes (approved vendors only)
-//     Route::middleware(['vendor.approved'])->group(function () {
-//         Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
-//         // Profile
-//         Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
-//         Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
-//         // Vehicle CRUD
-//         Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
-//         Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
-//         Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
-
-//         Route::get('/vehicles/{vehicle}', [VendorVehicleController::class, 'show'])->name('vehicles.show');
-
-//         Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])->name('vehicles.edit');
-//         Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])->name('vehicles.update');
-//         Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])->name('vehicles.destroy');
-
-//         Route::get('/users', [VendorUserController::class, 'index'])
-//         ->name('users.index');
-
-//         Route::get('/users/{user}', [VendorUserController::class, 'show'])
-//             ->name('users.show');
-
-//     });
-// });
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
 
     Route::get('/verification', [VendorApplicationController::class, 'verification'])->name('verification');

@@ -91,4 +91,15 @@ class AdminVendorController extends Controller
 
         return back()->with('success', 'Marked as resubmit requested.');
     }
+
+    public function delete($id)
+    {
+        $vendor = VendorProfile::findOrFail($id);
+
+        $vendor->delete();
+
+        return redirect()
+            ->route('admin.vendors.index')
+            ->with('success', 'Vendor deleted successfully.');
+    }
 }

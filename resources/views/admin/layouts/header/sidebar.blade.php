@@ -27,7 +27,14 @@
         <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}"
                href="{{ route('admin.vehicles.index') }}">
-                <i class="fa-solid fa-circle-check me-2"></i> Verifications
+                <i class="fa-solid fa-circle-check me-2"></i> Vehicles
+            </a>
+        </li>
+        
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.blog.*') ? 'active' : '' }}"
+            href="{{ route('admin.blog.index') }}">
+                <i class="fa-solid fa-blog me-2"></i> Blog Posts
             </a>
         </li>
     </ul>

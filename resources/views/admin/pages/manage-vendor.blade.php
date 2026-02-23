@@ -3,28 +3,30 @@
 @section('admin-content')
 <div class="container-fluid">
 
-    <div class="mb-3">
+    <div class="mb-4">
         <h2 class="fw-bold mb-1">Vendor Management</h2>
-        <p class="text-muted mb-0">Approve and manage vehicle vendors on the platform</p>
+        <p class="text-muted">Click a vendor to view details</p>
     </div>
 
     <div class="card shadow-sm">
         <div class="table-responsive">
-            <table class="table mb-0 align-middle">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Vendor</th>
                         <th>Contact</th>
                         <th>Join Date</th>
                         <th>Status</th>
-                        <th style="width:260px;">Actions</th>
+                        <th width="100">Delete</th>
                     </tr>
                 </thead>
 
                 <tbody>
                 @forelse($vendors as $v)
                     @php $status = $v->status ?? 'pending'; @endphp
-                    <tr>
+                    <tr style="cursor:pointer;"
+                        onclick="window.location='{{ route('admin.vendors.show', $v->id) }}'">
+
                         <td>
                             <div class="fw-semibold">{{ $v->company_name }}</div>
                             <div class="text-muted small">{{ $v->user->email ?? '' }}</div>
@@ -35,7 +37,9 @@
                             <div class="text-muted small">{{ $v->phone }}</div>
                         </td>
 
-                        <td class="text-muted">{{ $v->created_at?->format('M d, Y') }}</td>
+                        <td class="text-muted">
+                            {{ $v->created_at?->format('M d, Y') }}
+                        </td>
 
                         <td>
                             @if($status === 'approved')
@@ -44,57 +48,28 @@
                                 <span class="badge bg-warning text-dark">Pending</span>
                             @elseif($status === 'rejected')
                                 <span class="badge bg-danger">Rejected</span>
-                            @elseif($status === 'resubmit')
-                                <span class="badge bg-info text-dark">Resubmit</span>
-                            @else
-                                <span class="badge bg-secondary">{{ ucfirst($status) }}</span>
                             @endif
                         </td>
 
-                        <td>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="{{ route('admin.vendors.show', $v->id) }}" class="btn btn-sm btn-dark">
-                                    View
-                                </a>
-
-                                {{-- Pending --}}
-                                @if($status === 'pending' || $status === 'resubmit')
-                                    <form action="{{ route('admin.vendors.approve', $v->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-sm btn-success">Approve</button>
-                                    </form>
-
-                                    <form action="{{ route('admin.vendors.reject', $v->id) }}" method="POST" class="d-flex gap-2">
-                                        @csrf
-                                        <input name="remarks" class="form-control form-control-sm"
-                                            placeholder="Reject note" style="width:140px;" required>
-                                        <button class="btn btn-sm btn-danger">Reject</button>
-                                    </form>
-                                @endif
-
-                                {{-- Approved --}}
-                                @if($status === 'approved')
-                                    <form action="{{ route('admin.vendors.reject', $v->id) }}" method="POST" class="d-flex gap-2">
-                                        @csrf
-                                        <input name="remarks" class="form-control form-control-sm"
-                                            placeholder="Reason to revoke" style="width:140px;" required>
-                                        <button class="btn btn-sm btn-danger">Revoke</button>
-                                    </form>
-                                @endif
-
-                                {{-- Rejected --}}
-                                @if($status === 'rejected')
-                                    <form action="{{ route('admin.vendors.approve', $v->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-sm btn-success">Approve</button>
-                                    </form>
-                                @endif
-                            </div>
+                        <!-- Delete Button (prevent row click) -->
+                        <td onclick="event.stopPropagation();">
+                            <form action="{{ route('admin.vendors.delete', $v->id) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Delete this vendor?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </button>
+                            </form>
                         </td>
+
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">No vendors found.</td>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            No vendors found.
+                        </td>
                     </tr>
                 @endforelse
                 </tbody>
