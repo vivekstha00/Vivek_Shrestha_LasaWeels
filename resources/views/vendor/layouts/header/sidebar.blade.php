@@ -21,9 +21,9 @@
             </a>
         </li>
 
-        {{-- Future placeholders (keep for UI consistency) --}}
         <li class="nav-item mt-1">
-            <a class="nav-link disabled" href="#">
+            <a class="nav-link {{ request()->routeIs('vendor.bookings.*') ? 'active' : '' }}"
+            href="{{ route('vendor.bookings.index') }}">
                 <i class="fas fa-calendar-check me-2"></i> Bookings
             </a>
         </li>

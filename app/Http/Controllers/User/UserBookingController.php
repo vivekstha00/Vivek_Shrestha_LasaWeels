@@ -126,7 +126,7 @@ class UserBookingController extends Controller
 
         $securityDeposit = $data['service'] === 'self' ? $vehicle->security_deposit : 0;
 
-        return view('user.pages.booking-checkouts', compact(
+        return view('user.pages.booking.booking-checkouts', compact(
             'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit'
         ));
     }
@@ -180,7 +180,7 @@ class UserBookingController extends Controller
             'drop_datetime'    => $drop,
             'special_request'  => $data['special_request'] ?? null,
             'status'           => 'pending',
-            'payment_status'   => 'unpaid',    
+            'payment_status'   => 'unpaid',
             'total_price'      => $total,
             'security_deposit' => $securityDeposit,
         ]);
@@ -191,6 +191,6 @@ class UserBookingController extends Controller
     public function success(Booking $booking)
     {
         abort_unless($booking->user_id === Auth::id(), 403);
-        return view('user.pages.booking-success', compact('booking'));
+        return view('user.pages.booking.booking-success', compact('booking'));
     }
 }
