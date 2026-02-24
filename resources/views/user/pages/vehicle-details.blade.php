@@ -171,14 +171,24 @@
                     </div>
 
                     {{-- CTA --}}
-                    <a class="btn btn-success w-100 py-2 fw-bold"
-                       href="{{ route('user.booking.create', ['vehicle' => $vehicle->id] + ($search ?? []) + ['service' => $service]) }}">
-                        Book Now
-                    </a>
-                    {{-- <a class="btn btn-success w-100 py-2 fw-bold"
-                       href="{{ route('user.booking.create', ['vehicle' => $vehicle->id] + ($search ?? []) + ['service' => $service]) }}">
-                        Book Now
-                    </a> --}}
+                    <form method="GET" action="{{ route('user.booking.create', $vehicle->id) }}">
+                        @csrf
+
+                        {{-- Pass service & search data --}}
+                        <input type="hidden" name="service" value="{{ $service }}">
+                        <input type="hidden" name="pickup_location" value="{{ $search['pickup_location'] ?? '' }}">
+                        <input type="hidden" name="drop_location" value="{{ $search['drop_location'] ?? '' }}">
+                        <input type="hidden" name="pickup_datetime" value="{{ $search['pickup_datetime'] ?? '' }}">
+                        <input type="hidden" name="drop_datetime" value="{{ $search['drop_datetime'] ?? '' }}">
+                        <input type="hidden" name="special_request" value="">
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" required>
+                            <label class="form-check-label">I accept Terms & Conditions</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-2">Book Now</button>
+                    </form>
 
                     <div class="text-center small text-muted mt-3">
                         You can change date/time from the search page.

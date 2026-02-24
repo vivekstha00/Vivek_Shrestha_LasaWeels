@@ -11,10 +11,13 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
 
-            // FK to vehicles.id (Laravel default)
-            $table->foreignId('vehicle_id')->constrained('vehicles')->cascadeOnDelete();
+            $table->foreignId('vehicle_id')
+                ->constrained('vehicles')
+                ->cascadeOnDelete();
 
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
             $table->enum('service', ['self', 'driver'])->default('self');
 
@@ -24,9 +27,28 @@ return new class extends Migration
             $table->dateTime('pickup_datetime');
             $table->dateTime('drop_datetime');
 
-            $table->enum('status', ['pending','confirmed','completed','cancelled'])->default('pending');
+            // NEW: special request
+            $table->text('special_request')->nullable();
+
+            // Booking lifecycle
+            $table->enum('status', [
+                'pending',     // created but not paid
+                'confirmed',   // paid & approved
+                'active',      // trip started
+                'completed',   // trip finished
+                'cancelled'
+            ])->default('pending');
+
+            // Payment tracking
+            $table->enum('payment_status', [
+                'unpaid',
+                'paid',
+                'refunded'
+            ])->default('unpaid');
 
             $table->decimal('total_price', 10, 2)->default(0);
+
+            $table->decimal('security_deposit', 10, 2)->nullable();
 
             $table->timestamps();
 

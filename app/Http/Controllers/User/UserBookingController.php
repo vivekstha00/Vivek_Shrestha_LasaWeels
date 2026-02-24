@@ -99,16 +99,12 @@ class UserBookingController extends Controller
             'drop_location'    => ['required', 'string', 'max:255'],
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
+            'special_request'  => ['nullable', 'string', 'max:1000'],
         ]);
-
-        if ($vehicle->status !== 'available') {
-            return back()->withErrors(['vehicle' => 'Vehicle is not available.']);
-        }
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
-        // Overlap check again (important)
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('pickup_datetime', '<=', $drop)
@@ -119,19 +115,20 @@ class UserBookingController extends Controller
             return back()->withErrors(['dates' => 'Vehicle already booked for selected time.']);
         }
 
-        // price calculation
         $hours = $pickup->diffInHours($drop);
-        $days  = max(1, (int) ceil($hours / 24));
+        $days  = max(1, ceil($hours / 24));
 
-        $service = $data['service'];
-
-        $pricePerDay = $service === 'driver'
-            ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
-            : (float) ($vehicle->price_per_day ?? 0);
+        $pricePerDay = $data['service'] === 'driver'
+            ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
+            : $vehicle->price_per_day;
 
         $estimatedTotal = $days * $pricePerDay;
 
-        return view('user.pages.booking-checkout', compact('vehicle', 'data', 'days', 'estimatedTotal'));
+        $securityDeposit = $data['service'] === 'self' ? $vehicle->security_deposit : 0;
+
+        return view('user.pages.booking-checkouts', compact(
+            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit'
+        ));
     }
 
     // 3) CONFIRM BOOKING (POST)
@@ -143,15 +140,13 @@ class UserBookingController extends Controller
             'drop_location'    => ['required', 'string', 'max:255'],
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
+            'special_request'  => ['nullable', 'string', 'max:1000'],
         ]);
-
-        if ($vehicle->status !== 'available') {
-            return back()->withErrors(['vehicle' => 'Vehicle is not available.']);
-        }
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
+        // Overlap check again
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('pickup_datetime', '<=', $drop)
@@ -163,13 +158,17 @@ class UserBookingController extends Controller
         }
 
         $hours = $pickup->diffInHours($drop);
-        $days  = max(1, (int) ceil($hours / 24));
+        $days  = max(1, ceil($hours / 24));
 
         $pricePerDay = $data['service'] === 'driver'
-            ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
-            : (float) ($vehicle->price_per_day ?? 0);
+            ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
+            : $vehicle->price_per_day;
 
         $total = $days * $pricePerDay;
+
+        $securityDeposit = $data['service'] === 'self'
+            ? $vehicle->security_deposit
+            : null;
 
         $booking = Booking::create([
             'vehicle_id'       => $vehicle->id,
@@ -177,13 +176,15 @@ class UserBookingController extends Controller
             'service'          => $data['service'],
             'pickup_location'  => $data['pickup_location'],
             'drop_location'    => $data['drop_location'],
-            'pickup_datetime'  => $data['pickup_datetime'],
-            'drop_datetime'    => $data['drop_datetime'],
-            'status'           => 'confirmed',
+            'pickup_datetime'  => $pickup,
+            'drop_datetime'    => $drop,
+            'special_request'  => $data['special_request'] ?? null,
+            'status'           => 'pending',
+            'payment_status'   => 'unpaid',    
             'total_price'      => $total,
+            'security_deposit' => $securityDeposit,
         ]);
-        $vehicle->update(['status' => 'rented']);
-        // For now redirect to a simple success page (later you can do payment)
+
         return redirect()->route('user.booking.success', $booking->id);
     }
 

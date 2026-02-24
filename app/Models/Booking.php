@@ -10,12 +10,15 @@ class Booking extends Model
     protected $fillable = [
         'vehicle_id',
         'user_id',
-        'service',          // self | driver
+        'service',         
         'pickup_location',
         'drop_location',
         'pickup_datetime',
         'drop_datetime',
-        'status',           // pending | confirmed | completed | cancelled
+        'special_request',
+        'payment_status',
+        'security_deposit',
+        'status',
         'total_price',
     ];
 

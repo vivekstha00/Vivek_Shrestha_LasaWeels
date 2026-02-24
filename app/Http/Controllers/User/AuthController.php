@@ -63,7 +63,7 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Your account is pending approval.']);
         }
 
-        return redirect()->route('home')->with('success', 'Login successful');
+       return redirect()->intended(route('home'))->with('success', 'Login successful');
     }
 
 

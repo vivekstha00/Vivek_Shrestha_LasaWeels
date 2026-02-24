@@ -31,11 +31,19 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
 Route::middleware('auth')->group(function () {
-    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
-    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');
-    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
-});
 
+    // Booking checkout page (GET)
+    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])
+        ->name('user.booking.create');
+
+    // Booking store (POST)
+    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])
+        ->name('user.booking.store');
+
+    // Booking success page
+    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])
+        ->name('user.booking.success');
+});
 
 // Corporate rent -> vendor request
 Route::get('/corporate-rent', [VendorApplicationController::class, 'create'])->name('corporate.rent');
