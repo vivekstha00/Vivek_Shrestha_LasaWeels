@@ -1,6 +1,5 @@
 <div class="sidebar p-3">
     <h5 class="text-white fw-bold mb-3">LasaWheels</h5>
-    <p class="text-white-50 small mb-4">Super Admin</p>
 
     <ul class="nav flex-column">
         <li class="nav-item mb-1">
@@ -30,11 +29,17 @@
                 <i class="fa-solid fa-circle-check me-2"></i> Vehicles
             </a>
         </li>
-        
+
         <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.blog.*') ? 'active' : '' }}"
             href="{{ route('admin.blog.index') }}">
                 <i class="fa-solid fa-blog me-2"></i> Blog Posts
+            </a>
+        </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"
+               href="{{ route('admin.contacts.index') }}">
+                <i class="fa-solid fa-envelope me-2"></i> Contact Requests
             </a>
         </li>
     </ul>

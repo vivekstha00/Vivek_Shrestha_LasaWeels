@@ -15,7 +15,7 @@
                 <li class="nav-item"><a class="nav-link" href="#">Vehicle</a></li>
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('corporate.rent') ? 'active' : '' }}" href="{{ route('corporate.rent') }}">Corporate Rent</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('contact.create') }}">Contact</a></li>
             </ul>
 
             <div class="d-flex align-items-center gap-3 ms-4">

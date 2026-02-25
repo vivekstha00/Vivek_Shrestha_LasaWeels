@@ -24,7 +24,10 @@
                 </p>
 
                 <hr>
-
+                <div>
+                    {!! $post->excerpt !!}
+                </div>
+                <br>
                 <div>
                     {!! $post->content !!}
                 </div>

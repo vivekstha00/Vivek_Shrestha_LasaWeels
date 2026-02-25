@@ -7,6 +7,7 @@ use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\AdminVehicleController;
+use App\Http\Controllers\Admin\AdminContactController;
 use App\Http\Controllers\Admin\BlogController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Vendor\VendorBookingController;
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
 use App\Http\Controllers\User\UserBlogController;
+use App\Http\Controllers\User\UserContactController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -44,6 +46,9 @@ Route::middleware('auth')->group(function () {
     // Booking success page
     Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])
         ->name('user.booking.success');
+
+    Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
+    Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
 });
 
 // Corporate rent -> vendor request
@@ -52,6 +57,7 @@ Route::post('/corporate-rent', [VendorApplicationController::class, 'store'])->n
 
 Route::get('/blog', [UserBlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [UserBlogController::class, 'show'])->name('blog.show');
+
 
 // Admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -75,6 +81,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/vehicles/{vehicle}/toggle-active', [AdminVehicleController::class,'toggleActive'])->name('vehicles.toggleActive');
 
     Route::resource('blog', BlogController::class);
+
+    Route::get('contacts', [AdminContactController::class, 'index'])->name('contacts.index');
+    Route::get('contacts/{id}', [AdminContactController::class, 'show'])->name('contacts.show');
+    Route::post('contacts/{id}/reply', [AdminContactController::class, 'reply'])->name('contacts.reply');
+    Route::delete('contacts/{id}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
