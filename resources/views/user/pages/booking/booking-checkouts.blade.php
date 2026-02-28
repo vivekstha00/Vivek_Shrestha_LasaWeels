@@ -7,7 +7,7 @@
 @section('user-content')
 
 @php
-    $selectedService = old('service', $service ?? 'self');
+    $selectedService = old('service', $data['service'] ?? $service ?? 'self');
 
     $pricePerDay = $selectedService === 'driver'
         ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
@@ -61,13 +61,13 @@
                             <div class="col-md-6">
                                 <label class="form-label">Pickup Location</label>
                                 <input type="text" class="form-control" name="pickup_location"
-                                       value="{{ old('pickup_location') }}" required>
+                                       value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Drop Location</label>
                                 <input type="text" class="form-control" name="drop_location"
-                                       value="{{ old('drop_location') }}" required>
+                                       value="{{ old('drop_location', $data['drop_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
@@ -75,6 +75,7 @@
                                 <input type="datetime-local"
                                        class="form-control"
                                        name="pickup_datetime"
+                                       value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}"
                                        required>
                             </div>
 
@@ -83,6 +84,7 @@
                                 <input type="datetime-local"
                                        class="form-control"
                                        name="drop_datetime"
+                                       value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}"
                                        required>
                             </div>
                         </div>

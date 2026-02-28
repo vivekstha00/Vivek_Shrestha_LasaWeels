@@ -34,7 +34,8 @@
             </a>
         </li>
         <li class="nav-item mt-1">
-            <a class="nav-link disabled" href="#">
+            <a class="nav-link {{ request()->routeIs('vendor.drivers.*') ? 'active' : '' }}"
+            href="{{ route('vendor.drivers.index') }}">
                 <i class="fas fa-id-card me-2"></i> Drivers
             </a>
         </li>

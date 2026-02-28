@@ -126,8 +126,10 @@ class UserBookingController extends Controller
 
         $securityDeposit = $data['service'] === 'self' ? $vehicle->security_deposit : 0;
 
+        $service = $data['service'];
+
         return view('user.pages.booking.booking-checkouts', compact(
-            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit'
+            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit', 'service'
         ));
     }
 

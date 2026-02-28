@@ -16,6 +16,7 @@ use App\Http\Controllers\Vendor\VendorApplicationController;
 use App\Http\Controllers\Vendor\VendorVehicleController;
 use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Vendor\VendorBookingController;
+use App\Http\Controllers\Vendor\VendorDriverController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
@@ -96,6 +97,7 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
     Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
     Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
+    
     Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');
@@ -103,8 +105,18 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
     Route::get('/vehicles/{vehicle}/edit', [VendorVehicleController::class, 'edit'])->name('vehicles.edit');
     Route::put('/vehicles/{vehicle}', [VendorVehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VendorVehicleController::class, 'destroy'])->name('vehicles.destroy');
+
     Route::get('/users', [VendorUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [VendorUserController::class, 'show'])->name('users.show');
+
     Route::get('/bookings',[VendorBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}',[VendorBookingController::class, 'show'])->name('bookings.show');
+
+    Route::get('/drivers', [VendorDriverController::class, 'index'])->name('drivers.index');
+    Route::get('/drivers/create', [VendorDriverController::class, 'create'])->name('drivers.create');
+    Route::post('/drivers', [VendorDriverController::class, 'store'])->name('drivers.store');
+    Route::get('/drivers/{driver}', [VendorDriverController::class, 'show'])->name('drivers.show');
+    Route::get('/drivers/{driver}/edit', [VendorDriverController::class, 'edit'])->name('drivers.edit');
+    Route::put('/drivers/{driver}', [VendorDriverController::class, 'update'])->name('drivers.update');
+    Route::delete('/drivers/{driver}', [VendorDriverController::class, 'destroy'])->name('drivers.destroy');
 });

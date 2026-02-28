@@ -182,11 +182,6 @@
                         <input type="hidden" name="drop_datetime" value="{{ $search['drop_datetime'] ?? '' }}">
                         <input type="hidden" name="special_request" value="">
 
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" required>
-                            <label class="form-check-label">I accept Terms & Conditions</label>
-                        </div>
-
                         <button type="submit" class="btn btn-success w-100 py-2">Book Now</button>
                     </form>
 

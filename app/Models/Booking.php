@@ -10,7 +10,8 @@ class Booking extends Model
     protected $fillable = [
         'vehicle_id',
         'user_id',
-        'service',         
+        'driver_id',
+        'service',
         'pickup_location',
         'drop_location',
         'pickup_datetime',
@@ -38,5 +39,10 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function driver()
+    {
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 }
