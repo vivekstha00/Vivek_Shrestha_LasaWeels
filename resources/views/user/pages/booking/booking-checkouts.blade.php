@@ -8,7 +8,6 @@
 
 @php
     $selectedService = old('service', $data['service'] ?? $service ?? 'self');
-
     $pricePerDay = $selectedService === 'driver'
         ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
         : (float) ($vehicle->price_per_day ?? 0);
@@ -37,7 +36,7 @@
                         </p>
                         <p class="mb-0">
                             Price per day:
-                            <strong>NPR {{ number_format($pricePerDay,2) }}</strong>
+                            <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
                         </p>
                     </div>
 
@@ -60,45 +59,59 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Pickup Location</label>
-                                <input type="text" class="form-control" name="pickup_location"
-                                       value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}" required>
+                                <input type="text" class="form-control" name="pickup_location" value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Drop Location</label>
-                                <input type="text" class="form-control" name="drop_location"
-                                       value="{{ old('drop_location', $data['drop_location'] ?? '') }}" required>
+                                <input type="text" class="form-control" name="drop_location" value="{{ old('drop_location', $data['drop_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Pickup Date & Time</label>
-                                <input type="datetime-local"
-                                       class="form-control"
-                                       name="pickup_datetime"
-                                       value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}"
-                                       required>
+                                <input type="datetime-local" class="form-control" name="pickup_datetime" value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Drop Date & Time</label>
-                                <input type="datetime-local"
-                                       class="form-control"
-                                       name="drop_datetime"
-                                       value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}"
-                                       required>
+                                <input type="datetime-local" class="form-control" name="drop_datetime" value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
                             </div>
                         </div>
 
+                        {{-- Driver Selection Section --}}
+                        @if($selectedService === 'driver')
+                            <div class="card mt-4 border-primary">
+                                <div class="card-body">
+                                    <h5 class="fw-bold mb-2">Driver Selection</h5>
+
+                                    @if(!empty($selectedDriver))
+                                        <div class="alert alert-success d-flex align-items-center mb-3">
+                                            <span class="me-2 fs-5">✓</span>
+                                            <div>
+                                                <strong>{{ $selectedDriver->name }}</strong>
+                                                (Rating: {{ $selectedDriver->rating ?? 'N/A' }} / 5)
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="driver_id" value="{{ $selectedDriver->id }}">
+                                        <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            Change Driver
+                                        </a>
+                                    @else
+                                        <p class="text-muted mb-2">You need to select a driver before proceeding.</p>
+                                        <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
+                                           class="btn btn-primary">
+                                            Choose a Driver
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Terms --}}
                         <div class="form-check mt-4">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="accept_terms"
-                                   value="1"
-                                   required>
-                            <label class="form-check-label">
-                                I agree to Terms & Conditions
-                            </label>
+                            <input class="form-check-input" type="checkbox" name="accept_terms" value="1" required>
+                            <label class="form-check-label">I agree to Terms & Conditions</label>
                         </div>
 
                         <div class="mt-4 text-end">

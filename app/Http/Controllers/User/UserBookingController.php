@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Driver;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -100,6 +101,7 @@ class UserBookingController extends Controller
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
+            'driver_id'        => ['nullable', 'exists:drivers,id'],
         ]);
 
         $pickup = Carbon::parse($data['pickup_datetime']);
@@ -128,8 +130,14 @@ class UserBookingController extends Controller
 
         $service = $data['service'];
 
+        // Load the selected driver if driver_id is passed
+        $selectedDriver = null;
+        if ($service === 'driver' && !empty($data['driver_id'])) {
+            $selectedDriver = Driver::find($data['driver_id']);
+        }
+
         return view('user.pages.booking.booking-checkouts', compact(
-            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit', 'service'
+            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit', 'service', 'selectedDriver'
         ));
     }
 
@@ -143,6 +151,7 @@ class UserBookingController extends Controller
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
+            'driver_id'        => [$request->service === 'driver' ? 'required' : 'nullable', 'exists:drivers,id'],
         ]);
 
         $pickup = Carbon::parse($data['pickup_datetime']);
@@ -159,6 +168,19 @@ class UserBookingController extends Controller
             return back()->withErrors(['dates' => 'Vehicle already booked for selected time.']);
         }
 
+        // Check driver availability for the selected time period
+        if ($data['service'] === 'driver' && !empty($data['driver_id'])) {
+            $driverBusy = Booking::where('driver_id', $data['driver_id'])
+                ->whereIn('status', ['pending', 'confirmed', 'active'])
+                ->where('pickup_datetime', '<=', $drop)
+                ->where('drop_datetime', '>=', $pickup)
+                ->exists();
+
+            if ($driverBusy) {
+                return back()->withErrors(['driver_id' => 'This driver is already booked for the selected time. Please choose another driver.'])->withInput();
+            }
+        }
+
         $hours = $pickup->diffInHours($drop);
         $days  = max(1, ceil($hours / 24));
 
@@ -166,7 +188,7 @@ class UserBookingController extends Controller
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
             : $vehicle->price_per_day;
 
-        $total = $days * $pricePerDay;
+        $totalPrice = $days * $pricePerDay;
 
         $securityDeposit = $data['service'] === 'self'
             ? $vehicle->security_deposit
@@ -183,8 +205,9 @@ class UserBookingController extends Controller
             'special_request'  => $data['special_request'] ?? null,
             'status'           => 'pending',
             'payment_status'   => 'unpaid',
-            'total_price'      => $total,
+            'total_price'      => $totalPrice,
             'security_deposit' => $securityDeposit,
+            'driver_id'        => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
         ]);
 
         return redirect()->route('user.booking.success', $booking->id);

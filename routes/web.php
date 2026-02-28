@@ -22,6 +22,7 @@ use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
 use App\Http\Controllers\User\UserBlogController;
 use App\Http\Controllers\User\UserContactController;
+use App\Http\Controllers\User\UserDriverController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -37,21 +38,23 @@ Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name(
 Route::middleware('auth')->group(function () {
 
     // Booking checkout page (GET)
-    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])
-        ->name('user.booking.create');
+    Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
 
     // Booking store (POST)
-    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])
-        ->name('user.booking.store');
+    Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');
 
     // Booking success page
-    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])
-        ->name('user.booking.success');
+    Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
 
     Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
     Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
-});
 
+    // Route to show available drivers
+    Route::get('/user/drivers', [UserDriverController::class, 'availableDrivers'])->name('user.driver.index');
+
+    // Route to show driver details
+    Route::get('/user/drivers/{driver}', [UserDriverController::class, 'showDriver'])->name('user.driver.show');
+});
 // Corporate rent -> vendor request
 Route::get('/corporate-rent', [VendorApplicationController::class, 'create'])->name('corporate.rent');
 Route::post('/corporate-rent', [VendorApplicationController::class, 'store'])->name('vendor.apply');
@@ -97,7 +100,7 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
     Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
     Route::post('/profile', [VendorProfileController::class, 'update'])->name('profile.update');
-    
+
     Route::get('/vehicles', [VendorVehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VendorVehicleController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles', [VendorVehicleController::class, 'store'])->name('vehicles.store');

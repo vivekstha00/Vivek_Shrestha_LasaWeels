@@ -107,9 +107,20 @@ class VendorDriverController extends Controller
 
         $driver = Driver::findOrFail($request->driver_id);
 
-        // Ensure the driver is available
+        // Ensure the driver is not removed
         if ($driver->availability_status !== 'available') {
             return back()->withErrors(['driver' => 'Driver is not available.']);
+        }
+
+        // Check if driver has overlapping bookings
+        $driverBusy = Booking::where('driver_id', $driver->id)
+            ->whereIn('status', ['pending', 'confirmed', 'active'])
+            ->where('pickup_datetime', '<=', $booking->drop_datetime)
+            ->where('drop_datetime', '>=', $booking->pickup_datetime)
+            ->exists();
+
+        if ($driverBusy) {
+            return back()->withErrors(['driver' => 'Driver is already booked for this time period.']);
         }
 
         // Assign the driver to the booking
@@ -117,9 +128,6 @@ class VendorDriverController extends Controller
             'driver_id' => $driver->id,
             'status' => 'confirmed',
         ]);
-
-        // Update the driver's status to unavailable
-        $driver->update(['availability_status' => 'unavailable']);
 
         return redirect()->route('vendor.bookings.index')->with('success', 'Driver assigned to booking!');
     }

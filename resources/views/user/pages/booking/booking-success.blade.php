@@ -8,7 +8,7 @@
         <div class="card-body text-center">
 
             <h2 class="text-success mb-3">
-                🎉 Booking Successful!
+                Booking Successful!
             </h2>
 
             <p class="mb-4">
