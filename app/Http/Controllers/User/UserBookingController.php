@@ -12,6 +12,24 @@ use Illuminate\Support\Facades\Auth;
 
 class UserBookingController extends Controller
 {
+    public function index()
+    {
+        $bookings = Booking::with(['vehicle', 'payment'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10);
+
+        return view('user.pages.booking.my-bookings', compact('bookings'));
+    }
+
+    public function show(Booking $booking)
+    {
+        abort_unless($booking->user_id === Auth::id(), 403);
+
+        $booking->load(['vehicle', 'payment', 'driver']);
+
+        return view('user.pages.booking.booking-show', compact('booking'));
+    }
     // 1) SEARCH available vehicles (Find Vehicle button)
     public function search(Request $request)
     {
@@ -210,7 +228,8 @@ class UserBookingController extends Controller
             'driver_id'        => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
         ]);
 
-        return redirect()->route('user.booking.success', $booking->id);
+        return redirect()->route('booking.payment', $booking->id);
+
     }
 
     public function success(Booking $booking)
