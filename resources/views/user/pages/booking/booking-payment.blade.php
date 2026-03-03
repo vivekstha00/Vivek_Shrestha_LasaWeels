@@ -48,7 +48,7 @@
                                        name="payment_method"
                                        value="khalti">
                                 <label class="form-check-label">
-                                    Khalti (Coming Soon)
+                                    Khalti 
                                 </label>
                             </div>
                         </div>

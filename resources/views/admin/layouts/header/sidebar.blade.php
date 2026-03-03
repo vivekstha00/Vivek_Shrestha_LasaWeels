@@ -42,5 +42,11 @@
                 <i class="fa-solid fa-envelope me-2"></i> Contact Requests
             </a>
         </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}"
+               href="{{ route('admin.payments.index') }}">
+                <i class="fa-solid fa-money-bill-transfer me-2"></i> Payments
+            </a>
+        </li>
     </ul>
 </div>

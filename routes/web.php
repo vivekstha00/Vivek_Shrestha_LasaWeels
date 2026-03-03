@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\AdminVehicleController;
 use App\Http\Controllers\Admin\AdminContactController;
+use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\BlogController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
@@ -103,6 +104,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('contacts/{id}', [AdminContactController::class, 'show'])->name('contacts.show');
     Route::post('contacts/{id}/reply', [AdminContactController::class, 'reply'])->name('contacts.reply');
     Route::delete('contacts/{id}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
+
+
+    Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
+    Route::put('/payments/{payment}', [AdminPaymentController::class, 'update'])->name('payments.update');
+
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
