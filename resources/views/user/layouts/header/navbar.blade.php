@@ -27,7 +27,7 @@
                             <i class="fa-solid fa-user-circle me-1"></i> {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow rounded-3">
-                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ route('user.profile') }}">Profile</a></li>
                             <li><a class="dropdown-item" href="#">Bookings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>

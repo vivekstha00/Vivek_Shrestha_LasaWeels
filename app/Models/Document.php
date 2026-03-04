@@ -18,6 +18,9 @@ class Document extends Model
     protected $fillable = [
         'user_id',
         'type',
+        'document_number',
+        'issued_at',
+        'expires_at',
         'file_path',
         'status',
         'reviewed_by',

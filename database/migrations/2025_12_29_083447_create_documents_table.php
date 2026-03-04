@@ -16,9 +16,14 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('type');
+
+            $table->string('document_number')->nullable();
+            $table->date('issued_at')->nullable();
+            $table->date('expires_at')->nullable();
+            
             $table->string('file_path');
 
-            $table->string('status')->default('pending'); 
+            $table->string('status')->default('pending');
 
             $table->foreignId('reviewed_by')
                 ->nullable()

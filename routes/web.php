@@ -25,6 +25,8 @@ use App\Http\Controllers\User\UserBlogController;
 use App\Http\Controllers\User\UserContactController;
 use App\Http\Controllers\User\UserDriverController;
 use App\Http\Controllers\User\UserPaymentController;
+use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\User\UserDocumentController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -37,7 +39,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
+
 Route::middleware('auth')->group(function () {
+
+    Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
+    Route::post('/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
+
+    Route::post('/profile/documents', [UserDocumentController::class, 'store'])->name('user.documents.store');
+    Route::put('/profile/documents/{document}', [UserDocumentController::class, 'update'])->name('user.documents.update');
+    Route::delete('/profile/documents/{document}', [UserDocumentController::class, 'destroy'])->name('user.documents.destroy');
+
 
     // Booking checkout page (GET)
     Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
