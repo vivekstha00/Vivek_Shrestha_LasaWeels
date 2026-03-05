@@ -9,6 +9,10 @@ use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\BookingSuccessNotification;
+use App\Notifications\BookingRequestToAdminNotification;
+use App\Notifications\BookingRequestToVendorNotification;
+use Illuminate\Support\Facades\Notification;
 
 class UserBookingController extends Controller
 {
@@ -227,6 +231,16 @@ class UserBookingController extends Controller
             'security_deposit' => $securityDeposit,
             'driver_id'        => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
         ]);
+        
+        $booking->user->notify(new BookingSuccessNotification($booking));
+
+        $vendorUser = $vehicle->vendor;
+        if ($vendorUser && !empty($vendorUser->email)) {
+            $vendorUser->notify(new BookingRequestToVendorNotification($booking));
+        }
+
+        Notification::route('mail', config('app.admin_email'))
+            ->notify(new BookingRequestToAdminNotification($booking));
 
         return redirect()->route('booking.payment', $booking->id);
 

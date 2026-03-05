@@ -21,6 +21,7 @@ class Booking extends Model
         'security_deposit',
         'status',
         'total_price',
+        'reminder_sent_at',
     ];
 
     protected $casts = [

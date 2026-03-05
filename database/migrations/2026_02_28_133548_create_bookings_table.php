@@ -20,7 +20,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->foreignId('driver_id')
                 ->nullable()
-                ->constrained('drivers')  
+                ->constrained('drivers')
                 ->nullOnDelete();
 
             $table->enum('service', ['self', 'driver'])->default('self');
@@ -53,6 +53,8 @@ return new class extends Migration
             $table->decimal('total_price', 10, 2)->default(0);
 
             $table->decimal('security_deposit', 10, 2)->nullable();
+
+            $table->timestamp('reminder_sent_at')->nullable();
 
             $table->timestamps();
 

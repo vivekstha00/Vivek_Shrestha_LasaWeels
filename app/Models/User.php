@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -69,7 +70,9 @@ class User extends Authenticatable
 
     public function vendorProfile()
     {
-        return $this->hasOne(\App\Models\VendorProfile::class);
+        return $this->hasOne(VendorProfile::class);
     }
+
+    
 
 }

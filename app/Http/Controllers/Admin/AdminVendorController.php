@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\VendorProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\VendorApprovedNotification;
+use App\Notifications\VendorRejectedNotification;
 
 class AdminVendorController extends Controller
 {
@@ -44,6 +46,11 @@ class AdminVendorController extends Controller
         Document::where('user_id', $profile->user_id)
             ->update(['status' => 'approved']);
 
+        $vendorUser = User::find($profile->user_id);
+        if ($vendorUser) {
+            $vendorUser->notify(new VendorApprovedNotification());
+        }
+
         return back()->with('success', 'Vendor approved.');
     }
 
@@ -69,6 +76,11 @@ class AdminVendorController extends Controller
 
         Document::where('user_id', $profile->user_id)
             ->update(['status' => 'rejected']);
+            
+        $vendorUser = User::find($profile->user_id);
+        if ($vendorUser) {
+            $vendorUser->notify(new VendorRejectedNotification($request->remarks));
+        }
 
         return back()->with('success', 'Vendor rejected.');
     }

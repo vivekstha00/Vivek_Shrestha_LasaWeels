@@ -9,6 +9,8 @@ use App\Models\VendorProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\VendorRequestSubmittedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class VendorApplicationController extends Controller
 {
@@ -65,6 +67,11 @@ class VendorApplicationController extends Controller
                 'status'     => 'pending',
             ]);
         }
+
+        //  Notify admin: vendor request submitted
+        Notification::route('mail', config('app.admin_email'))
+            ->notify(new VendorRequestSubmittedNotification($user));
+
 
         return redirect()->route('login')
             ->with('success', 'Vendor request submitted. Wait for admin approval.');

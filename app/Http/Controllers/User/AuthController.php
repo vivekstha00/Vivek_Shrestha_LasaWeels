@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\WelcomeUserNotification;
 
 class AuthController extends Controller
 {
@@ -81,7 +82,7 @@ class AuthController extends Controller
             'password' => ['required', 'min:6', 'confirmed'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
             'phone'    => $data['phone'],
@@ -89,6 +90,8 @@ class AuthController extends Controller
             'role'     => 'user',
             'status'   => 'approved',
         ]);
+
+        $user->notify(new WelcomeUserNotification());
 
         return redirect()->route('login')->with('success', 'Registration successful. Please login.');
     }

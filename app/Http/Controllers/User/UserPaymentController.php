@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Notifications\PaymentSuccessNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
@@ -142,6 +143,10 @@ class UserPaymentController extends Controller
                 'status' => 'confirmed',
                 'payment_status' => 'paid',
             ]);
+
+            if($payment){
+                $booking->user->notify(new PaymentSuccessNotification($payment));
+            }
 
             return redirect()->route('user.booking.success', $booking->id)
                 ->with('success', 'Khalti payment successful. Booking confirmed!');
