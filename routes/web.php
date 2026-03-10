@@ -18,6 +18,7 @@ use App\Http\Controllers\Vendor\VendorVehicleController;
 use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Vendor\VendorBookingController;
 use App\Http\Controllers\Vendor\VendorDriverController;
+use App\Http\Controllers\Vendor\VendorVehicleServiceController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
@@ -153,4 +154,19 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
     Route::get('/drivers/{driver}/edit', [VendorDriverController::class, 'edit'])->name('drivers.edit');
     Route::put('/drivers/{driver}', [VendorDriverController::class, 'update'])->name('drivers.update');
     Route::delete('/drivers/{driver}', [VendorDriverController::class, 'destroy'])->name('drivers.destroy');
+
+    Route::get('/vehicles/{vehicle}/services/create', [VendorVehicleServiceController::class, 'create'])
+    ->name('vehicles.services.create');
+
+    Route::post('/vehicles/{vehicle}/services', [VendorVehicleServiceController::class, 'store'])
+        ->name('vehicles.services.store');
+
+    Route::get('/vehicles/{vehicle}/services/{service}/edit', [VendorVehicleServiceController::class, 'edit'])
+        ->name('vehicles.services.edit');
+
+    Route::put('/vehicles/{vehicle}/services/{service}', [VendorVehicleServiceController::class, 'update'])
+        ->name('vehicles.services.update');
+
+    Route::delete('/vehicles/{vehicle}/services/{service}', [VendorVehicleServiceController::class, 'destroy'])
+        ->name('vehicles.services.destroy');
 });

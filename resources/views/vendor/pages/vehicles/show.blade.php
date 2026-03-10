@@ -5,7 +5,6 @@
 @section('page_subtitle', 'View details of your vehicle listing')
 
 @section('vendor-content')
-<div class="container-fluid py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -91,25 +90,31 @@
                 <div class="card-body">
 
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        @if($vehicle->status === 'pending')
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @elseif($vehicle->status === 'approved')
-                            <span class="badge bg-success">Approved</span>
-                        @else
-                            <span class="badge bg-danger">Rejected</span>
-                        @endif
+                        @switch($vehicle->status)
+                            @case('available')
+                                <span class="badge bg-primary">Available</span>
+                                @break
+
+                            @case('rented')
+                                <span class="badge bg-info text-dark">Rented</span>
+                                @break
+
+                            @case('maintenance')
+                                <span class="badge bg-secondary">Maintenance</span>
+                                @break
+
+                            @case('inactive')
+                                <span class="badge bg-dark">Inactive</span>
+                                @break
+
+                            @default
+                                <span class="badge bg-light text-dark">{{ ucfirst($vehicle->status) }}</span>
+                        @endswitch
 
                         <span class="badge bg-secondary">
                             Active: {{ $vehicle->is_active ? 'Yes' : 'No' }}
                         </span>
                     </div>
-
-                    @if($vehicle->status === 'rejected' && $vehicle->reject_reason)
-                        <div class="alert alert-danger">
-                            <strong>Reject Reason:</strong> {{ $vehicle->reject_reason }}
-                        </div>
-                    @endif
-
                     <div class="row g-2">
                         <div class="col-md-6">
                             <div class="small text-muted">Vehicle Type</div>
@@ -200,6 +205,137 @@
             </div>
         </div>
 
+    </div>
+    {{-- Service Summary --}}
+    <div class="row g-3 mt-1">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Last Service</div>
+                    <div class="fw-semibold">
+                        {{ $latestService?->service_date?->format('d M Y') ?? '—' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Next Due Date</div>
+                    <div class="fw-semibold">
+                        {{ $latestService?->next_service_due_date?->format('d M Y') ?? '—' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Total Maintenance Cost</div>
+                    <div class="fw-semibold">
+                        {{ number_format($totalServiceCost ?? 0, 2) }} {{ $vehicle->currency }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Service Alert</div>
+                    <div class="fw-semibold">
+                        @if($serviceAlert === 'overdue')
+                            <span class="badge bg-danger">Overdue</span>
+                        @elseif($serviceAlert === 'due_soon')
+                            <span class="badge bg-warning text-dark">Due Soon</span>
+                        @else
+                            <span class="badge bg-success">OK</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Service History --}}
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-0">Service History</h5>
+                    <div class="text-muted small">Track maintenance records of this vehicle</div>
+                </div>
+
+                <a href="{{ route('vendor.vehicles.services.create', $vehicle->id) }}"
+                   class="btn btn-primary btn-sm">
+                    + Add Service Record
+                </a>
+            </div>
+
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Service Date</th>
+                            <th>Type</th>
+                            <th>Odometer</th>
+                            <th>Cost</th>
+                            <th>Next Due Date</th>
+                            <th>Next Due KM</th>
+                            <th style="width:160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($vehicle->services as $service)
+                            <tr>
+                                <td>{{ $service->service_date?->format('d M Y') ?? '—' }}</td>
+                                <td>{{ ucwords(str_replace('_', ' ', $service->service_type)) }}</td>
+                                <td>{{ $service->odometer_km ? number_format($service->odometer_km).' km' : '—' }}</td>
+                                <td>
+                                    {{ $service->cost ? number_format($service->cost, 2).' '.$vehicle->currency : '—' }}
+                                </td>
+                                <td>{{ $service->next_service_due_date?->format('d M Y') ?? '—' }}</td>
+                                <td>{{ $service->next_service_due_km ? number_format($service->next_service_due_km).' km' : '—' }}</td>
+                                <td class="d-flex gap-2">
+                                    <a href="{{ route('vendor.vehicles.services.edit', [$vehicle->id, $service->id]) }}"
+                                       class="btn btn-sm btn-outline-dark">
+                                        Edit
+                                    </a>
+
+                                    <form method="POST"
+                                          action="{{ route('vendor.vehicles.services.destroy', [$vehicle->id, $service->id]) }}"
+                                          onsubmit="return confirm('Delete this service record?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            @if($service->notes)
+                                <tr>
+                                    <td colspan="7" class="small text-muted">
+                                        <strong>Notes:</strong> {{ $service->notes }}
+                                    </td>
+                                </tr>
+                            @endif
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No service records yet.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 </div>

@@ -16,9 +16,32 @@ class VendorVehicleController extends Controller
             abort(403);
         }
 
-        $vehicle->load('images');
+        $vehicle->load([
+            'images',
+            'services' => function ($query) {
+                $query->latest('service_date');
+            }
+        ]);
 
-        return view('vendor.pages.vehicles.show', compact('vehicle'));
+        $latestService = $vehicle->services->first();
+        $totalServiceCost = $vehicle->services->sum('cost');
+
+        $serviceAlert = 'ok';
+
+        if ($latestService) {
+            if ($latestService->next_service_due_date && now()->gt($latestService->next_service_due_date)) {
+                $serviceAlert = 'overdue';
+            } elseif ($latestService->next_service_due_date && now()->diffInDays($latestService->next_service_due_date, false) <= 7) {
+                $serviceAlert = 'due_soon';
+            }
+        }
+
+        return view('vendor.pages.vehicles.show', compact(
+            'vehicle',
+            'latestService',
+            'totalServiceCost',
+            'serviceAlert'
+        ));
     }
 
     public function index()

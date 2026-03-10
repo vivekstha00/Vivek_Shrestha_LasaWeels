@@ -78,5 +78,10 @@ class Vehicle extends Model
         return $this->hasMany(Booking::class, 'vehicle_id', 'id');
     }
 
+    public function services()
+    {
+        return $this->hasMany(VehicleService::class)->latest('service_date');
+    }
+
 }
 
