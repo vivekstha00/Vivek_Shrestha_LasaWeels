@@ -18,64 +18,57 @@ class UserPaymentController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
-        // Optional: prevent re-paying
         if ($booking->payment_status === 'paid') {
             return redirect()->route('user.booking.success', $booking->id)
-                ->with('success', 'Booking already paid.');
+                ->with('success', 'Booking already fully paid.');
         }
 
         return view('user.pages.booking.booking-payment', compact('booking'));
     }
 
-    // 2) Handle cash / khalti selection
+    // 2) Handle full online / deposit + cash selection
     public function process(Request $request, Booking $booking)
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
         $data = $request->validate([
-            'payment_method' => 'required|in:cash,khalti',
+            'payment_option' => 'required|in:full_online,deposit_cash',
         ]);
 
-        // (Optional) commission calc - you can adjust later
         $commissionRate = 0.10;
-        $platformCommission = round($booking->total_price * $commissionRate, 2);
-        $vendorAmount = round($booking->total_price - $platformCommission, 2);
+        $depositRate = 0.20;
 
-        //  CASH ON PICKUP
-        if ($data['payment_method'] === 'cash') {
+        $totalAmount = $booking->total_price;
+        $platformCommission = round($totalAmount * $commissionRate, 2);
+        $vendorAmount = round($totalAmount - $platformCommission, 2);
 
-            Payment::updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'user_id' => Auth::id(),
-                    'booking_id' => $booking->id,
-                    'amount' => $booking->total_price,
-                    'method' => 'cash',
-                    'status' => 'pending',
-                    'platform_commission' => $platformCommission,
-                    'vendor_amount' => $vendorAmount,
-                    'payout_status' => 'unpaid',
-                ]
-            );
-
-            $booking->update([
-                'status' => 'confirmed',
-                'payment_status' => 'unpaid', // still unpaid until pickup
-            ]);
-
-            return redirect()->route('user.booking.success', $booking->id)
-                ->with('success', 'Booking confirmed. Pay cash on pickup.');
+        if ($data['payment_option'] === 'deposit_cash') {
+            $depositAmount = round($totalAmount * $depositRate, 2);
+            $remainingAmount = round($totalAmount - $depositAmount, 2);
+        } else {
+            $depositAmount = $totalAmount;
+            $remainingAmount = 0;
         }
 
-        // ✅ KHALTI INITIATE
+        $vendorId = $booking->vehicle->vendor_id ?? $booking->vehicle->user_id ?? null;
+
         $payment = Payment::updateOrCreate(
             ['booking_id' => $booking->id],
             [
                 'user_id' => Auth::id(),
+                'vendor_id' => $vendorId,
                 'booking_id' => $booking->id,
-                'amount' => $booking->total_price,
+                'amount' => $totalAmount,
                 'method' => 'khalti',
+                'payment_type' => $data['payment_option'],
+                'paid_amount' => 0,
+                'remaining_amount' => $remainingAmount,
+                'deposit_amount' => $depositAmount,
                 'status' => 'pending',
+                'deposit_status' => 'pending',
+                'settlement_status' => $data['payment_option'] === 'deposit_cash'
+                    ? 'pending_balance'
+                    : 'payout_pending',
                 'platform_commission' => $platformCommission,
                 'vendor_amount' => $vendorAmount,
                 'payout_status' => 'unpaid',
@@ -88,9 +81,11 @@ class UserPaymentController extends Controller
         ])->post('https://dev.khalti.com/api/v2/epayment/initiate/', [
             'return_url' => route('user.khalti.callback'),
             'website_url' => route('home'),
-            'amount' => (int) round($booking->total_price * 100),
+            'amount' => (int) round($depositAmount * 100),
             'purchase_order_id' => (string) $booking->id,
-            'purchase_order_name' => "Vehicle Booking #{$booking->id}",
+            'purchase_order_name' => $data['payment_option'] === 'deposit_cash'
+                ? "Booking Deposit #{$booking->id}"
+                : "Vehicle Booking #{$booking->id}",
         ]);
 
         if ($response->successful() && $response->json('payment_url')) {
@@ -98,22 +93,27 @@ class UserPaymentController extends Controller
             return redirect($response->json('payment_url'));
         }
 
-        return back()->withErrors(['payment' => 'Khalti initiation failed.']);
+        return back()->withErrors([
+            'payment' => 'Khalti initiation failed. Please try again.',
+        ]);
     }
 
     // 3) Khalti callback
     public function khaltiCallback(Request $request)
     {
         $pidx = $request->query('pidx');
+
         if (!$pidx) {
-            return redirect()->route('home')->withErrors(['payment' => 'Invalid Khalti callback.']);
+            return redirect()->route('home')
+                ->withErrors(['payment' => 'Invalid Khalti callback.']);
         }
 
         $bookingId = Cookie::get('khalti_booking_id');
-        $booking = Booking::find($bookingId);
+        $booking = Booking::with(['user', 'vehicle'])->find($bookingId);
 
         if (!$booking) {
-            return redirect()->route('home')->withErrors(['payment' => 'Booking not found.']);
+            return redirect()->route('home')
+                ->withErrors(['payment' => 'Booking not found.']);
         }
 
         $lookup = Http::withHeaders([
@@ -130,29 +130,46 @@ class UserPaymentController extends Controller
         $payment = Payment::where('booking_id', $booking->id)->first();
 
         if ($payment) {
-            $payment->status = $status === 'Completed' ? 'completed' : 'failed';
-            $payment->gateway_reference = $pidx; // if column exists
-            $payment->gateway_payload = $lookup->json(); // if json exists
+            $payment->gateway_reference = $pidx;
+            $payment->gateway_payload = $lookup->json();
+
+            if ($status === 'Completed') {
+                $payment->status = 'completed';
+                $payment->paid_amount = $payment->deposit_amount;
+                $payment->remaining_amount = $payment->amount - $payment->deposit_amount;
+                $payment->deposit_status = 'paid';
+                $payment->paid_at = now();
+
+                if ($payment->payment_type === 'full_online') {
+                    $payment->settlement_status = 'payout_pending';
+                } else {
+                    $payment->settlement_status = 'pending_balance';
+                }
+
+                $payment->save();
+
+                $booking->update([
+                    'status' => 'confirmed',
+                    'payment_status' => $payment->payment_type === 'full_online' ? 'paid' : 'partial',
+                ]);
+
+                $booking->user->notify(new PaymentSuccessNotification($payment));
+
+                Cookie::queue(Cookie::forget('khalti_booking_id'));
+
+                return redirect()->route('user.booking.success', $booking->id)
+                    ->with('success', $payment->payment_type === 'deposit_cash'
+                        ? 'Deposit payment successful. Booking confirmed!'
+                        : 'Full payment successful. Booking confirmed!');
+            }
+
+            $payment->status = 'failed';
             $payment->save();
         }
 
         Cookie::queue(Cookie::forget('khalti_booking_id'));
 
-        if ($status === 'Completed') {
-            $booking->update([
-                'status' => 'confirmed',
-                'payment_status' => 'paid',
-            ]);
-
-            if($payment){
-                $booking->user->notify(new PaymentSuccessNotification($payment));
-            }
-
-            return redirect()->route('user.booking.success', $booking->id)
-                ->with('success', 'Khalti payment successful. Booking confirmed!');
-        }
-
-        return redirect()->route('user.booking.payment', $booking->id)
-            ->withErrors(['payment' => 'Khalti payment failed. Try again.']);
+        return redirect()->route('booking.payment', $booking->id)
+            ->withErrors(['payment' => 'Khalti payment failed. Please try again.']);
     }
-}
+};

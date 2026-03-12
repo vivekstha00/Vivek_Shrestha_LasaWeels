@@ -10,10 +10,6 @@ class UserVehicleController extends Controller
 {
     public function show(Request $request, Vehicle $vehicle)
     {
-        // Optional: only allow viewing vehicles that are active/approved (adjust as per your logic)
-        // if (!$vehicle->is_active || $vehicle->status !== 'approved') abort(404);
-
-        // Read search params from query string (so details page keeps booking info)
         $search = $request->validate([
             'service'         => ['nullable', 'in:self,driver'],
             'pickup_location' => ['nullable', 'string', 'max:255'],
@@ -24,13 +20,40 @@ class UserVehicleController extends Controller
 
         $service = $search['service'] ?? 'self';
 
-        // Load images relation for multiple photos
-        $vehicle->load(['images', 'primaryImage']);
+        $vehicle->load([
+            'images',
+            'primaryImage',
+            'services.items',
+        ]);
+
+        $latestService = $vehicle->services->sortByDesc('service_date')->first();
+        $serviceCount = $vehicle->services->count();
+
+        $recentServiceItems = collect();
+
+        if ($latestService) {
+            $recentServiceItems = $latestService->items
+                ->pluck('service_item')
+                ->map(fn ($item) => ucwords(str_replace('_', ' ', $item)))
+                ->values();
+        }
+
+        $maintenanceStatus = 'Well maintained';
+
+        if ($latestService && $latestService->next_service_due_date) {
+            if (now()->gt($latestService->next_service_due_date)) {
+                $maintenanceStatus = 'Service due soon';
+            }
+        }
 
         return view('user.pages.vehicle-details', [
             'vehicle' => $vehicle,
-            'search'  => $search,
+            'search' => $search,
             'service' => $service,
+            'latestService' => $latestService,
+            'serviceCount' => $serviceCount,
+            'recentServiceItems' => $recentServiceItems,
+            'maintenanceStatus' => $maintenanceStatus,
         ]);
     }
 }

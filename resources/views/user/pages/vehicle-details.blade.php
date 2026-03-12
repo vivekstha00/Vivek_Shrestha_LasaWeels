@@ -123,6 +123,53 @@
                     @endif
                 </div>
             </div>
+            {{-- Maintenance & Reliability --}}
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Maintenance & Reliability</h5>
+
+                    @if($latestService)
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div><strong>Last Serviced:</strong> {{ $latestService->service_date?->format('d M Y') ?? '—' }}</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div>
+                                    <strong>Status:</strong>
+                                    @if($maintenanceStatus === 'Well maintained')
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                                            {{ $maintenanceStatus }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2">
+                                            {{ $maintenanceStatus }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <strong>Recent Maintenance:</strong>
+                                <div class="text-muted mt-1">
+                                    {{ $recentServiceItems->isNotEmpty() ? $recentServiceItems->join(', ') : 'Regular maintenance recorded' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <strong>Service History:</strong>
+                                <div class="text-muted mt-1">
+                                    {{ $serviceCount }} maintenance visit{{ $serviceCount > 1 ? 's' : '' }} recorded
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-muted">
+                            No maintenance history available for this vehicle yet.
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
         {{-- RIGHT: Booking summary + CTA --}}

@@ -12,7 +12,7 @@ return new class extends Migration {
 
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            $table->unsignedBigInteger('vendor_id')->nullable();
+            $table->foreignId('vendor_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
 
@@ -20,15 +20,31 @@ return new class extends Migration {
 
             $table->string('method', 30);
 
+            $table->string('payment_type', 30)->default('full_online');
+
+            $table->decimal('paid_amount', 10, 2)->default(0);
+
+            $table->decimal('remaining_amount', 10, 2)->default(0);
+
+            $table->decimal('deposit_amount', 10, 2)->default(0);
+
             $table->string('status', 30)->default('pending');
 
+            $table->string('deposit_status', 30)->nullable();
+
+            $table->string('settlement_status', 50)->nullable();
+
             $table->decimal('platform_commission', 10, 2)->default(0);
+
             $table->decimal('vendor_amount', 10, 2)->default(0);
 
             $table->string('payout_status', 30)->default('unpaid');
 
-            $table->string('gateway_reference')->nullable();  
+            $table->string('gateway_reference')->nullable();
+
             $table->json('gateway_payload')->nullable();
+
+            $table->timestamp('paid_at')->nullable();
 
             $table->timestamps();
         });

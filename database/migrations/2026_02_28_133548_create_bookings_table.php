@@ -46,8 +46,8 @@ return new class extends Migration
             // Payment tracking
             $table->enum('payment_status', [
                 'unpaid',
-                'paid',
-                'refunded'
+                'partial',
+                'paid'
             ])->default('unpaid');
 
             $table->decimal('total_price', 10, 2)->default(0);
