@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'address',
         'profile_image',
         'password',
         'role',
@@ -73,6 +74,6 @@ class User extends Authenticatable
         return $this->hasOne(VendorProfile::class);
     }
 
-    
+
 
 }

@@ -22,13 +22,28 @@ class UserProfileController extends Controller
             ->get()
             ->keyBy('type');
 
+        $baseQuery = Booking::query()->where('user_id', $user->id);
+
+        $totalBookings = (clone $baseQuery)->count();
+        $confirmedBookings = (clone $baseQuery)->where('status', 'confirmed')->count();
+        $completedBookings = (clone $baseQuery)->where('status', 'completed')->count();
+        $cancelledBookings = (clone $baseQuery)->where('status', 'cancelled')->count();
+
         $bookings = Booking::query()
             ->where('user_id', $user->id)
-            ->with(['vehicle', 'driver']) 
+            ->with(['vehicle', 'driver'])
             ->latest()
             ->paginate(10);
 
-        return view('user.pages.profile.index', compact('user', 'documents', 'bookings'));
+        return view('user.pages.profile.index', compact(
+            'user',
+            'documents',
+            'bookings',
+            'totalBookings',
+            'confirmedBookings',
+            'completedBookings',
+            'cancelledBookings'
+        ));
     }
 
     public function update(Request $request)
