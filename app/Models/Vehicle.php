@@ -83,5 +83,10 @@ class Vehicle extends Model
         return $this->hasMany(VehicleService::class)->latest('service_date');
     }
 
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
+
 }
 

@@ -29,6 +29,7 @@ use App\Http\Controllers\User\UserDriverController;
 use App\Http\Controllers\User\UserPaymentController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserDocumentController;
+use App\Http\Controllers\User\UserReviewController;
 
 Route::view('/', 'user.pages.home')->name('home');
 
@@ -51,33 +52,27 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/documents/{document}', [UserDocumentController::class, 'update'])->name('user.documents.update');
     Route::delete('/profile/documents/{document}', [UserDocumentController::class, 'destroy'])->name('user.documents.destroy');
 
-
-    // Booking checkout page (GET)
     Route::get('/booking/{vehicle}', [UserBookingController::class, 'create'])->name('user.booking.create');
 
-    // Booking store (POST)
     Route::post('/booking/{vehicle}', [UserBookingController::class, 'store'])->name('user.booking.store');
 
     Route::get('/booking/{booking}/payment', [UserPaymentController::class, 'show'])->name('booking.payment');
 
     Route::post('/booking/{booking}/payment', [UserPaymentController::class, 'process'])->name('booking.payment.process');
 
-    // My bookings list
     Route::get('/my-bookings', [UserBookingController::class, 'index'])->name('user.booking.index');
 
-    // Booking detail (optional but professional)
     Route::get('/my-bookings/{booking}', [UserBookingController::class, 'show'])->name('user.booking.show');
 
-    // Booking success page
     Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
+
+    Route::post('/profile/bookings/{booking}/review', [UserReviewController::class, 'store'])->name('user.bookings.review.store');
 
     Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
     Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
 
-    // Route to show available drivers
     Route::get('/user/drivers', [UserDriverController::class, 'availableDrivers'])->name('user.driver.index');
 
-    // Route to show driver details
     Route::get('/user/drivers/{driver}', [UserDriverController::class, 'showDriver'])->name('user.driver.show');
 });
 Route::get('/khalti/callback', [UserPaymentController::class, 'khaltiCallback'])->name('user.khalti.callback');

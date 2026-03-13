@@ -37,6 +37,7 @@
                             <th>Status</th>
                             <th>Payment</th>
                             <th>Total</th>
+                            <th>Review</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -108,7 +109,25 @@
                                 </td>
 
                                 <td>Rs. {{ number_format($b->total_price, 2) }}</td>
-
+                                <td>
+                                    @if($b->status === 'completed')
+                                        @if($b->review)
+                                            <span class="badge bg-success">Reviewed</span>
+                                        @else
+                                            <button
+                                                class="btn btn-sm btn-primary"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#reviewForm{{ $b->id }}"
+                                                aria-expanded="false"
+                                            >
+                                                Write Review
+                                            </button>
+                                        @endif
+                                    @else
+                                        <span class="text-muted small">Not available</span>
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <a href="{{ route('user.booking.show', $b->id) }}" class="btn btn-sm btn-outline-secondary">
                                         View
@@ -121,6 +140,74 @@
                                     @endif
                                 </td>
                             </tr>
+                            @if($b->status === 'completed' && !$b->review)
+                                <tr class="collapse" id="reviewForm{{ $b->id }}">
+                                    <td colspan="11">
+                                        <div class="p-3 bg-light border-top">
+                                            <h6 class="fw-bold mb-3">Submit Review for Booking #{{ $b->id }}</h6>
+
+                                            <form action="{{ route('user.bookings.review.store', $b) }}" method="POST">
+                                                @csrf
+
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Overall Rating</label>
+                                                        <select name="overall_rating" class="form-control" required>
+                                                            <option value="">Select Rating</option>
+                                                            @for($i = 1; $i <= 5; $i++)
+                                                                <option value="{{ $i }}">{{ $i }} Star</option>
+                                                            @endfor
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Vehicle Rating</label>
+                                                        <select name="vehicle_rating" class="form-control" required>
+                                                            <option value="">Select Rating</option>
+                                                            @for($i = 1; $i <= 5; $i++)
+                                                                <option value="{{ $i }}">{{ $i }} Star</option>
+                                                            @endfor
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-12">
+                                                        <label class="form-label">Overall Review</label>
+                                                        <textarea name="overall_review" rows="2" class="form-control" placeholder="Write your overall trip experience"></textarea>
+                                                    </div>
+
+                                                    <div class="col-md-12">
+                                                        <label class="form-label">Vehicle Review</label>
+                                                        <textarea name="vehicle_review" rows="2" class="form-control" placeholder="Write your vehicle experience"></textarea>
+                                                    </div>
+
+                                                    @if($hasDriver)
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Driver Rating</label>
+                                                            <select name="driver_rating" class="form-control" required>
+                                                                <option value="">Select Rating</option>
+                                                                @for($i = 1; $i <= 5; $i++)
+                                                                    <option value="{{ $i }}">{{ $i }} Star</option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-md-12">
+                                                            <label class="form-label">Driver Review</label>
+                                                            <textarea name="driver_review" rows="2" class="form-control" placeholder="Write your driver experience"></textarea>
+                                                        </div>
+                                                    @endif
+
+                                                    <div class="col-12 text-end">
+                                                        <button type="submit" class="btn btn-success">
+                                                            Submit Review
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>

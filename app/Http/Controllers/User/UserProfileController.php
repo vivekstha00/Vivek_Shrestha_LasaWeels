@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class UserProfileController extends Controller
 {
@@ -16,6 +17,12 @@ class UserProfileController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        // Auto-complete past bookings for this user
+        Booking::where('user_id', $user->id)
+            ->whereIn('status', ['confirmed', 'active'])
+            ->where('drop_datetime', '<', Carbon::now())
+            ->update(['status' => 'completed']);
 
         $documents = $user->documents()
             ->latest()
@@ -31,7 +38,7 @@ class UserProfileController extends Controller
 
         $bookings = Booking::query()
             ->where('user_id', $user->id)
-            ->with(['vehicle', 'driver'])
+            ->with(['vehicle', 'driver', 'review'])
             ->latest()
             ->paginate(10);
 

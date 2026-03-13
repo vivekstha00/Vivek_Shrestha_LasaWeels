@@ -18,7 +18,13 @@ class UserBookingController extends Controller
 {
     public function index()
     {
-        $bookings = Booking::with(['vehicle', 'payment'])
+        // Auto-complete past bookings for this user
+        Booking::where('user_id', Auth::id())
+            ->whereIn('status', ['confirmed', 'active'])
+            ->where('drop_datetime', '<', Carbon::now())
+            ->update(['status' => 'completed']);
+
+        $bookings = Booking::with(['vehicle', 'payment', 'driver', 'review'])
             ->where('user_id', Auth::id())
             ->latest()
             ->paginate(10);
@@ -231,7 +237,7 @@ class UserBookingController extends Controller
             'security_deposit' => $securityDeposit,
             'driver_id'        => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
         ]);
-        
+
         $booking->user->notify(new BookingSuccessNotification($booking));
 
         $vendorUser = $vehicle->vendor;
