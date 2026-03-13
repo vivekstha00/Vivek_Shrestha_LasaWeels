@@ -19,6 +19,7 @@ use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Vendor\VendorBookingController;
 use App\Http\Controllers\Vendor\VendorDriverController;
 use App\Http\Controllers\Vendor\VendorVehicleServiceController;
+use App\Http\Controllers\Vendor\VendorPaymentController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
@@ -169,4 +170,7 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
 
     Route::delete('/vehicles/{vehicle}/services/{service}', [VendorVehicleServiceController::class, 'destroy'])
         ->name('vehicles.services.destroy');
+
+    Route::get('/payments', [VendorPaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/{payment}', [VendorPaymentController::class, 'show'])->name('payments.show');
 });

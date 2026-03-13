@@ -44,6 +44,13 @@
                 <i class="fas fa-chart-line me-2"></i> Reports
             </a>
         </li>
+        <li class="nav-item mt-1"></li>
+            <a class="nav-link {{ request()->routeIs('vendor.payments.*') ? 'active' : '' }}"
+            href="{{ route('vendor.payments.index') }}">
+                <i class="fas fa-money-check-alt me-2"></i> Payments
+            </a>
+        </li>
+
     </ul>
 
     <div class="mt-auto pt-3">

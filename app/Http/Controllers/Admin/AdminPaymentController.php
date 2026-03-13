@@ -13,6 +13,7 @@ class AdminPaymentController extends Controller
     {
         $query = Payment::query()->with([
             'user',
+            'vendor',
             'booking.vehicle',
         ]);
 
@@ -25,13 +26,23 @@ class AdminPaymentController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('payment_type')) {
+            $query->where('payment_type', $request->payment_type);
+        }
+
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
                 $sub->where('id', $q)
                     ->orWhere('booking_id', $q)
-                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%"));
+                    ->orWhereHas('user', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%")
+                          ->orWhere('email', 'like', "%{$q}%");
+                    })
+                    ->orWhereHas('vendor', function ($v) use ($q) {
+                        $v->where('name', 'like', "%{$q}%")
+                          ->orWhere('email', 'like', "%{$q}%");
+                    });
             });
         }
 
@@ -40,39 +51,87 @@ class AdminPaymentController extends Controller
         return view('admin.payments.index', compact('payments'));
     }
 
-    // SHOW a payment
+    // SHOW one payment
     public function show(Payment $payment)
     {
-        $payment->load(['user', 'booking.vehicle', 'booking.driver']);
+        $payment->load([
+            'user',
+            'vendor',
+            'booking.vehicle',
+            'booking.driver',
+        ]);
+
         return view('admin.payments.show', compact('payment'));
     }
 
-    // UPDATE status (cash completion / mark failed / etc.)
+    // UPDATE payment / settlement / payout status
     public function update(Request $request, Payment $payment)
     {
         $data = $request->validate([
             'status' => 'required|in:pending,completed,failed,refunded',
-            'payout_status' => 'nullable|in:unpaid,paid,pending',
+            'payout_status' => 'nullable|in:unpaid,pending,paid',
+            'deposit_status' => 'nullable|in:pending,paid,refunded,forfeited',
+            'settlement_status' => 'nullable|in:pending_balance,balance_received,payout_pending,paid_to_vendor,not_applicable',
         ]);
 
         $payment->update([
             'status' => $data['status'],
             'payout_status' => $data['payout_status'] ?? $payment->payout_status,
+            'deposit_status' => $data['deposit_status'] ?? $payment->deposit_status,
+            'settlement_status' => $data['settlement_status'] ?? $payment->settlement_status,
         ]);
 
-        // Sync booking payment_status when payment completed
         if ($payment->booking) {
-            if ($payment->status === 'completed') {
-                $payment->booking->update([
-                    'payment_status' => 'paid',
-                    'status' => 'confirmed',
-                ]);
+            if ($payment->payment_type === 'full_online') {
+                if ($payment->status === 'completed') {
+                    $payment->booking->update([
+                        'payment_status' => 'paid',
+                        'status' => 'confirmed',
+                    ]);
+                }
+
+                if (in_array($payment->status, ['failed', 'pending'])) {
+                    $payment->booking->update([
+                        'payment_status' => 'unpaid',
+                    ]);
+                }
+
+                if ($payment->status === 'refunded') {
+                    $payment->booking->update([
+                        'payment_status' => 'refunded',
+                    ]);
+                }
             }
 
-            if (in_array($payment->status, ['failed', 'pending'])) {
-                $payment->booking->update([
-                    'payment_status' => 'unpaid',
-                ]);
+            if ($payment->payment_type === 'deposit_cash') {
+                if ($payment->status === 'completed' && $payment->settlement_status === 'balance_received') {
+                    $payment->update([
+                        'paid_amount' => $payment->amount,
+                        'remaining_amount' => 0,
+                    ]);
+
+                    $payment->booking->update([
+                        'payment_status' => 'paid',
+                        'status' => 'confirmed',
+                    ]);
+                } elseif ($payment->status === 'completed') {
+                    $payment->booking->update([
+                        'payment_status' => 'partial',
+                        'status' => 'confirmed',
+                    ]);
+                }
+
+                if ($payment->status === 'refunded') {
+                    $payment->booking->update([
+                        'payment_status' => 'refunded',
+                    ]);
+                }
+
+                if (in_array($payment->status, ['failed', 'pending'])) {
+                    $payment->booking->update([
+                        'payment_status' => 'unpaid',
+                    ]);
+                }
             }
         }
 

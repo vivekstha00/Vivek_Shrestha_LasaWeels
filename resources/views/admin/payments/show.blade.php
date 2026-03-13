@@ -5,9 +5,15 @@
 @section('admin-content')
 <div class="container py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Payment #{{ $payment->id }}</h3>
-        <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Payment #{{ $payment->id }}</h3>
+            <p class="text-muted mb-0">Manage payment and vendor settlement</p>
+        </div>
+
+        <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary btn-sm">
+            Back
+        </a>
     </div>
 
     @if(session('success'))
@@ -15,75 +21,194 @@
     @endif
 
     <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h5 class="mb-3">Payment Info</h5>
+        {{-- Left Side --}}
+        <div class="col-lg-8">
 
-                    <p class="mb-1"><strong>Method:</strong> {{ strtoupper($payment->method) }}</p>
-                    <p class="mb-1"><strong>Status:</strong> {{ ucfirst($payment->status) }}</p>
-                    <p class="mb-1"><strong>Amount:</strong> Rs. {{ number_format($payment->amount, 2) }}</p>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Payment Details</h5>
 
-                    @if(!empty($payment->gateway_reference))
-                        <p class="mb-1"><strong>Gateway Ref:</strong> {{ $payment->gateway_reference }}</p>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Payment Type</div>
+                        <div class="col-md-8">
+                            {{ $payment->payment_type === 'deposit_cash' ? 'Deposit + Cash' : 'Full Online' }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Method</div>
+                        <div class="col-md-8">{{ strtoupper($payment->method) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Status</div>
+                        <div class="col-md-8">{{ ucfirst($payment->status) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Total Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->amount, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Paid Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->paid_amount, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Remaining Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->remaining_amount, 2) }}</div>
+                    </div>
+
+                    @if($payment->payment_type === 'deposit_cash')
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Deposit Amount</div>
+                            <div class="col-md-8">Rs. {{ number_format($payment->deposit_amount, 2) }}</div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Deposit Status</div>
+                            <div class="col-md-8">{{ ucfirst($payment->deposit_status ?? 'N/A') }}</div>
+                        </div>
+                    @endif
+
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Platform Commission</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->platform_commission, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Vendor Net Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->vendor_amount, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Payout Status</div>
+                        <div class="col-md-8">{{ ucfirst($payment->payout_status ?? 'N/A') }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Settlement Status</div>
+                        <div class="col-md-8">{{ ucfirst(str_replace('_', ' ', $payment->settlement_status ?? 'N/A')) }}</div>
+                    </div>
+
+                    @if($payment->gateway_reference)
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Gateway Reference</div>
+                            <div class="col-md-8">{{ $payment->gateway_reference }}</div>
+                        </div>
                     @endif
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 mt-3">
-                <div class="card-body">
-                    <h5 class="mb-3">Booking Info</h5>
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Booking Details</h5>
 
-                    <p class="mb-1"><strong>Booking ID:</strong> #{{ $payment->booking->id ?? 'N/A' }}</p>
-                    <p class="mb-1"><strong>Booking Status:</strong> {{ ucfirst($payment->booking->status ?? 'N/A') }}</p>
-                    <p class="mb-1"><strong>Payment Status:</strong> {{ ucfirst($payment->booking->payment_status ?? 'N/A') }}</p>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Booking ID</div>
+                        <div class="col-md-8">#{{ $payment->booking->id ?? 'N/A' }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Booking Status</div>
+                        <div class="col-md-8">{{ ucfirst($payment->booking->status ?? 'N/A') }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Payment Status</div>
+                        <div class="col-md-8">{{ ucfirst($payment->booking->payment_status ?? 'N/A') }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Vehicle</div>
+                        <div class="col-md-8">
+                            {{ $payment->booking->vehicle->brand ?? '' }}
+                            {{ $payment->booking->vehicle->model ?? '' }}
+                        </div>
+                    </div>
                 </div>
             </div>
+
         </div>
 
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h5 class="mb-3">Update Payment</h5>
+        {{-- Right Side --}}
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Update Payment</h5>
 
                     <form method="POST" action="{{ route('admin.payments.update', $payment->id) }}">
                         @csrf
                         @method('PUT')
 
                         <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select" required>
-                                <option value="pending" {{ $payment->status==='pending'?'selected':'' }}>Pending</option>
-                                <option value="completed" {{ $payment->status==='completed'?'selected':'' }}>Completed</option>
-                                <option value="failed" {{ $payment->status==='failed'?'selected':'' }}>Failed</option>
-                                <option value="refunded" {{ $payment->status==='refunded'?'selected':'' }}>Refunded</option>
+                            <label class="form-label">Payment Status</label>
+                            <select name="status" class="form-select">
+                                <option value="pending" {{ $payment->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="completed" {{ $payment->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="failed" {{ $payment->status === 'failed' ? 'selected' : '' }}>Failed</option>
+                                <option value="refunded" {{ $payment->status === 'refunded' ? 'selected' : '' }}>Refunded</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Payout Status (Optional)</label>
+                            <label class="form-label">Payout Status</label>
                             <select name="payout_status" class="form-select">
-                                <option value="">Keep same</option>
-                                <option value="unpaid" {{ $payment->payout_status==='unpaid'?'selected':'' }}>Unpaid</option>
-                                <option value="pending" {{ $payment->payout_status==='pending'?'selected':'' }}>Pending</option>
-                                <option value="paid" {{ $payment->payout_status==='paid'?'selected':'' }}>Paid</option>
+                                <option value="unpaid" {{ $payment->payout_status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                                <option value="pending" {{ $payment->payout_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="paid" {{ $payment->payout_status === 'paid' ? 'selected' : '' }}>Paid</option>
                             </select>
                         </div>
 
-                        <button class="btn btn-primary w-100">Update</button>
+                        <div class="mb-3">
+                            <label class="form-label">Settlement Status</label>
+                            <select name="settlement_status" class="form-select">
+                                <option value="pending_balance" {{ $payment->settlement_status === 'pending_balance' ? 'selected' : '' }}>Pending Balance</option>
+                                <option value="balance_received" {{ $payment->settlement_status === 'balance_received' ? 'selected' : '' }}>Balance Received</option>
+                                <option value="payout_pending" {{ $payment->settlement_status === 'payout_pending' ? 'selected' : '' }}>Payout Pending</option>
+                                <option value="paid_to_vendor" {{ $payment->settlement_status === 'paid_to_vendor' ? 'selected' : '' }}>Paid To Vendor</option>
+                                <option value="not_applicable" {{ $payment->settlement_status === 'not_applicable' ? 'selected' : '' }}>Not Applicable</option>
+                            </select>
+                        </div>
+
+                        @if($payment->payment_type === 'deposit_cash')
+                            <div class="mb-3">
+                                <label class="form-label">Deposit Status</label>
+                                <select name="deposit_status" class="form-select">
+                                    <option value="pending" {{ $payment->deposit_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="paid" {{ $payment->deposit_status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                    <option value="refunded" {{ $payment->deposit_status === 'refunded' ? 'selected' : '' }}>Refunded</option>
+                                    <option value="forfeited" {{ $payment->deposit_status === 'forfeited' ? 'selected' : '' }}>Forfeited</option>
+                                </select>
+                            </div>
+                        @endif
+
+                        <button type="submit" class="btn btn-primary w-100">Update</button>
                     </form>
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 mt-3">
-                <div class="card-body">
-                    <h6 class="mb-2">User</h6>
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-2">Customer</h6>
                     <p class="mb-1">{{ $payment->user->name ?? 'N/A' }}</p>
-                    <p class="mb-0 text-muted">{{ $payment->user->email ?? '' }}</p>
+                    <p class="text-muted mb-0">{{ $payment->user->email ?? '' }}</p>
                 </div>
             </div>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-2">Vendor</h6>
+                    <p class="mb-1">{{ $payment->vendor->name ?? 'N/A' }}</p>
+                    <p class="text-muted mb-0">{{ $payment->vendor->email ?? '' }}</p>
+                </div>
+            </div>
+
         </div>
     </div>
-
 </div>
 @endsection
