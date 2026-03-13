@@ -39,7 +39,6 @@
                 <div class="card-body">
 
                     @php
-                        // choose primary image first, else first image, else old image_url, else null
                         $primary = $vehicle->images->firstWhere('is_primary', true)
                                     ?? $vehicle->images->first();
                         $mainSrc = $primary ? asset('storage/'.$primary->path)
@@ -115,6 +114,7 @@
                             Active: {{ $vehicle->is_active ? 'Yes' : 'No' }}
                         </span>
                     </div>
+
                     <div class="row g-2">
                         <div class="col-md-6">
                             <div class="small text-muted">Vehicle Type</div>
@@ -138,7 +138,7 @@
 
                         <div class="col-md-6">
                             <div class="small text-muted">Fuel Type</div>
-                            <div class="fw-semibold">{{ $vehicle->fuel_type }}</div>
+                            <div class="fw-semibold">{{ ucfirst($vehicle->fuel_type) }}</div>
                         </div>
 
                         <div class="col-md-6">
@@ -151,10 +151,45 @@
                             <div class="fw-semibold">{{ $vehicle->seating_capacity }}</div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="small text-muted">Mileage / Litre</div>
-                            <div class="fw-semibold">{{ $vehicle->mileage_per_litre ?? '—' }}</div>
-                        </div>
+                        @if($vehicle->fuel_type === 'electric')
+                            <div class="col-md-6">
+                                <div class="small text-muted">Battery Capacity</div>
+                                <div class="fw-semibold">
+                                    {{ $vehicle->battery_capacity ? $vehicle->battery_capacity . ' kWh' : '—' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="small text-muted">Range per Charge</div>
+                                <div class="fw-semibold">
+                                    {{ $vehicle->range_per_charge ? $vehicle->range_per_charge . ' km' : '—' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="small text-muted">Charging Time</div>
+                                <div class="fw-semibold">
+                                    {{ $vehicle->charging_time ? $vehicle->charging_time . ' hrs' : '—' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="small text-muted">Charger Type</div>
+                                <div class="fw-semibold">{{ $vehicle->charger_type ?? '—' }}</div>
+                            </div>
+                        @else
+                            <div class="col-md-6">
+                                <div class="small text-muted">Mileage / Litre</div>
+                                <div class="fw-semibold">{{ $vehicle->mileage_per_litre ?? '—' }}</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="small text-muted">Fuel Tank Capacity</div>
+                                <div class="fw-semibold">
+                                    {{ $vehicle->fuel_tank_capacity ? $vehicle->fuel_tank_capacity . ' L' : '—' }}
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="col-md-6">
                             <div class="small text-muted">Manufacture Year</div>
@@ -206,6 +241,7 @@
         </div>
 
     </div>
+
     {{-- Service Summary --}}
     <div class="row g-3 mt-1">
         <div class="col-md-3">

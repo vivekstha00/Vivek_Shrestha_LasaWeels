@@ -33,6 +33,11 @@ return new class extends Migration
             $table->string('transmission');
             $table->unsignedTinyInteger('seating_capacity')->default(4);
             $table->decimal('mileage_per_litre', 5, 2)->nullable();
+            $table->decimal('fuel_tank_capacity', 5, 2)->nullable();
+            $table->decimal('battery_capacity', 6, 2)->nullable();
+            $table->decimal('range_per_charge', 6, 2)->nullable();
+            $table->decimal('charging_time', 5, 2)->nullable();
+            $table->string('charger_type')->nullable();
             $table->string('currency', 3)->default('NPR');
 
             // Pricing

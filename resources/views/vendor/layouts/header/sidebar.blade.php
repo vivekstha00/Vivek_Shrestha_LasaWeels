@@ -50,7 +50,12 @@
                 <i class="fas fa-money-check-alt me-2"></i> Payments
             </a>
         </li>
-
+        <li class="nav-item mt-1">
+            <a class="nav-link {{ request()->routeIs('vendor.reviews.*') ? 'active' : '' }}"
+            href="{{ route('vendor.reviews.index') }}">
+                <i class="fas fa-star me-2"></i> Reviews
+            </a>
+        </li>
     </ul>
 
     <div class="mt-auto pt-3">

@@ -82,7 +82,8 @@
                     {{-- Fuel --}}
                     <div class="col-md-6">
                         <label class="form-label">Fuel Type *</label>
-                        <select name="fuel_type" class="form-select" required>
+                        <select name="fuel_type" id="fuel_type" class="form-select" required>
+                            <option value="">Select Fuel Type</option>
                             @foreach(config('vehicle.fuel_types') as $value => $label)
                                 <option value="{{ $value }}"
                                     {{ old('fuel_type',$vehicle->fuel_type) == $value ? 'selected' : '' }}>
@@ -113,13 +114,65 @@
                                value="{{ old('seating_capacity',$vehicle->seating_capacity) }}" required>
                     </div>
 
-                    {{-- Mileage --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Mileage per Litre</label>
-                        <input type="number" step="0.01"
-                               name="mileage_per_litre"
-                               class="form-control"
-                               value="{{ old('mileage_per_litre',$vehicle->mileage_per_litre) }}">
+                    {{-- Petrol / Diesel Fields --}}
+                    <div id="fuelFields" class="row g-3 m-0 p-0">
+                        <div class="col-md-6">
+                            <label class="form-label">Mileage per Litre</label>
+                            <input type="number" step="0.01"
+                                   name="mileage_per_litre"
+                                   class="form-control"
+                                   value="{{ old('mileage_per_litre',$vehicle->mileage_per_litre) }}">
+                            @error('mileage_per_litre') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Fuel Tank Capacity (L)</label>
+                            <input type="number" step="0.01"
+                                   name="fuel_tank_capacity"
+                                   class="form-control"
+                                   value="{{ old('fuel_tank_capacity',$vehicle->fuel_tank_capacity) }}">
+                            @error('fuel_tank_capacity') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Electric Fields --}}
+                    <div id="electricFields" class="row g-3 m-0 p-0">
+                        <div class="col-md-6">
+                            <label class="form-label">Battery Capacity (kWh)</label>
+                            <input type="number" step="0.01"
+                                   name="battery_capacity"
+                                   class="form-control"
+                                   value="{{ old('battery_capacity',$vehicle->battery_capacity) }}">
+                            @error('battery_capacity') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Range per Charge (km)</label>
+                            <input type="number" step="0.01"
+                                   name="range_per_charge"
+                                   class="form-control"
+                                   value="{{ old('range_per_charge',$vehicle->range_per_charge) }}">
+                            @error('range_per_charge') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Charging Time (hours)</label>
+                            <input type="number" step="0.01"
+                                   name="charging_time"
+                                   class="form-control"
+                                   value="{{ old('charging_time',$vehicle->charging_time) }}">
+                            @error('charging_time') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Charger Type</label>
+                            <input type="text"
+                                   name="charger_type"
+                                   class="form-control"
+                                   value="{{ old('charger_type',$vehicle->charger_type) }}"
+                                   placeholder="Type 2 / CCS / Fast Charging">
+                            @error('charger_type') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
                     </div>
 
                     {{-- Price --}}
@@ -180,4 +233,28 @@
     </form>
 
 </div>
+
+<script>
+    function toggleFuelFields() {
+        const fuelType = document.getElementById('fuel_type').value;
+        const fuelFields = document.getElementById('fuelFields');
+        const electricFields = document.getElementById('electricFields');
+
+        if (fuelType === 'electric') {
+            fuelFields.style.display = 'none';
+            electricFields.style.display = 'flex';
+        } else if (fuelType === 'petrol' || fuelType === 'diesel') {
+            fuelFields.style.display = 'flex';
+            electricFields.style.display = 'none';
+        } else {
+            fuelFields.style.display = 'none';
+            electricFields.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleFuelFields();
+        document.getElementById('fuel_type').addEventListener('change', toggleFuelFields);
+    });
+</script>
 @endsection

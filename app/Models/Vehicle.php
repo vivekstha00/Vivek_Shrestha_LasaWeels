@@ -29,6 +29,12 @@ class Vehicle extends Model
         'seating_capacity',
         'mileage_per_litre',
 
+        'fuel_tank_capacity',
+        'battery_capacity',
+        'range_per_charge',
+        'charging_time',
+        'charger_type',
+
         'price_per_day',
         'with_driver_price_per_day',
         'security_deposit',
@@ -50,6 +56,10 @@ class Vehicle extends Model
     protected $casts = [
         'manufacture_year' => 'integer',
         'mileage_per_litre' => 'decimal:2',
+        'fuel_tank_capacity' => 'decimal:2',
+        'battery_capacity' => 'decimal:2',
+        'range_per_charge' => 'decimal:2',
+        'charging_time' => 'decimal:2',
         'is_active' => 'boolean',
         'approved_at' => 'datetime',
     ];

@@ -18,7 +18,6 @@ return [
         'petrol' => 'Petrol',
         'diesel' => 'Diesel',
         'electric' => 'Electric',
-        'hybrid' => 'Hybrid',
     ],
 
     'transmissions' => [
