@@ -48,5 +48,11 @@
                 <i class="fa-solid fa-money-bill-transfer me-2"></i> Payments
             </a>
         </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"
+               href="{{ route('admin.reviews.index') }}">
+                <i class="fa-solid fa-star me-2"></i> Reviews
+            </a>
+        </li>
     </ul>
 </div>
