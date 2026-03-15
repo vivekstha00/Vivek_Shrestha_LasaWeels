@@ -10,7 +10,7 @@
 @endphp
 
 {{-- Page-only spacing (no master changes) --}}
-<div class="container pb-5" style="padding-top: 110px;"
+<div class="container pb-5" style="padding-top: 2px;"
      x-data="{
         openEdit: false,
 

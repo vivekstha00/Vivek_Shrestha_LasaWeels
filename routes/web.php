@@ -43,6 +43,11 @@ Route::post('/register', [AuthController::class, 'registerStore'])->name('regist
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
+
+Route::get('/vehicles', [UserVehicleController::class, 'index'])->name('vehicles.index');
+
+Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browseShow'])->name('vehicles.browse.show');
+
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
 
 Route::middleware('auth')->group(function () {

@@ -244,15 +244,15 @@
                             <input type="hidden" name="type" value="license">
 
                             <div class="row g-2">
-                                <div class="col-md-4">
-                                    <input type="file" name="file" class="form-control" {{ $license ? '' : 'required' }}>
+                                <div class="col-md-3">
+                                    <input type="file" name="file" class="form-control form-control-sm" {{ $license ? '' : 'required' }}>
                                 </div>
 
                                 <div class="col-md-3">
                                     <input
                                         type="text"
                                         name="document_number"
-                                        class="form-control"
+                                        class="form-control form-control-sm"
                                         placeholder="License Number"
                                         value="{{ $license->document_number ?? '' }}"
                                     >
@@ -262,7 +262,7 @@
                                     <input
                                         type="date"
                                         name="issued_at"
-                                        class="form-control"
+                                        class="form-control form-control-sm"
                                         value="{{ $license->issued_at ?? '' }}"
                                     >
                                 </div>
@@ -271,13 +271,13 @@
                                     <input
                                         type="date"
                                         name="expires_at"
-                                        class="form-control"
+                                        class="form-control form-control-sm"
                                         value="{{ $license->expires_at ?? '' }}"
                                     >
                                 </div>
 
-                                <div class="col-md-1">
-                                    <button type="submit" class="btn btn-primary w-100">Save</button>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
                                 </div>
                             </div>
                         </form>
@@ -322,22 +322,22 @@
                             <input type="hidden" name="type" value="citizenship">
 
                             <div class="row g-2">
-                                <div class="col-md-5">
-                                    <input type="file" name="file" class="form-control" {{ $citizenship ? '' : 'required' }}>
+                                <div class="col-md-4">
+                                    <input type="file" name="file" class="form-control form-control-sm" {{ $citizenship ? '' : 'required' }}>
                                 </div>
 
                                 <div class="col-md-4">
                                     <input
                                         type="text"
                                         name="document_number"
-                                        class="form-control"
+                                        class="form-control form-control-sm"
                                         placeholder="Citizenship Number"
                                         value="{{ $citizenship->document_number ?? '' }}"
                                     >
                                 </div>
 
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-primary w-100">Save</button>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
                                 </div>
                             </div>
                         </form>

@@ -124,7 +124,7 @@
                         <label class="form-label">Seating Capacity *</label>
                         <input type="number" name="seating_capacity"
                                class="form-control"
-                               value="{{ old('seating_capacity',4) }}" required>
+                               value="{{ old('seating_capacity',5) }}" required>
                         @error('seating_capacity') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
@@ -223,7 +223,7 @@
                         <select name="status" class="form-select" required>
                             @foreach(config('vehicle.status_options') as $value => $label)
                                 <option value="{{ $value }}"
-                                    {{ old('status','inactive') == $value ? 'selected' : '' }}>
+                                    {{ old('status','available') == $value ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
                             @endforeach
@@ -257,10 +257,12 @@
         const fuelType = document.getElementById('fuel_type').value;
         const fuelFields = document.getElementById('fuelFields');
         const electricFields = document.getElementById('electricFields');
+        const transmissionSelect = document.querySelector('select[name="transmission"]');
 
         if (fuelType === 'electric') {
             fuelFields.style.display = 'none';
             electricFields.style.display = 'flex';
+            transmissionSelect.value = 'automatic';
         } else if (fuelType === 'petrol' || fuelType === 'diesel') {
             fuelFields.style.display = 'flex';
             electricFields.style.display = 'none';

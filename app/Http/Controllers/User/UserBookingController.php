@@ -113,7 +113,7 @@ class UserBookingController extends Controller
             ->paginate(5)
             ->withQueryString();
 
-        return view('user.pages.search-results', [
+        return view('user.pages.vehicles.search-results', [
             'vehicles' => $vehicles,
             'search'   => $data,
         ]);

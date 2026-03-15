@@ -12,7 +12,7 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-1">
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Vehicle</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('vehicles.index') }}">Vehicle</a></li>
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('corporate.rent') ? 'active' : '' }}" href="{{ route('corporate.rent') }}">Corporate Rent</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('contact.create') }}">Contact</a></li>
