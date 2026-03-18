@@ -45,7 +45,7 @@
         {{-- LEFT SIDE --}}
         <div class="col-lg-4">
 
-            {{-- ✅ Filters (like your reference screenshot) --}}
+            {{--  Filters (like your reference screenshot) --}}
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -59,7 +59,7 @@
                                 'pickup_datetime' => request('pickup_datetime', $search['pickup_datetime'] ?? ''),
                                 'drop_datetime' => request('drop_datetime', $search['drop_datetime'] ?? ''),
                            ]) }}"
-                           class="text-sm text-gray-600 hover:text-gray-900 underline">
+                           class="btn btn-outline-secondary w-50 rounded-3">
                             Clear
                         </a>
                     </div>

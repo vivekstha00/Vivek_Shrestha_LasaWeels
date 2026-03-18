@@ -10,11 +10,27 @@ class UserVehicleController extends Controller
 {
     public function index(Request $request)
     {
-        $vehicles = Vehicle::with(['images', 'primaryImage'])
+        $query = Vehicle::with(['images', 'primaryImage'])
             ->where('status', 'available')
-            ->where('is_active', 1)
-            ->latest()
-            ->paginate(9);
+            ->where('is_active', 1);
+
+        if ($request->filled('fuel_type')) {
+            $query->where('fuel_type', $request->fuel_type);
+        }
+
+        if ($request->filled('transmission')) {
+            $query->where('transmission', $request->transmission);
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price_per_day', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price_per_day', '<=', $request->max_price);
+        }
+
+        $vehicles = $query->latest()->paginate(9)->withQueryString();
 
         return view('user.pages.vehicles.index', compact('vehicles'));
     }
