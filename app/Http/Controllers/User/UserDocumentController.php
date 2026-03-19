@@ -67,6 +67,20 @@ class UserDocumentController extends Controller
             'expires_at'      => ['nullable', 'date', 'after_or_equal:issued_at'],
         ]);
 
+        $needsReverification = false;
+
+        if (($validated['document_number'] ?? null) != $document->document_number) {
+            $needsReverification = true;
+        }
+
+        if (($validated['issued_at'] ?? null) != $document->issued_at) {
+            $needsReverification = true;
+        }
+
+        if (($validated['expires_at'] ?? null) != $document->expires_at) {
+            $needsReverification = true;
+        }
+
         if ($request->hasFile('file')) {
             if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
                 Storage::disk('public')->delete($document->file_path);
@@ -75,6 +89,10 @@ class UserDocumentController extends Controller
             $validated['file_path'] = $request->file('file')
                 ->store("documents/{$user->id}", 'public');
 
+            $needsReverification = true;
+        }
+
+        if ($needsReverification) {
             $validated['status'] = 'pending';
             $validated['reviewed_by'] = null;
             $validated['reviewed_at'] = null;
@@ -83,9 +101,8 @@ class UserDocumentController extends Controller
 
         $document->update($validated);
 
-        return back()->with('success', 'Document updated.');
+        return back()->with('success', 'Document updated successfully.');
     }
-
 
     public function destroy(Document $document)
     {

@@ -192,7 +192,52 @@
                     </div>
                 </div>
             </div>
+            {{-- Self Drive Verification Status --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold">Self-Drive Verification</h5>
+                </div>
 
+                <div class="card-body px-4 pb-4">
+                    @if($selfDriveVerificationStatus === 'approved')
+                        <div class="alert alert-success mb-0">
+                            <div class="fw-semibold mb-1">Verified for Self Drive</div>
+                            <div class="small">
+                                Your license and citizenship are approved. You can book self-drive vehicles.
+                            </div>
+                        </div>
+                    @elseif($selfDriveVerificationStatus === 'pending')
+                        <div class="alert alert-warning mb-0">
+                            <div class="fw-semibold mb-1">Verification Pending</div>
+                            <div class="small">
+                                Your documents are under review. You can still book vehicles with driver.
+                            </div>
+                        </div>
+                    @elseif($selfDriveVerificationStatus === 'rejected')
+                        <div class="alert alert-danger mb-0">
+                            <div class="fw-semibold mb-1">Verification Rejected</div>
+                            <div class="small">
+                                One or more required documents were rejected. Please update and resubmit them.
+                            </div>
+                        </div>
+                    @elseif($selfDriveVerificationStatus === 'expired')
+                        <div class="alert alert-danger mb-0">
+                            <div class="fw-semibold mb-1">License Expired</div>
+                            <div class="small">
+                                Your driving license has expired. Please upload a valid one to continue self-drive booking.
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-secondary mb-0">
+                            <div class="fw-semibold mb-1">Documents Required</div>
+                            <div class="small">
+                                Upload your driving license and citizenship first to unlock self-drive booking.
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            
             {{-- Documents --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">

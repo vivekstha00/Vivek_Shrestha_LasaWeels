@@ -18,7 +18,6 @@ class UserBookingController extends Controller
 {
     public function index()
     {
-        // Auto-complete past bookings for this user
         Booking::where('user_id', Auth::id())
             ->whereIn('status', ['confirmed', 'active'])
             ->where('drop_datetime', '<', Carbon::now())
@@ -40,18 +39,15 @@ class UserBookingController extends Controller
 
         return view('user.pages.booking.booking-show', compact('booking'));
     }
-    // 1) SEARCH available vehicles (Find Vehicle button)
+
     public function search(Request $request)
     {
         $data = $request->validate([
-            // base search
             'service'          => ['required', 'in:self,driver'],
             'pickup_location'  => ['required', 'string', 'max:255'],
             'drop_location'    => ['required', 'string', 'max:255'],
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
-
-            // ✅ filters (optional)
             'vehicle_type'     => ['nullable', 'string', 'max:50'],
             'fuel_type'        => ['nullable', 'string', 'max:50'],
             'transmission'     => ['nullable', 'string', 'max:50'],
@@ -62,23 +58,18 @@ class UserBookingController extends Controller
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
-        // for sorting: if service=driver use with_driver_price_per_day else price_per_day
         $sortColumn = $data['service'] === 'driver'
             ? 'with_driver_price_per_day'
             : 'price_per_day';
 
         $vehicles = Vehicle::query()
             ->with(['primaryImage', 'images'])
-
-            // ✅ your availability logic
             ->where('status', 'available')
             ->whereDoesntHave('bookings', function ($q) use ($pickup, $drop) {
                 $q->whereIn('status', ['pending', 'confirmed'])
-                ->where('pickup_datetime', '<=', $drop)
-                ->where('drop_datetime', '>=', $pickup);
+                    ->where('pickup_datetime', '<=', $drop)
+                    ->where('drop_datetime', '>=', $pickup);
             })
-
-            // ✅ filters
             ->when(!empty($data['vehicle_type']), fn ($q) =>
                 $q->where('vehicle_type', $data['vehicle_type'])
             )
@@ -91,11 +82,7 @@ class UserBookingController extends Controller
             ->when(!empty($data['wheel_type']), fn ($q) =>
                 $q->where('wheel_type', $data['wheel_type'])
             )
-
-            // ✅ price sorting
             ->when(!empty($data['price_sort']), function ($q) use ($data, $sortColumn) {
-                // if driver price is null, sort by self price as fallback
-                // COALESCE(with_driver_price_per_day, price_per_day)
                 if ($sortColumn === 'with_driver_price_per_day') {
                     $direction = $data['price_sort'] === 'low_high' ? 'asc' : 'desc';
                     return $q->orderByRaw("COALESCE(with_driver_price_per_day, price_per_day) {$direction}");
@@ -106,10 +93,7 @@ class UserBookingController extends Controller
                     $data['price_sort'] === 'low_high' ? 'asc' : 'desc'
                 );
             })
-
-            // fallback ordering if no price_sort
             ->latest('id')
-
             ->paginate(5)
             ->withQueryString();
 
@@ -119,7 +103,13 @@ class UserBookingController extends Controller
         ]);
     }
 
-    // 2) BOOKING CHECKOUT (after clicking "Book Now" from details)
+    private function redirectSelfDriveVerification()
+    {
+        return redirect()
+            ->to(route('user.profile') . '#documents-section')
+            ->with('error', 'To book a self-drive vehicle, your license and citizenship must be approved first.');
+    }
+
     public function create(Request $request, Vehicle $vehicle)
     {
         $data = $request->validate([
@@ -131,6 +121,13 @@ class UserBookingController extends Controller
             'special_request'  => ['nullable', 'string', 'max:1000'],
             'driver_id'        => ['nullable', 'exists:drivers,id'],
         ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($data['service'] === 'self' && !$user->hasApprovedSelfDriveDocuments()) {
+            return $this->redirectSelfDriveVerification();
+        }
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
@@ -158,18 +155,22 @@ class UserBookingController extends Controller
 
         $service = $data['service'];
 
-        // Load the selected driver if driver_id is passed
         $selectedDriver = null;
         if ($service === 'driver' && !empty($data['driver_id'])) {
             $selectedDriver = Driver::find($data['driver_id']);
         }
 
         return view('user.pages.booking.booking-checkouts', compact(
-            'vehicle', 'data', 'days', 'estimatedTotal', 'securityDeposit', 'service', 'selectedDriver'
+            'vehicle',
+            'data',
+            'days',
+            'estimatedTotal',
+            'securityDeposit',
+            'service',
+            'selectedDriver'
         ));
     }
 
-    // 3) CONFIRM BOOKING (POST)
     public function store(Request $request, Vehicle $vehicle)
     {
         $data = $request->validate([
@@ -182,10 +183,16 @@ class UserBookingController extends Controller
             'driver_id'        => [$request->service === 'driver' ? 'required' : 'nullable', 'exists:drivers,id'],
         ]);
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($data['service'] === 'self' && !$user->hasApprovedSelfDriveDocuments()) {
+            return $this->redirectSelfDriveVerification();
+        }
+
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
-        // Overlap check again
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('pickup_datetime', '<=', $drop)
@@ -196,7 +203,6 @@ class UserBookingController extends Controller
             return back()->withErrors(['dates' => 'Vehicle already booked for selected time.']);
         }
 
-        // Check driver availability for the selected time period
         if ($data['service'] === 'driver' && !empty($data['driver_id'])) {
             $driverBusy = Booking::where('driver_id', $data['driver_id'])
                 ->whereIn('status', ['pending', 'confirmed', 'active'])
@@ -205,7 +211,9 @@ class UserBookingController extends Controller
                 ->exists();
 
             if ($driverBusy) {
-                return back()->withErrors(['driver_id' => 'This driver is already booked for the selected time. Please choose another driver.'])->withInput();
+                return back()
+                    ->withErrors(['driver_id' => 'This driver is already booked for the selected time. Please choose another driver.'])
+                    ->withInput();
             }
         }
 
@@ -249,7 +257,6 @@ class UserBookingController extends Controller
             ->notify(new BookingRequestToAdminNotification($booking));
 
         return redirect()->route('booking.payment', $booking->id);
-
     }
 
     public function success(Booking $booking)

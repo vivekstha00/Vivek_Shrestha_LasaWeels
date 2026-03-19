@@ -18,7 +18,6 @@ class UserProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Auto-complete past bookings for this user
         Booking::where('user_id', $user->id)
             ->whereIn('status', ['confirmed', 'active'])
             ->where('drop_datetime', '<', Carbon::now())
@@ -42,6 +41,9 @@ class UserProfileController extends Controller
             ->latest()
             ->paginate(10);
 
+        $selfDriveVerified = $user->hasApprovedSelfDriveDocuments();
+        $selfDriveVerificationStatus = $user->selfDriveVerificationStatus();
+
         return view('user.pages.profile.index', compact(
             'user',
             'documents',
@@ -49,7 +51,9 @@ class UserProfileController extends Controller
             'totalBookings',
             'confirmedBookings',
             'completedBookings',
-            'cancelledBookings'
+            'cancelledBookings',
+            'selfDriveVerified',
+            'selfDriveVerificationStatus'
         ));
     }
 

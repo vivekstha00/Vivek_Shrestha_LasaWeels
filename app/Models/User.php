@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 
 class User extends Authenticatable
@@ -82,6 +83,80 @@ class User extends Authenticatable
      public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function requiredSelfDriveDocuments(): array
+    {
+        return ['license', 'citizenship'];
+    }
+
+    public function hasApprovedSelfDriveDocuments(): bool
+    {
+        $requiredTypes = $this->requiredSelfDriveDocuments();
+
+        $documents = $this->documents()
+            ->whereIn('type', $requiredTypes)
+            ->get()
+            ->keyBy('type');
+
+        foreach ($requiredTypes as $type) {
+            if (!isset($documents[$type])) {
+                return false;
+            }
+
+            if (($documents[$type]->status ?? null) !== 'approved') {
+                return false;
+            }
+        }
+
+        if (
+            isset($documents['license']) &&
+            !empty($documents['license']->expires_at) &&
+            Carbon::parse($documents['license']->expires_at)->isPast()
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    public function selfDriveVerificationStatus(): string
+    {
+        $requiredTypes = $this->requiredSelfDriveDocuments();
+
+        $documents = $this->documents()
+            ->whereIn('type', $requiredTypes)
+            ->get()
+            ->keyBy('type');
+
+        foreach ($requiredTypes as $type) {
+            if (!isset($documents[$type])) {
+                return 'missing';
+            }
+        }
+
+        if (
+            isset($documents['license']) &&
+            !empty($documents['license']->expires_at) &&
+            Carbon::parse($documents['license']->expires_at)->isPast()
+        ) {
+            return 'expired';
+        }
+
+        foreach ($requiredTypes as $type) {
+            if (($documents[$type]->status ?? null) === 'rejected') {
+                return 'rejected';
+            }
+        }
+
+        foreach ($requiredTypes as $type) {
+            if (($documents[$type]->status ?? null) !== 'approved') {
+                return 'pending';
+            }
+        }
+
+        return 'approved';
     }
 
 }
