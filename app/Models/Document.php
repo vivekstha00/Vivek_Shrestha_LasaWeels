@@ -2,19 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Document extends Model
 {
     use HasFactory;
 
-    /**
-     * Mass-assignable attributes.
-     *
-     * Note: include only columns that actually exist in your documents table migration.
-     */
     protected $fillable = [
         'user_id',
         'type',
@@ -28,24 +23,19 @@ class Document extends Model
         'remarks',
     ];
 
-    /**
-     * Attribute casting.
-     */
     protected $casts = [
+        'issued_at'   => 'date',
+        'expires_at'  => 'date',
         'reviewed_at' => 'datetime',
+        'created_at'  => 'datetime',
+        'updated_at'  => 'datetime',
     ];
 
-    /**
-     * The owner of the document (user/vendor).
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Admin who reviewed the document (optional).
-     */
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');

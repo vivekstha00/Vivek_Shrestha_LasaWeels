@@ -49,6 +49,12 @@
             </a>
         </li>
         <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.documents.*') ? 'active' : '' }}"
+               href="{{ route('admin.documents.index') }}">
+                <i class="fa-solid fa-file me-2"></i> Documents
+            </a>
+        </li>
+        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"
                href="{{ route('admin.reviews.index') }}">
                 <i class="fa-solid fa-star me-2"></i> Reviews

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminContactController;
 use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\AdminDocumentController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -128,6 +129,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
 
+    Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
+    Route::patch('/documents/{document}/approve', [AdminDocumentController::class, 'approve'])->name('documents.approve');
+    Route::patch('/documents/{document}/reject', [AdminDocumentController::class, 'reject'])->name('documents.reject');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
