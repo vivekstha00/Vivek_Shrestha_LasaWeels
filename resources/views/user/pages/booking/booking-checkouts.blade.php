@@ -51,7 +51,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('user.booking.store', $vehicle->id) }}">
+                    <form id="bookingCheckoutForm" method="POST" action="{{ route('user.booking.store', $vehicle->id) }}">
                         @csrf
 
                         <input type="hidden" name="service" value="{{ $selectedService }}">
@@ -131,27 +131,69 @@
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3">Price Summary</h5>
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mb-2">
                         <span>Estimated Days</span>
                         <strong>{{ $days ?? 1 }}</strong>
                     </div>
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mb-2">
                         <span>Price per day</span>
-                        <strong>NPR {{ number_format($pricePerDay,2) }}</strong>
+                        <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
                     </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Actual Price</span>
+                        <strong id="actual_price" data-value="{{ $estimatedTotal ?? 0 }}">
+                            NPR {{ number_format($estimatedTotal ?? 0, 2) }}
+                        </strong>
+                    </div>
+
+                    @if(($availablePoints ?? 0) > 0)
+                        <hr>
+
+                        <div class="mb-2">
+                            <div class="small text-muted mb-1">Available Points</div>
+                            <div class="fw-bold text-primary">{{ $availablePoints ?? 0 }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="small text-muted mb-1">Max Redeemable</div>
+                            <div class="fw-bold text-success">{{ $maxRedeemablePoints ?? 0 }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Redeem Points</label>
+                            <input
+                                type="number"
+                                id="redeem_points"
+                                name="redeem_points"
+                                form="bookingCheckoutForm"
+                                class="form-control"
+                                min="0"
+                                max="{{ $maxRedeemablePoints ?? 0 }}"
+                                step="1"
+                                value="{{ old('redeem_points', 0) }}"
+                                placeholder="Enter points"
+                            >
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Loyalty Discount</span>
+                            <strong class="text-danger" id="discount_price">- NPR 0.00</strong>
+                        </div>
+                    @endif
 
                     <hr>
 
                     <div class="d-flex justify-content-between fs-5">
-                        <span class="fw-bold">Estimated Total</span>
-                        <span class="fw-bold">
-                            NPR {{ number_format($estimatedTotal ?? 0,2) }}
+                        <span class="fw-bold">Final Price</span>
+                        <span class="fw-bold text-success" id="final_price">
+                            NPR {{ number_format($estimatedTotal ?? 0, 2) }}
                         </span>
                     </div>
 
-                    <small class="text-muted">
-                        Final price will be calculated securely on server.
+                    <small class="text-muted d-block mt-2">
+                        Final price will be validated securely on server.
                     </small>
                 </div>
             </div>
@@ -159,4 +201,51 @@
 
     </div>
 </div>
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const redeemInput = document.getElementById('redeem_points');
+            const actualPriceEl = document.getElementById('actual_price');
+            const discountPriceEl = document.getElementById('discount_price');
+            const finalPriceEl = document.getElementById('final_price');
+
+            if (!redeemInput || !actualPriceEl || !discountPriceEl || !finalPriceEl) {
+                return;
+            }
+
+            const actualPrice = parseFloat(actualPriceEl.dataset.value || 0);
+            const maxRedeemable = parseInt(redeemInput.max || 0);
+
+            function formatNpr(amount) {
+                return 'NPR ' + Number(amount).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            function updateSummary() {
+                let points = parseInt(redeemInput.value || 0);
+
+                if (isNaN(points) || points < 0) {
+                    points = 0;
+                }
+
+                if (points > maxRedeemable) {
+                    points = maxRedeemable;
+                }
+
+                redeemInput.value = points;
+
+                const discount = points;
+                const finalPrice = Math.max(0, actualPrice - discount);
+
+                discountPriceEl.textContent = '- ' + formatNpr(discount);
+                finalPriceEl.textContent = formatNpr(finalPrice);
+            }
+
+            redeemInput.addEventListener('input', updateSummary);
+            updateSummary();
+        });
+    </script>
+@endpush
 @endsection

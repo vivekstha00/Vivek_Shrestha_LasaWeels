@@ -178,4 +178,92 @@ class LoyaltyService
 
         return min($available, $maxByPercent);
     }
+
+    public function redeemPointsForBooking(Booking $booking, int $points): void
+    {
+        if ($points <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($booking, $points) {
+            $account = LoyaltyAccount::where('user_id', $booking->user_id)->lockForUpdate()->first();
+
+            if (! $account) {
+                return;
+            }
+
+            $alreadyRedeemed = LoyaltyTransaction::where(
+                'event_key',
+                'booking_' . $booking->id . '_redeem'
+            )->exists();
+
+            if ($alreadyRedeemed) {
+                return;
+            }
+
+            if ($account->available_points < $points) {
+                return;
+            }
+
+            LoyaltyTransaction::create([
+                'user_id' => $booking->user_id,
+                'booking_id' => $booking->id,
+                'event_key' => 'booking_' . $booking->id . '_redeem',
+                'type' => 'redeem',
+                'points' => -$points,
+                'amount_npr' => $points,
+                'meta' => [
+                    'reason' => 'Redeemed on booking checkout',
+                ],
+            ]);
+
+            $account->available_points -= $points;
+            $account->lifetime_redeemed_points += $points;
+            $account->save();
+        });
+    }
+    public function restoreRedeemedPoints(Booking $booking): void
+    {
+        if ($booking->loyalty_points_redeemed <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($booking) {
+            $alreadyRestored = LoyaltyTransaction::where(
+                'event_key',
+                'booking_' . $booking->id . '_restore_redemption'
+            )->exists();
+
+            if ($alreadyRestored) {
+                return;
+            }
+
+            $account = LoyaltyAccount::firstOrCreate(
+                ['user_id' => $booking->user_id],
+                [
+                    'available_points' => 0,
+                    'lifetime_earned_points' => 0,
+                    'lifetime_redeemed_points' => 0,
+                    'tier' => 'bronze',
+                    'completed_bookings_count' => 0,
+                    'yearly_spend' => 0,
+                ]
+            );
+
+            LoyaltyTransaction::create([
+                'user_id' => $booking->user_id,
+                'booking_id' => $booking->id,
+                'event_key' => 'booking_' . $booking->id . '_restore_redemption',
+                'type' => 'restore_redemption',
+                'points' => $booking->loyalty_points_redeemed,
+                'amount_npr' => $booking->loyalty_discount_amount,
+                'meta' => [
+                    'reason' => 'Restored after cancellation/refund',
+                ],
+            ]);
+
+            $account->available_points += $booking->loyalty_points_redeemed;
+            $account->save();
+        });
+    }
 }

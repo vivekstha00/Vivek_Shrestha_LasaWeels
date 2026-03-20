@@ -75,6 +75,22 @@ class UserProfileController extends Controller
         ));
     }
 
+    public function loyaltyHistory()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $loyaltyAccount = $user->loyaltyAccount;
+        $loyaltyTransactions = $user->loyaltyTransactions()
+            ->latest()
+            ->paginate(10);
+
+        return view('user.pages.profile.loyalty-history', compact(
+            'user',
+            'loyaltyAccount',
+            'loyaltyTransactions'
+        ));
+    }
     public function update(Request $request)
     {
         /** @var \App\Models\User $user */

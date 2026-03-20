@@ -54,7 +54,10 @@ Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name(
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
+    
     Route::post('/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
+
+    Route::get('/user/profile/loyalty', [UserProfileController::class, 'loyaltyHistory'])->name('user.profile.loyalty');
 
     Route::post('/profile/documents', [UserDocumentController::class, 'store'])->name('user.documents.store');
     Route::put('/profile/documents/{document}', [UserDocumentController::class, 'update'])->name('user.documents.update');

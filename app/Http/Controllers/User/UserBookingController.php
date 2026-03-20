@@ -136,7 +136,7 @@ class UserBookingController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if ($data['service'] === 'self' && !$user->hasApprovedSelfDriveDocuments()) {
+        if ($data['service'] === 'self' && ! $user->hasApprovedSelfDriveDocuments()) {
             return $this->redirectSelfDriveVerification();
         }
 
@@ -150,7 +150,9 @@ class UserBookingController extends Controller
             ->exists();
 
         if ($overlap) {
-            return back()->withErrors(['dates' => 'Vehicle already booked for selected time.']);
+            return back()->withErrors([
+                'dates' => 'Vehicle already booked for selected time.'
+            ])->withInput();
         }
 
         $hours = $pickup->diffInHours($drop);
@@ -162,12 +164,18 @@ class UserBookingController extends Controller
 
         $estimatedTotal = $days * $pricePerDay;
 
-        $securityDeposit = $data['service'] === 'self' ? $vehicle->security_deposit : 0;
+        $loyaltyService = app(LoyaltyService::class);
+        $maxRedeemablePoints = $loyaltyService->getMaxRedeemablePoints($user, $estimatedTotal);
+        $availablePoints = $user->loyaltyAccount->available_points ?? 0;
+
+        $securityDeposit = $data['service'] === 'self'
+            ? $vehicle->security_deposit
+            : 0;
 
         $service = $data['service'];
 
         $selectedDriver = null;
-        if ($service === 'driver' && !empty($data['driver_id'])) {
+        if ($service === 'driver' && ! empty($data['driver_id'])) {
             $selectedDriver = Driver::find($data['driver_id']);
         }
 
@@ -178,7 +186,9 @@ class UserBookingController extends Controller
             'estimatedTotal',
             'securityDeposit',
             'service',
-            'selectedDriver'
+            'selectedDriver',
+            'availablePoints',
+            'maxRedeemablePoints'
         ));
     }
 
@@ -192,12 +202,14 @@ class UserBookingController extends Controller
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
             'driver_id'        => [$request->service === 'driver' ? 'required' : 'nullable', 'exists:drivers,id'],
+            'redeem_points'    => ['nullable', 'integer', 'min:0'],
+            'accept_terms' => ['required', 'accepted'],
         ]);
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if ($data['service'] === 'self' && !$user->hasApprovedSelfDriveDocuments()) {
+        if ($data['service'] === 'self' && ! $user->hasApprovedSelfDriveDocuments()) {
             return $this->redirectSelfDriveVerification();
         }
 
@@ -211,10 +223,12 @@ class UserBookingController extends Controller
             ->exists();
 
         if ($overlap) {
-            return back()->withErrors(['dates' => 'Vehicle already booked for selected time.']);
+            return back()->withErrors([
+                'dates' => 'Vehicle already booked for selected time.'
+            ])->withInput();
         }
 
-        if ($data['service'] === 'driver' && !empty($data['driver_id'])) {
+        if ($data['service'] === 'driver' && ! empty($data['driver_id'])) {
             $driverBusy = Booking::where('driver_id', $data['driver_id'])
                 ->whereIn('status', ['pending', 'confirmed', 'active'])
                 ->where('pickup_datetime', '<=', $drop)
@@ -223,7 +237,9 @@ class UserBookingController extends Controller
 
             if ($driverBusy) {
                 return back()
-                    ->withErrors(['driver_id' => 'This driver is already booked for the selected time. Please choose another driver.'])
+                    ->withErrors([
+                        'driver_id' => 'This driver is already booked for the selected time. Please choose another driver.'
+                    ])
                     ->withInput();
             }
         }
@@ -237,30 +253,57 @@ class UserBookingController extends Controller
 
         $totalPrice = $days * $pricePerDay;
 
+        $loyaltyService = app(LoyaltyService::class);
+        $requestedRedeemPoints = (int) ($data['redeem_points'] ?? 0);
+        $maxRedeemablePoints = $loyaltyService->getMaxRedeemablePoints($user, $totalPrice);
+
+        if ($requestedRedeemPoints > 0) {
+            if ($requestedRedeemPoints < 100) {
+                return back()
+                    ->withErrors([
+                        'redeem_points' => 'Minimum redeemable points is 100.'
+                    ])
+                    ->withInput();
+            }
+
+            if ($requestedRedeemPoints > $maxRedeemablePoints) {
+                return back()
+                    ->withErrors([
+                        'redeem_points' => 'Requested redeem points exceed your allowed limit.'
+                    ])
+                    ->withInput();
+            }
+        }
+
+        $loyaltyDiscountAmount = $requestedRedeemPoints; // 1 point = 1 NPR
+        $finalTotalPrice = max(0, $totalPrice - $loyaltyDiscountAmount);
+
         $securityDeposit = $data['service'] === 'self'
             ? $vehicle->security_deposit
             : null;
 
         $booking = Booking::create([
-            'vehicle_id'       => $vehicle->id,
-            'user_id'          => Auth::id(),
-            'service'          => $data['service'],
-            'pickup_location'  => $data['pickup_location'],
-            'drop_location'    => $data['drop_location'],
-            'pickup_datetime'  => $pickup,
-            'drop_datetime'    => $drop,
-            'special_request'  => $data['special_request'] ?? null,
-            'status'           => 'pending',
-            'payment_status'   => 'unpaid',
-            'total_price'      => $totalPrice,
-            'security_deposit' => $securityDeposit,
-            'driver_id'        => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
+            'vehicle_id'               => $vehicle->id,
+            'user_id'                  => Auth::id(),
+            'service'                  => $data['service'],
+            'pickup_location'          => $data['pickup_location'],
+            'drop_location'            => $data['drop_location'],
+            'pickup_datetime'          => $pickup,
+            'drop_datetime'            => $drop,
+            'special_request'          => $data['special_request'] ?? null,
+            'status'                   => 'pending',
+            'payment_status'           => 'unpaid',
+            'total_price'              => $finalTotalPrice,
+            'loyalty_points_redeemed'  => $requestedRedeemPoints,
+            'loyalty_discount_amount'  => $loyaltyDiscountAmount,
+            'security_deposit'         => $securityDeposit,
+            'driver_id'                => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,
         ]);
 
         $booking->user->notify(new BookingSuccessNotification($booking));
 
         $vendorUser = $vehicle->vendor;
-        if ($vendorUser && !empty($vendorUser->email)) {
+        if ($vendorUser && ! empty($vendorUser->email)) {
             $vendorUser->notify(new BookingRequestToVendorNotification($booking));
         }
 

@@ -253,8 +253,11 @@
 
             {{-- Recent Loyalty Activity --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">Recent Loyalty Activity</h5>
+                    <a href="{{ route('user.profile.loyalty') }}" class="btn btn-sm btn-outline-primary rounded-3">
+                        View All
+                    </a>
                 </div>
 
                 <div class="card-body px-4 pb-4">

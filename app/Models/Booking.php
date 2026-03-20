@@ -22,6 +22,11 @@ class Booking extends Model
         'status',
         'total_price',
         'reminder_sent_at',
+        'loyalty_points_earned',
+        'loyalty_points_redeemed',
+        'loyalty_discount_amount',
+        'loyalty_processed_at',
+
     ];
 
     protected $casts = [
