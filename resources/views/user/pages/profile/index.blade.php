@@ -162,6 +162,149 @@
                 </div>
             </div>
 
+            {{-- Loyalty Overview --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold">Loyalty Points</h5>
+                        <small class="text-muted">Earn points from completed trips and reviews</small>
+                    </div>
+
+                    @php
+                        $tierClass = match(strtolower($loyaltyAccount->tier ?? 'bronze')) {
+                            'gold' => 'bg-warning text-dark',
+                            'silver' => 'bg-secondary',
+                            default => 'bg-dark text-white',
+                        };
+                    @endphp
+
+                    <span class="badge {{ $tierClass }} px-3 py-2 rounded-pill">
+                        {{ ucfirst($loyaltyAccount->tier ?? 'bronze') }}
+                    </span>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="border rounded-4 p-3 h-100 text-center">
+                                <div class="small text-muted mb-1">Available Points</div>
+                                <h4 class="fw-bold text-primary mb-0">{{ $loyaltyAccount->available_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="border rounded-4 p-3 h-100 text-center">
+                                <div class="small text-muted mb-1">Lifetime Earned</div>
+                                <h4 class="fw-bold text-success mb-0">{{ $loyaltyAccount->lifetime_earned_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="border rounded-4 p-3 h-100 text-center">
+                                <div class="small text-muted mb-1">Redeemed</div>
+                                <h4 class="fw-bold text-danger mb-0">{{ $loyaltyAccount->lifetime_redeemed_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="border rounded-4 p-3 h-100 text-center">
+                                <div class="small text-muted mb-1">Completed Trips</div>
+                                <h4 class="fw-bold mb-0">{{ $loyaltyAccount->completed_bookings_count ?? 0 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    @php
+                        $completedCount = $loyaltyAccount->completed_bookings_count ?? 0;
+                        $currentTier = strtolower($loyaltyAccount->tier ?? 'bronze');
+
+                        if ($currentTier === 'bronze') {
+                            $nextTier = 'Silver';
+                            $target = 5;
+                        } elseif ($currentTier === 'silver') {
+                            $nextTier = 'Gold';
+                            $target = 10;
+                        } else {
+                            $nextTier = null;
+                            $target = null;
+                        }
+
+                        $progress = $target ? min(($completedCount / $target) * 100, 100) : 100;
+                    @endphp
+
+                    @if($nextTier)
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">Progress to {{ $nextTier }}</span>
+                                <span class="fw-semibold">{{ $completedCount }}/{{ $target }} trips</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%"></div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-warning mb-0">
+                            <div class="fw-semibold">Gold Tier Achieved</div>
+                            <div class="small">You have reached the highest loyalty level.</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Recent Loyalty Activity --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold">Recent Loyalty Activity</h5>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+                    @if(($loyaltyTransactions ?? collect())->isEmpty())
+                        <div class="text-center py-4">
+                            <h6 class="fw-bold mb-2">No loyalty activity yet</h6>
+                            <p class="text-muted mb-0">Complete bookings and submit reviews to earn points.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Activity</th>
+                                        <th>Booking</th>
+                                        <th>Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($loyaltyTransactions as $transaction)
+                                        @php
+                                            $typeLabel = match($transaction->type) {
+                                                'earn_booking' => 'Trip Completed',
+                                                'earn_first_booking_bonus' => 'First Booking Bonus',
+                                                'earn_review_bonus' => 'Review Bonus',
+                                                'redeem' => 'Redeemed',
+                                                'restore_redemption' => 'Restored',
+                                                'manual_adjustment' => 'Adjustment',
+                                                default => ucfirst(str_replace('_', ' ', $transaction->type)),
+                                            };
+
+                                            $pointClass = $transaction->points >= 0 ? 'text-success' : 'text-danger';
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $transaction->created_at->format('d M Y') }}</td>
+                                            <td>{{ $typeLabel }}</td>
+                                            <td>{{ $transaction->booking_id ? '#'.$transaction->booking_id : '-' }}</td>
+                                            <td class="fw-bold {{ $pointClass }}">
+                                                {{ $transaction->points > 0 ? '+' : '' }}{{ $transaction->points }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
             {{-- Personal Info --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4">
@@ -237,7 +380,7 @@
                     @endif
                 </div>
             </div>
-            
+
             {{-- Documents --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">

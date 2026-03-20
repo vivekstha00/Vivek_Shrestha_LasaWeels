@@ -13,15 +13,26 @@ use App\Notifications\BookingSuccessNotification;
 use App\Notifications\BookingRequestToAdminNotification;
 use App\Notifications\BookingRequestToVendorNotification;
 use Illuminate\Support\Facades\Notification;
+use App\Services\LoyaltyService;
 
 class UserBookingController extends Controller
 {
     public function index()
     {
-        Booking::where('user_id', Auth::id())
+        $loyaltyService = app(LoyaltyService::class);
+
+        $bookingsToComplete = Booking::where('user_id', Auth::id())
             ->whereIn('status', ['confirmed', 'active'])
             ->where('drop_datetime', '<', Carbon::now())
-            ->update(['status' => 'completed']);
+            ->get();
+
+        foreach ($bookingsToComplete as $bookingToComplete) {
+            $bookingToComplete->update([
+                'status' => 'completed',
+            ]);
+
+            $loyaltyService->awardCompletedBookingPoints($bookingToComplete->fresh());
+        }
 
         $bookings = Booking::with(['vehicle', 'payment', 'driver', 'review'])
             ->where('user_id', Auth::id())

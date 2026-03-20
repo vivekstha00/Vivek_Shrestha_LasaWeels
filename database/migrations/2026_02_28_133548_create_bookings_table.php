@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained()
                 ->cascadeOnDelete();
+
             $table->foreignId('driver_id')
                 ->nullable()
                 ->constrained('drivers')
@@ -31,19 +32,16 @@ return new class extends Migration
             $table->dateTime('pickup_datetime');
             $table->dateTime('drop_datetime');
 
-            // NEW: special request
             $table->text('special_request')->nullable();
 
-            // Booking lifecycle
             $table->enum('status', [
-                'pending',     // created but not paid
-                'confirmed',   // paid & approved
-                'active',      // trip started
-                'completed',   // trip finished
+                'pending',
+                'confirmed',
+                'active',
+                'completed',
                 'cancelled'
             ])->default('pending');
 
-            // Payment tracking
             $table->enum('payment_status', [
                 'unpaid',
                 'partial',
@@ -52,9 +50,14 @@ return new class extends Migration
 
             $table->decimal('total_price', 10, 2)->default(0);
 
+            $table->unsignedInteger('loyalty_points_earned')->default(0);
+            $table->unsignedInteger('loyalty_points_redeemed')->default(0);
+            $table->decimal('loyalty_discount_amount', 10, 2)->default(0);
+
             $table->decimal('security_deposit', 10, 2)->nullable();
 
             $table->timestamp('reminder_sent_at')->nullable();
+            $table->timestamp('loyalty_processed_at')->nullable();
 
             $table->timestamps();
 

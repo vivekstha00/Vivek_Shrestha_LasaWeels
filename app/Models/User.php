@@ -90,6 +90,16 @@ class User extends Authenticatable
         return ['license', 'citizenship'];
     }
 
+    public function loyaltyAccount()
+    {
+        return $this->hasOne(LoyaltyAccount::class);
+    }
+
+    public function loyaltyTransactions()
+    {
+        return $this->hasMany(LoyaltyTransaction::class);
+    }
+
     public function hasApprovedSelfDriveDocuments(): bool
     {
         $requiredTypes = $this->requiredSelfDriveDocuments();

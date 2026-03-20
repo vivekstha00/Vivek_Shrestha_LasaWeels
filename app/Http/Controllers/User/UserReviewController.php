@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\LoyaltyService;
 
 class UserReviewController extends Controller
 {
@@ -53,6 +54,8 @@ class UserReviewController extends Controller
             'driver_rating'   => $hasDriver ? ($validated['driver_rating'] ?? null) : null,
             'driver_review'   => $hasDriver ? ($validated['driver_review'] ?? null) : null,
         ]);
+
+        app(LoyaltyService::class)->awardReviewBonus($booking->fresh());
 
         return back()->with('success', 'Review submitted successfully.');
     }

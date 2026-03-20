@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Services\LoyaltyService;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -18,10 +18,20 @@ class UserProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        Booking::where('user_id', $user->id)
+        $loyaltyService = app(LoyaltyService::class);
+
+        $bookingsToComplete = Booking::where('user_id', $user->id)
             ->whereIn('status', ['confirmed', 'active'])
             ->where('drop_datetime', '<', Carbon::now())
-            ->update(['status' => 'completed']);
+            ->get();
+
+        foreach ($bookingsToComplete as $bookingToComplete) {
+            $bookingToComplete->update([
+                'status' => 'completed',
+            ]);
+
+            $loyaltyService->awardCompletedBookingPoints($bookingToComplete->fresh());
+        }
 
         $documents = $user->documents()
             ->latest()
@@ -44,6 +54,12 @@ class UserProfileController extends Controller
         $selfDriveVerified = $user->hasApprovedSelfDriveDocuments();
         $selfDriveVerificationStatus = $user->selfDriveVerificationStatus();
 
+        $loyaltyAccount = $user->loyaltyAccount;
+        $loyaltyTransactions = $user->loyaltyTransactions()
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('user.pages.profile.index', compact(
             'user',
             'documents',
@@ -53,7 +69,9 @@ class UserProfileController extends Controller
             'completedBookings',
             'cancelledBookings',
             'selfDriveVerified',
-            'selfDriveVerificationStatus'
+            'selfDriveVerificationStatus',
+            'loyaltyAccount',
+            'loyaltyTransactions'
         ));
     }
 
