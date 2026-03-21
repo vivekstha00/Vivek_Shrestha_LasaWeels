@@ -5,10 +5,15 @@
 @section('vendor-content')
 <div class="container-fluid py-4">
 
+    @php
+        $loyaltyDiscount = (float) ($payment->booking->loyalty_discount_amount ?? 0);
+        $originalAmount = (float) $payment->amount + $loyaltyDiscount;
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1">Payment #{{ $payment->id }}</h3>
-            <p class="text-muted mb-0">View earning and payout details</p>
+            <p class="text-muted mb-0">View earnings, loyalty discount impact, and payout details</p>
         </div>
 
         <a href="{{ route('vendor.payments.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -41,7 +46,17 @@
                     </div>
 
                     <div class="row mb-2">
-                        <div class="col-md-4 text-muted">Total Amount</div>
+                        <div class="col-md-4 text-muted">Original Booking Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($originalAmount, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Loyalty Discount</div>
+                        <div class="col-md-8 text-danger">Rs. {{ number_format($loyaltyDiscount, 2) }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Customer Paid Amount</div>
                         <div class="col-md-8">Rs. {{ number_format($payment->amount, 2) }}</div>
                     </div>
 
@@ -107,6 +122,12 @@
                         <div class="col-md-4 text-muted">Booking Payment Status</div>
                         <div class="col-md-8">{{ ucfirst($payment->booking->payment_status ?? 'N/A') }}</div>
                     </div>
+
+                    @if($loyaltyDiscount > 0)
+                        <div class="alert alert-info mt-3 mb-0">
+                            This booking used loyalty redemption. The discount is funded by the platform.
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -117,8 +138,7 @@
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3">Payout Note</h6>
                     <p class="text-muted mb-0">
-                        Payout statuses are managed by admin. If you believe a payment or payout record is incorrect,
-                        contact admin support.
+                        Loyalty discounts are platform-funded. Your payout is shown separately through the platform commission and vendor net amount breakdown.
                     </p>
                 </div>
             </div>

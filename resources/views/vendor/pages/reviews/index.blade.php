@@ -53,7 +53,6 @@
                                 <th>Vehicle</th>
                                 <th>Driver</th>
                                 <th>Date</th>
-                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,7 +62,7 @@
                                         ?? trim(($review->vehicle?->brand ?? '') . ' ' . ($review->vehicle?->model ?? ''));
                                 @endphp
 
-                                <tr>
+                                <tr style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor=''" onclick="window.location='{{ route('vendor.reviews.show', $review->id) }}'">
                                     <td>#{{ $review->id }}</td>
                                     <td>#{{ $review->booking_id }}</td>
                                     <td>{{ $review->user?->name ?? 'N/A' }}</td>
@@ -78,11 +77,6 @@
                                         @endif
                                     </td>
                                     <td>{{ $review->created_at->format('d M Y') }}</td>
-                                    <td class="text-end">
-                                        <a href="{{ route('vendor.reviews.show', $review->id) }}" class="btn btn-sm btn-outline-primary">
-                                            View
-                                        </a>
-                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

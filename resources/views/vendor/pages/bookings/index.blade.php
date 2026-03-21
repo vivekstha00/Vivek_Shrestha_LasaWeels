@@ -21,12 +21,11 @@
                         <th>Status</th>
                         <th>Payment</th>
                         <th>Total</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($bookings as $booking)
-                        <tr>
+                        <tr style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor=''" onclick="window.location='{{ route('vendor.bookings.show', $booking->id) }}'">
                             <td>#{{ $booking->id }}</td>
                             <td>{{ $booking->vehicle?->title ?? 'N/A' }}</td>
                             <td>{{ $booking->user->name ?? 'N/A' }}</td>
@@ -47,17 +46,10 @@
                             </td>
 
                             <td>Rs. {{ number_format($booking->total_price, 2) }}</td>
-
-                            <td>
-                                <a href="{{ route('vendor.bookings.show', $booking->id) }}"
-                                   class="btn btn-sm btn-primary">
-                                    View
-                                </a>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center">No bookings found.</td>
+                            <td colspan="8" class="text-center">No bookings found.</td>
                         </tr>
                     @endforelse
                 </tbody>

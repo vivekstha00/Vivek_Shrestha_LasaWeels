@@ -5,6 +5,12 @@
 @section('vendor-content')
 <div class="container-fluid">
 
+    @php
+        $originalAmount = (float) $booking->total_price + (float) ($booking->loyalty_discount_amount ?? 0);
+        $loyaltyDiscount = (float) ($booking->loyalty_discount_amount ?? 0);
+        $finalCustomerPayment = (float) $booking->total_price;
+    @endphp
+
     <h4 class="mb-4">Booking Details #{{ $booking->id }}</h4>
 
     <div class="card shadow-sm">
@@ -62,9 +68,49 @@
                 </span>
             </p>
 
-            <h5 class="mt-3">
-                Total: Rs. {{ number_format($booking->total_price, 2) }}
-            </h5>
+            <div class="card border-0 bg-light rounded-4 mt-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Pricing Breakdown</h5>
+
+                    <p class="mb-2">
+                        <strong>Original Booking Amount:</strong>
+                        Rs. {{ number_format($originalAmount, 2) }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Loyalty Discount:</strong>
+                        <span class="text-danger">
+                            - Rs. {{ number_format($loyaltyDiscount, 2) }}
+                        </span>
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Final Customer Payment:</strong>
+                        <span class="text-success">
+                            Rs. {{ number_format($finalCustomerPayment, 2) }}
+                        </span>
+                    </p>
+
+                    @if($booking->payment)
+                        <hr>
+                        <p class="mb-2">
+                            <strong>Platform Commission:</strong>
+                            Rs. {{ number_format($booking->payment->platform_commission ?? 0, 2) }}
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>Your Net Amount:</strong>
+                            Rs. {{ number_format($booking->payment->vendor_amount ?? 0, 2) }}
+                        </p>
+                    @endif
+
+                    @if($loyaltyDiscount > 0)
+                        <div class="alert alert-info mt-3 mb-0">
+                            Loyalty discount is platform-funded and does not reduce your payout basis.
+                        </div>
+                    @endif
+                </div>
+            </div>
 
             <a href="{{ route('vendor.bookings.index') }}"
                class="btn btn-secondary mt-3">

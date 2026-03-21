@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1">My Payments</h3>
-            <p class="text-muted mb-0">Track earnings, commission, and payout status</p>
+            <p class="text-muted mb-0">Track customer payments, loyalty discount impact, commission, and payouts</p>
         </div>
     </div>
 
@@ -16,8 +16,8 @@
         <div class="col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body">
-                    <small class="text-muted d-block mb-1">Total Gross Revenue</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalGross, 2) }}</h4>
+                    <small class="text-muted d-block mb-1">Original Booking Value</small>
+                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalOriginalValue, 2) }}</h4>
                 </div>
             </div>
         </div>
@@ -25,8 +25,17 @@
         <div class="col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body">
-                    <small class="text-muted d-block mb-1">Total Commission</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalCommission, 2) }}</h4>
+                    <small class="text-muted d-block mb-1">Loyalty Discount</small>
+                    <h4 class="fw-bold mb-0 text-danger">Rs. {{ number_format($totalLoyaltyDiscount, 2) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">Customer Paid</small>
+                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalCustomerPaid, 2) }}</h4>
                 </div>
             </div>
         </div>
@@ -40,7 +49,25 @@
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
+        <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">Platform Commission</small>
+                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalCommission, 2) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">Pending Payouts</small>
+                    <h4 class="fw-bold mb-0">Rs. {{ number_format($pendingPayout, 2) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body">
                     <small class="text-muted d-block mb-1">Paid Payouts</small>
@@ -48,13 +75,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-12">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Pending Payouts</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($pendingPayout, 2) }}</h4>
-                </div>
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body">
+            <div class="alert alert-info mb-0">
+                Loyalty discounts are platform-funded. The customer may pay a reduced amount, but your payout breakdown is shown separately.
             </div>
         </div>
     </div>
@@ -68,7 +94,9 @@
                         <th>Booking</th>
                         <th>Customer</th>
                         <th>Payment Type</th>
-                        <th>Total</th>
+                        <th>Original</th>
+                        <th>Discount</th>
+                        <th>Customer Paid</th>
                         <th>Commission</th>
                         <th>Net Amount</th>
                         <th>Payout</th>
@@ -76,6 +104,11 @@
                 </thead>
                 <tbody>
                     @forelse($payments as $payment)
+                        @php
+                            $discount = (float) ($payment->booking->loyalty_discount_amount ?? 0);
+                            $original = (float) $payment->amount + $discount;
+                        @endphp
+
                         <tr
                             onclick="window.location='{{ route('vendor.payments.show', $payment->id) }}'"
                             style="cursor:pointer;"
@@ -83,10 +116,12 @@
                         >
                             <td class="px-4 fw-semibold">#{{ $payment->id }}</td>
                             <td>#{{ $payment->booking_id }}</td>
+
                             <td>
                                 <div class="fw-semibold">{{ $payment->user->name ?? 'N/A' }}</div>
                                 <small class="text-muted">{{ $payment->user->email ?? '' }}</small>
                             </td>
+
                             <td>
                                 @if($payment->payment_type === 'deposit_cash')
                                     <span class="badge text-bg-info rounded-pill px-3 py-2">Deposit + Cash</span>
@@ -94,9 +129,13 @@
                                     <span class="badge text-bg-primary rounded-pill px-3 py-2">Full Online</span>
                                 @endif
                             </td>
+
+                            <td>Rs. {{ number_format($original, 2) }}</td>
+                            <td class="text-danger">Rs. {{ number_format($discount, 2) }}</td>
                             <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                             <td>Rs. {{ number_format($payment->platform_commission, 2) }}</td>
                             <td>Rs. {{ number_format($payment->vendor_amount, 2) }}</td>
+
                             <td>
                                 @if($payment->payout_status === 'paid')
                                     <span class="badge text-bg-success rounded-pill px-3 py-2">Paid</span>
@@ -109,7 +148,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-5">No payment records found.</td>
+                            <td colspan="10" class="text-center text-muted py-5">No payment records found.</td>
                         </tr>
                     @endforelse
                 </tbody>

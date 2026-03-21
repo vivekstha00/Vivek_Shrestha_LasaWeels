@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class VendorProfileController extends Controller
 {
+
     public function edit()
     {
         $vendor = Auth::user();
@@ -16,6 +17,7 @@ class VendorProfileController extends Controller
 
     public function update(Request $request)
     {
+        /** @var \App\Models\User $vendor */
         $vendor = Auth::user();
 
         $data = $request->validate([

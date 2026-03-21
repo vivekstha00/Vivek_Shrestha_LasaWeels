@@ -10,30 +10,40 @@ class VendorPaymentController extends Controller
 {
     public function index()
     {
+        $vendorId = Auth::id();
+
         $payments = Payment::with(['user', 'booking.vehicle'])
-            ->where('vendor_id', Auth::id())
+            ->where('vendor_id', $vendorId)
             ->latest()
             ->paginate(10);
 
-        $totalGross = Payment::where('vendor_id', Auth::id())->sum('amount');
-        $totalCommission = Payment::where('vendor_id', Auth::id())->sum('platform_commission');
-        $totalNet = Payment::where('vendor_id', Auth::id())->sum('vendor_amount');
+        $totalCustomerPaid = Payment::where('vendor_id', $vendorId)->sum('amount');
+        $totalCommission = Payment::where('vendor_id', $vendorId)->sum('platform_commission');
+        $totalNet = Payment::where('vendor_id', $vendorId)->sum('vendor_amount');
 
-        $pendingPayout = Payment::where('vendor_id', Auth::id())
+        $pendingPayout = Payment::where('vendor_id', $vendorId)
             ->whereIn('payout_status', ['unpaid', 'pending'])
             ->sum('vendor_amount');
 
-        $paidPayout = Payment::where('vendor_id', Auth::id())
+        $paidPayout = Payment::where('vendor_id', $vendorId)
             ->where('payout_status', 'paid')
             ->sum('vendor_amount');
 
+        $totalLoyaltyDiscount = Payment::where('vendor_id', $vendorId)
+            ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
+            ->sum('bookings.loyalty_discount_amount');
+
+        $totalOriginalValue = $totalCustomerPaid + $totalLoyaltyDiscount;
+
         return view('vendor.pages.payments.index', compact(
             'payments',
-            'totalGross',
+            'totalCustomerPaid',
             'totalCommission',
             'totalNet',
             'pendingPayout',
-            'paidPayout'
+            'paidPayout',
+            'totalLoyaltyDiscount',
+            'totalOriginalValue'
         ));
     }
 

@@ -28,7 +28,7 @@ class VendorBookingController extends Controller
             abort(403);
         }
 
-        $booking->load(['vehicle', 'user']);
+        $booking->load(['vehicle', 'user', 'payment']);
 
         return view('vendor.pages.bookings.show', compact('booking'));
     }
