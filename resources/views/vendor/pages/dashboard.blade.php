@@ -44,6 +44,62 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Original Booking Value</div>
+                    <div class="fs-4 fw-bold">Rs. {{ number_format($originalBookingValue ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Loyalty Discount Impact</div>
+                    <div class="fs-4 fw-bold text-danger">Rs. {{ number_format($totalLoyaltyDiscount ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Customer Paid</div>
+                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalCustomerPaid ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Net Earnings</div>
+                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalNet ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Platform Commission</div>
+                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalCommission ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card card-soft">
+                <div class="card-body">
+                    <div class="text-muted small">Bookings Using Loyalty Discount</div>
+                    <div class="fs-4 fw-bold">{{ $discountedBookingsCount ?? 0 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card card-soft table-card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
