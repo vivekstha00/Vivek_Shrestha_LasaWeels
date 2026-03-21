@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\AdminDocumentController;
+use App\Http\Controllers\Admin\AdminLoyaltyController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -54,7 +55,7 @@ Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name(
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
-    
+
     Route::post('/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
 
     Route::get('/user/profile/loyalty', [UserProfileController::class, 'loyaltyHistory'])->name('user.profile.loyalty');
@@ -136,6 +137,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
     Route::patch('/documents/{document}/approve', [AdminDocumentController::class, 'approve'])->name('documents.approve');
     Route::patch('/documents/{document}/reject', [AdminDocumentController::class, 'reject'])->name('documents.reject');
+
+    Route::get('/loyalty', [AdminLoyaltyController::class, 'index'])->name('loyalty.index');
+    Route::get('/loyalty/{user}', [AdminLoyaltyController::class, 'show'])->name('loyalty.show');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {

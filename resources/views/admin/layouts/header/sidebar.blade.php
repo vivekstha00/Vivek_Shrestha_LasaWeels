@@ -17,6 +17,13 @@
         </li>
 
         <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.loyalty.*') ? 'active' : '' }}"
+            href="{{ route('admin.loyalty.index') }}">
+                <i class="fa-solid fa-gift me-2"></i> Loyalty
+            </a>
+        </li>
+
+        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}"
                href="{{ route('admin.vendors.index') }}">
                 <i class="fa-solid fa-building me-2"></i> Vendors
