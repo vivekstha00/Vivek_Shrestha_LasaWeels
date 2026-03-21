@@ -20,6 +20,55 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="GET" action="{{ route('user.booking.index') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Pickup Date (From)</label>
+                        <input type="date" name="from_date" class="form-control rounded-3" value="{{ request('from_date') }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Drop Date (To)</label>
+                        <input type="date" name="to_date" class="form-control rounded-3" value="{{ request('to_date') }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select name="status" class="form-select rounded-3">
+                            <option value="">All Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Service</label>
+                        <select name="service" class="form-select rounded-3">
+                            <option value="">All Service</option>
+                            <option value="self" {{ request('service') == 'self' ? 'selected' : '' }}>Self Drive</option>
+                            <option value="driver" {{ request('service') == 'driver' ? 'selected' : '' }}>With Driver</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100 rounded-3">
+                            Filter
+                        </button>
+
+                        <a href="{{ route('user.booking.index') }}" class="btn btn-outline-secondary w-100 rounded-3">
+                            Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if($bookings->count() === 0)
         <div class="alert alert-info">You haven’t made any bookings yet.</div>
     @else

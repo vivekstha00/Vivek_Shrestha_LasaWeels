@@ -17,7 +17,7 @@ use App\Services\LoyaltyService;
 
 class UserBookingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $loyaltyService = app(LoyaltyService::class);
 
@@ -34,10 +34,23 @@ class UserBookingController extends Controller
             $loyaltyService->awardCompletedBookingPoints($bookingToComplete->fresh());
         }
 
-        $bookings = Booking::with(['vehicle', 'payment', 'driver', 'review'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->paginate(10);
+        $query = Booking::with(['vehicle', 'payment', 'driver', 'review'])
+            ->where('user_id', Auth::id());
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('pickup_datetime', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('drop_datetime', '<=', $request->to_date);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('service')) {
+            $query->where('service', $request->service);
+        }
+
+        $bookings = $query->latest()->paginate(10)->withQueryString();
 
         return view('user.pages.booking.my-bookings', compact('bookings'));
     }

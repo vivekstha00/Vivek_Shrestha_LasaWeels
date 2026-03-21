@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
+use App\Services\LoyaltyService;
 
 class UserPaymentController extends Controller
 {
@@ -152,6 +153,10 @@ class UserPaymentController extends Controller
                     'status' => 'confirmed',
                     'payment_status' => $payment->payment_type === 'full_online' ? 'paid' : 'partial',
                 ]);
+                if ($booking->loyalty_points_redeemed > 0) {
+                    app(LoyaltyService::class)
+                        ->redeemPointsForBooking($booking->fresh(), $booking->loyalty_points_redeemed);
+                }
 
                 $booking->user->notify(new PaymentSuccessNotification($payment));
 

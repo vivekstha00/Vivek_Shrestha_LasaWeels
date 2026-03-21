@@ -26,10 +26,10 @@
 
     <div class="row g-4">
 
-        {{-- LEFT SIDE --}}
+        {{-- LEFT SIDE – Personal & Status (col-lg-4) --}}
         <div class="col-lg-4">
 
-            {{-- Profile Card --}}
+            {{-- 1. Profile Card --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4 text-center">
 
@@ -55,7 +55,147 @@
                 </div>
             </div>
 
-            {{-- Update Profile --}}
+            {{-- Loyalty Overview – cleaner, more like your screenshot --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold">Loyalty Points</h5>
+                        <small class="text-muted">Earn points from completed trips and reviews</small>
+                    </div>
+
+                    @php
+                        $tierClass = match(strtolower($loyaltyAccount->tier ?? 'bronze')) {
+                            'gold'   => 'bg-warning text-dark',
+                            'silver' => 'bg-secondary text-white',
+                            default  => 'bg-dark text-white',
+                        };
+                    @endphp
+
+                    <span class="badge {{ $tierClass }} px-4 py-2 fs-6 rounded-pill">
+                        {{ ucfirst($loyaltyAccount->tier ?? 'bronze') }}
+                    </span>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+
+                    <div class="row g-3 mb-4">
+
+                        <!-- Row 1 -->
+                        <div class="col-6">
+                            <div class="border rounded-4 p-3 text-center h-100">
+                                <div class="small text-muted mb-1">Available Points</div>
+                                <h4 class="fw-bold text-primary mb-0">{{ $loyaltyAccount->available_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="border rounded-4 p-3 text-center h-100">
+                                <div class="small text-muted mb-1">Lifetime Earned</div>
+                                <h4 class="fw-bold text-success mb-0">{{ $loyaltyAccount->lifetime_earned_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="col-6">
+                            <div class="border rounded-4 p-3 text-center h-100">
+                                <div class="small text-muted mb-1">Redeemed</div>
+                                <h4 class="fw-bold text-danger mb-0">{{ $loyaltyAccount->lifetime_redeemed_points ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="border rounded-4 p-3 text-center h-100">
+                                <div class="small text-muted mb-1">Completed Trips</div>
+                                <h4 class="fw-bold mb-0">{{ $loyaltyAccount->completed_bookings_count ?? 0 }}</h4>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    @php
+                        $completedCount = $loyaltyAccount->completed_bookings_count ?? 0;
+                        $currentTier = strtolower($loyaltyAccount->tier ?? 'bronze');
+
+                        if ($currentTier === 'bronze') {
+                            $nextTier = 'Silver';
+                            $target = 5;
+                        } elseif ($currentTier === 'silver') {
+                            $nextTier = 'Gold';
+                            $target = 10;
+                        } else {
+                            $nextTier = null;
+                            $target = null;
+                        }
+
+                        $progress = $target ? min(($completedCount / $target) * 100, 100) : 100;
+                    @endphp
+
+                    @if($nextTier)
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center small mb-2">
+                                <span class="text-muted">Progress to {{ $nextTier }}</span>
+                                <span class="fw-semibold">{{ $completedCount }}/{{ $target }} trips</span>
+                            </div>
+                            <div class="progress" style="height: 12px; background-color: #e9ecef;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progress }}%"></div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-warning mb-0 mt-3">
+                            <div class="fw-semibold">Gold Tier Achieved</div>
+                            <div class="small">You have reached the highest loyalty level.</div>
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- Self-Drive Verification – only show if NOT yet approved --}}
+            @if($selfDriveVerificationStatus !== 'approved')
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="mb-0 fw-bold">Self-Drive Verification</h5>
+                    </div>
+
+                    <div class="card-body px-4 pb-4">
+                        @if($selfDriveVerificationStatus === 'pending')
+                            <div class="alert alert-warning mb-0">
+                                <div class="fw-semibold mb-1">Verification Pending</div>
+                                <div class="small">
+                                    Your documents are under review. You can still book vehicles with driver.
+                                </div>
+                            </div>
+
+                        @elseif($selfDriveVerificationStatus === 'rejected')
+                            <div class="alert alert-danger mb-0">
+                                <div class="fw-semibold mb-1">Verification Rejected</div>
+                                <div class="small">
+                                    One or more required documents were rejected. Please update and resubmit them.
+                                </div>
+                            </div>
+
+                        @elseif($selfDriveVerificationStatus === 'expired')
+                            <div class="alert alert-danger mb-0">
+                                <div class="fw-semibold mb-1">License Expired</div>
+                                <div class="small">
+                                    Your driving license has expired. Please upload a valid one to continue self-drive booking.
+                                </div>
+                            </div>
+
+                        @else
+                            <!-- Not uploaded / no documents -->
+                            <div class="alert alert-secondary mb-0">
+                                <div class="fw-semibold mb-1">Documents Required</div>
+                                <div class="small">
+                                    Upload your driving license and citizenship to unlock self-drive booking.
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- 4. Update Profile – last in personal column --}}
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">
                     <h5 class="mb-0 fw-bold">Update Profile</h5>
@@ -120,7 +260,7 @@
 
         </div>
 
-        {{-- RIGHT SIDE --}}
+        {{-- RIGHT SIDE – Activity & History (col-lg-8) --}}
         <div class="col-lg-8">
 
             {{-- Booking Stats --}}
@@ -159,95 +299,6 @@
                             <h3 class="fw-bold text-danger mb-0">{{ $cancelledBookings ?? 0 }}</h3>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {{-- Loyalty Overview --}}
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0 fw-bold">Loyalty Points</h5>
-                        <small class="text-muted">Earn points from completed trips and reviews</small>
-                    </div>
-
-                    @php
-                        $tierClass = match(strtolower($loyaltyAccount->tier ?? 'bronze')) {
-                            'gold' => 'bg-warning text-dark',
-                            'silver' => 'bg-secondary',
-                            default => 'bg-dark text-white',
-                        };
-                    @endphp
-
-                    <span class="badge {{ $tierClass }} px-3 py-2 rounded-pill">
-                        {{ ucfirst($loyaltyAccount->tier ?? 'bronze') }}
-                    </span>
-                </div>
-
-                <div class="card-body px-4 pb-4">
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded-4 p-3 h-100 text-center">
-                                <div class="small text-muted mb-1">Available Points</div>
-                                <h4 class="fw-bold text-primary mb-0">{{ $loyaltyAccount->available_points ?? 0 }}</h4>
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded-4 p-3 h-100 text-center">
-                                <div class="small text-muted mb-1">Lifetime Earned</div>
-                                <h4 class="fw-bold text-success mb-0">{{ $loyaltyAccount->lifetime_earned_points ?? 0 }}</h4>
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded-4 p-3 h-100 text-center">
-                                <div class="small text-muted mb-1">Redeemed</div>
-                                <h4 class="fw-bold text-danger mb-0">{{ $loyaltyAccount->lifetime_redeemed_points ?? 0 }}</h4>
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded-4 p-3 h-100 text-center">
-                                <div class="small text-muted mb-1">Completed Trips</div>
-                                <h4 class="fw-bold mb-0">{{ $loyaltyAccount->completed_bookings_count ?? 0 }}</h4>
-                            </div>
-                        </div>
-                    </div>
-
-                    @php
-                        $completedCount = $loyaltyAccount->completed_bookings_count ?? 0;
-                        $currentTier = strtolower($loyaltyAccount->tier ?? 'bronze');
-
-                        if ($currentTier === 'bronze') {
-                            $nextTier = 'Silver';
-                            $target = 5;
-                        } elseif ($currentTier === 'silver') {
-                            $nextTier = 'Gold';
-                            $target = 10;
-                        } else {
-                            $nextTier = null;
-                            $target = null;
-                        }
-
-                        $progress = $target ? min(($completedCount / $target) * 100, 100) : 100;
-                    @endphp
-
-                    @if($nextTier)
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between small mb-2">
-                                <span class="text-muted">Progress to {{ $nextTier }}</span>
-                                <span class="fw-semibold">{{ $completedCount }}/{{ $target }} trips</span>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%"></div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="alert alert-warning mb-0">
-                            <div class="fw-semibold">Gold Tier Achieved</div>
-                            <div class="small">You have reached the highest loyalty level.</div>
-                        </div>
-                    @endif
                 </div>
             </div>
 
@@ -308,7 +359,8 @@
                     @endif
                 </div>
             </div>
-            {{-- Personal Info --}}
+
+            {{-- Personal Information --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="mb-0 fw-bold">Personal Information</h5>
@@ -336,51 +388,6 @@
                             <div class="fw-semibold">{{ $user->address ?: 'Not provided' }}</div>
                         </div>
                     </div>
-                </div>
-            </div>
-            {{-- Self Drive Verification Status --}}
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="mb-0 fw-bold">Self-Drive Verification</h5>
-                </div>
-
-                <div class="card-body px-4 pb-4">
-                    @if($selfDriveVerificationStatus === 'approved')
-                        <div class="alert alert-success mb-0">
-                            <div class="fw-semibold mb-1">Verified for Self Drive</div>
-                            <div class="small">
-                                Your license and citizenship are approved. You can book self-drive vehicles.
-                            </div>
-                        </div>
-                    @elseif($selfDriveVerificationStatus === 'pending')
-                        <div class="alert alert-warning mb-0">
-                            <div class="fw-semibold mb-1">Verification Pending</div>
-                            <div class="small">
-                                Your documents are under review. You can still book vehicles with driver.
-                            </div>
-                        </div>
-                    @elseif($selfDriveVerificationStatus === 'rejected')
-                        <div class="alert alert-danger mb-0">
-                            <div class="fw-semibold mb-1">Verification Rejected</div>
-                            <div class="small">
-                                One or more required documents were rejected. Please update and resubmit them.
-                            </div>
-                        </div>
-                    @elseif($selfDriveVerificationStatus === 'expired')
-                        <div class="alert alert-danger mb-0">
-                            <div class="fw-semibold mb-1">License Expired</div>
-                            <div class="small">
-                                Your driving license has expired. Please upload a valid one to continue self-drive booking.
-                            </div>
-                        </div>
-                    @else
-                        <div class="alert alert-secondary mb-0">
-                            <div class="fw-semibold mb-1">Documents Required</div>
-                            <div class="small">
-                                Upload your driving license and citizenship first to unlock self-drive booking.
-                            </div>
-                        </div>
-                    @endif
                 </div>
             </div>
 
