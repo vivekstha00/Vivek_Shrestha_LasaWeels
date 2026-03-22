@@ -8,9 +8,12 @@
 
 @php
     $selectedService = old('service', $data['service'] ?? $service ?? 'self');
+
     $pricePerDay = $selectedService === 'driver'
         ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
         : (float) ($vehicle->price_per_day ?? 0);
+
+    $actualPrice = (float) ($estimatedTotal ?? 0);
 @endphp
 
 <div class="container mt-5 pt-5">
@@ -34,10 +37,17 @@
                                 {{ $selectedService === 'driver' ? 'With Driver' : 'Self Drive' }}
                             </strong>
                         </p>
-                        <p class="mb-0">
+                        <p class="mb-1">
                             Price per day:
                             <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
                         </p>
+
+                        @if(!empty($securityDeposit) && $selectedService === 'self')
+                            <p class="mb-0 text-muted">
+                                Refundable Security Deposit:
+                                <strong>NPR {{ number_format($securityDeposit, 2) }}</strong>
+                            </p>
+                        @endif
                     </div>
 
                     {{-- Errors --}}
@@ -59,26 +69,50 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Pickup Location</label>
-                                <input type="text" class="form-control" name="pickup_location" value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}" required>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    name="pickup_location"
+                                    value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}"
+                                    required
+                                >
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Drop Location</label>
-                                <input type="text" class="form-control" name="drop_location" value="{{ old('drop_location', $data['drop_location'] ?? '') }}" required>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    name="drop_location"
+                                    value="{{ old('drop_location', $data['drop_location'] ?? '') }}"
+                                    required
+                                >
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Pickup Date & Time</label>
-                                <input type="datetime-local" class="form-control" name="pickup_datetime" value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    name="pickup_datetime"
+                                    value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}"
+                                    required
+                                >
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Drop Date & Time</label>
-                                <input type="datetime-local" class="form-control" name="drop_datetime" value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    name="drop_datetime"
+                                    value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}"
+                                    required
+                                >
                             </div>
                         </div>
 
-                        {{-- Driver Selection Section --}}
+                        {{-- Driver Selection --}}
                         @if($selectedService === 'driver')
                             <div class="card mt-4 border-primary">
                                 <div class="card-body">
@@ -92,13 +126,16 @@
                                                 (Rating: {{ $selectedDriver->rating ?? 'N/A' }} / 5)
                                             </div>
                                         </div>
+
                                         <input type="hidden" name="driver_id" value="{{ $selectedDriver->id }}">
+
                                         <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
                                            class="btn btn-outline-primary btn-sm">
                                             Change Driver
                                         </a>
                                     @else
                                         <p class="text-muted mb-2">You need to select a driver before proceeding.</p>
+
                                         <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
                                            class="btn btn-primary">
                                             Choose a Driver
@@ -108,10 +145,149 @@
                             </div>
                         @endif
 
+                        {{-- Discount Choice --}}
+                        <div class="card mt-4 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3">Apply Discount</h5>
+
+                                <div class="form-check mb-2">
+                                    <input
+                                        class="form-check-input discount-choice"
+                                        type="radio"
+                                        name="discount_choice"
+                                        id="discount_none"
+                                        value="none"
+                                        {{ old('discount_choice', 'none') === 'none' ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="discount_none">
+                                        No discount
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input
+                                        class="form-check-input discount-choice"
+                                        type="radio"
+                                        name="discount_choice"
+                                        id="discount_loyalty"
+                                        value="loyalty"
+                                        {{ old('discount_choice') === 'loyalty' ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="discount_loyalty">
+                                        Use Loyalty Points
+                                    </label>
+                                </div>
+
+                                <div id="loyalty_box" class="border rounded p-3 mb-3" style="display: none;">
+                                    <div class="mb-2">
+                                        <div class="small text-muted mb-1">Available Points</div>
+                                        <div class="fw-bold text-primary">{{ $availablePoints ?? 0 }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="small text-muted mb-1">Max Redeemable</div>
+                                        <div class="fw-bold text-success">{{ $maxRedeemablePoints ?? 0 }}</div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label class="form-label fw-semibold">Redeem Points</label>
+                                        <input
+                                            type="number"
+                                            id="redeem_points"
+                                            name="redeem_points"
+                                            class="form-control"
+                                            min="0"
+                                            max="{{ $maxRedeemablePoints ?? 0 }}"
+                                            step="1"
+                                            value="{{ old('redeem_points', 0) }}"
+                                            placeholder="Enter points"
+                                        >
+                                        <small class="text-muted">1 point = NPR 1. Minimum 100 points.</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input
+                                        class="form-check-input discount-choice"
+                                        type="radio"
+                                        name="discount_choice"
+                                        id="discount_code_option"
+                                        value="code"
+                                        {{ old('discount_choice') === 'code' ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="discount_code_option">
+                                        Use Discount Code
+                                    </label>
+                                </div>
+
+                                <div id="code_box" class="border rounded p-3" style="display: none;">
+                                    <label class="form-label fw-semibold">Discount Code</label>
+                                    <input
+                                        type="text"
+                                        id="discount_code"
+                                        name="discount_code"
+                                        class="form-control"
+                                        value="{{ old('discount_code') }}"
+                                        placeholder="Enter code like NEWYEAR26"
+                                    >
+
+                                    @if(!empty($activeDiscountCodes) && $activeDiscountCodes->count())
+                                        <div class="mt-3">
+                                            <div class="small text-muted mb-2">Available offers</div>
+
+                                            @foreach($activeDiscountCodes as $offer)
+                                                <div class="border rounded p-2 small bg-light mb-2">
+                                                    <strong>{{ $offer->title }}</strong><br>
+                                                    Code: <strong>{{ $offer->code }}</strong><br>
+
+                                                    @if($offer->type === 'percentage')
+                                                        Discount:
+                                                        {{ rtrim(rtrim(number_format($offer->value, 2), '0'), '.') }}% off
+                                                    @else
+                                                        Discount:
+                                                        NPR {{ number_format($offer->value, 2) }} off
+                                                    @endif
+
+                                                    @if($offer->max_discount_amount)
+                                                        <br>Max Discount: NPR {{ number_format($offer->max_discount_amount, 2) }}
+                                                    @endif
+
+                                                    @if($offer->valid_until)
+                                                        <br>Valid Until: {{ $offer->valid_until->format('Y-m-d h:i A') }}
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Special Request --}}
+                        <div class="mt-4">
+                            <label class="form-label">Special Request</label>
+                            <textarea
+                                name="special_request"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Any note for booking (optional)"
+                            >{{ old('special_request', $data['special_request'] ?? '') }}</textarea>
+                        </div>
+
                         {{-- Terms --}}
                         <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" name="accept_terms" value="1" required>
-                            <label class="form-check-label">I agree to Terms & Conditions</label>
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="accept_terms"
+                                value="1"
+                                id="accept_terms"
+                                {{ old('accept_terms') ? 'checked' : '' }}
+                                required
+                            >
+                            <label class="form-check-label" for="accept_terms">
+                                I agree to Terms & Conditions
+                            </label>
                         </div>
 
                         <div class="mt-4 text-end">
@@ -142,55 +318,36 @@
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Actual Price</span>
-                        <strong id="actual_price" data-value="{{ $estimatedTotal ?? 0 }}">
-                            NPR {{ number_format($estimatedTotal ?? 0, 2) }}
+                        <span>Original Price</span>
+                        <strong id="actual_price" data-value="{{ $actualPrice }}">
+                            NPR {{ number_format($actualPrice, 2) }}
                         </strong>
                     </div>
 
-                    @if(($availablePoints ?? 0) > 0)
-                        <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount Type</span>
+                        <strong id="discount_type_label">None</strong>
+                    </div>
 
-                        <div class="mb-2">
-                            <div class="small text-muted mb-1">Available Points</div>
-                            <div class="fw-bold text-primary">{{ $availablePoints ?? 0 }}</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="small text-muted mb-1">Max Redeemable</div>
-                            <div class="fw-bold text-success">{{ $maxRedeemablePoints ?? 0 }}</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Redeem Points</label>
-                            <input
-                                type="number"
-                                id="redeem_points"
-                                name="redeem_points"
-                                form="bookingCheckoutForm"
-                                class="form-control"
-                                min="0"
-                                max="{{ $maxRedeemablePoints ?? 0 }}"
-                                step="1"
-                                value="{{ old('redeem_points', 0) }}"
-                                placeholder="Enter points"
-                            >
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Loyalty Discount</span>
-                            <strong class="text-danger" id="discount_price">- NPR 0.00</strong>
-                        </div>
-                    @endif
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount Amount</span>
+                        <strong class="text-danger" id="discount_price">- NPR 0.00</strong>
+                    </div>
 
                     <hr>
 
                     <div class="d-flex justify-content-between fs-5">
                         <span class="fw-bold">Final Price</span>
                         <span class="fw-bold text-success" id="final_price">
-                            NPR {{ number_format($estimatedTotal ?? 0, 2) }}
+                            NPR {{ number_format($actualPrice, 2) }}
                         </span>
                     </div>
+
+                    @if(!empty($securityDeposit) && $selectedService === 'self')
+                        <small class="text-muted d-block mt-2">
+                            Security deposit is separate and refundable based on your booking policy.
+                        </small>
+                    @endif
 
                     <small class="text-muted d-block mt-2">
                         Final price will be validated securely on server.
@@ -201,29 +358,69 @@
 
     </div>
 </div>
+
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const redeemInput = document.getElementById('redeem_points');
-            const actualPriceEl = document.getElementById('actual_price');
-            const discountPriceEl = document.getElementById('discount_price');
-            const finalPriceEl = document.getElementById('final_price');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const actualPriceEl = document.getElementById('actual_price');
+        const finalPriceEl = document.getElementById('final_price');
+        const discountPriceEl = document.getElementById('discount_price');
+        const discountTypeLabelEl = document.getElementById('discount_type_label');
 
-            if (!redeemInput || !actualPriceEl || !discountPriceEl || !finalPriceEl) {
-                return;
+        const redeemInput = document.getElementById('redeem_points');
+        const discountCodeInput = document.getElementById('discount_code');
+
+        const loyaltyBox = document.getElementById('loyalty_box');
+        const codeBox = document.getElementById('code_box');
+
+        const radioNone = document.getElementById('discount_none');
+        const radioLoyalty = document.getElementById('discount_loyalty');
+        const radioCode = document.getElementById('discount_code_option');
+
+        const actualPrice = parseFloat(actualPriceEl?.dataset.value || 0);
+        const maxRedeemable = parseInt(redeemInput?.max || 0);
+
+        function formatNpr(amount) {
+            return 'NPR ' + Number(amount).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function getSelectedDiscountChoice() {
+            const checked = document.querySelector('input[name="discount_choice"]:checked');
+            return checked ? checked.value : 'none';
+        }
+
+        function toggleDiscountFields() {
+            const selected = getSelectedDiscountChoice();
+
+            if (loyaltyBox) {
+                loyaltyBox.style.display = selected === 'loyalty' ? 'block' : 'none';
             }
 
-            const actualPrice = parseFloat(actualPriceEl.dataset.value || 0);
-            const maxRedeemable = parseInt(redeemInput.max || 0);
-
-            function formatNpr(amount) {
-                return 'NPR ' + Number(amount).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+            if (codeBox) {
+                codeBox.style.display = selected === 'code' ? 'block' : 'block';
             }
 
-            function updateSummary() {
+            if (selected !== 'loyalty' && redeemInput) {
+                redeemInput.value = 0;
+            }
+
+            if (selected !== 'code' && discountCodeInput) {
+                discountCodeInput.value = '';
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const selected = getSelectedDiscountChoice();
+
+            let discount = 0;
+            let label = 'None';
+
+            if (selected === 'loyalty' && redeemInput) {
                 let points = parseInt(redeemInput.value || 0);
 
                 if (isNaN(points) || points < 0) {
@@ -235,17 +432,40 @@
                 }
 
                 redeemInput.value = points;
-
-                const discount = points;
-                const finalPrice = Math.max(0, actualPrice - discount);
-
-                discountPriceEl.textContent = '- ' + formatNpr(discount);
-                finalPriceEl.textContent = formatNpr(finalPrice);
+                discount = points;
+                label = 'Loyalty Points';
             }
 
-            redeemInput.addEventListener('input', updateSummary);
-            updateSummary();
+            if (selected === 'code') {
+                label = 'Discount Code';
+                discount = 0;
+            }
+
+            const finalPrice = Math.max(0, actualPrice - discount);
+
+            if (discountTypeLabelEl) {
+                discountTypeLabelEl.textContent = label;
+            }
+
+            if (discountPriceEl) {
+                discountPriceEl.textContent = '- ' + formatNpr(discount);
+            }
+
+            if (finalPriceEl) {
+                finalPriceEl.textContent = formatNpr(finalPrice);
+            }
+        }
+
+        document.querySelectorAll('.discount-choice').forEach(function (radio) {
+            radio.addEventListener('change', toggleDiscountFields);
         });
-    </script>
+
+        if (redeemInput) {
+            redeemInput.addEventListener('input', updateSummary);
+        }
+
+        toggleDiscountFields();
+    });
+</script>
 @endpush
 @endsection

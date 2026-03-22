@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\Vehicle;
+use App\Models\DiscountCode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -192,6 +193,17 @@ class UserBookingController extends Controller
             $selectedDriver = Driver::find($data['driver_id']);
         }
 
+        $activeDiscountCodes = DiscountCode::query()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('valid_from')->orWhere('valid_from', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', now());
+            })
+            ->orderByDesc('id')
+            ->get();
+
         return view('user.pages.booking.booking-checkouts', compact(
             'vehicle',
             'data',
@@ -201,7 +213,8 @@ class UserBookingController extends Controller
             'service',
             'selectedDriver',
             'availablePoints',
-            'maxRedeemablePoints'
+            'maxRedeemablePoints',
+            'activeDiscountCodes'
         ));
     }
 
@@ -215,8 +228,10 @@ class UserBookingController extends Controller
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
             'driver_id'        => [$request->service === 'driver' ? 'required' : 'nullable', 'exists:drivers,id'],
+            'discount_choice'  => ['nullable', 'in:none,loyalty,code'],
             'redeem_points'    => ['nullable', 'integer', 'min:0'],
-            'accept_terms' => ['required', 'accepted'],
+            'discount_code'    => ['nullable', 'string', 'max:50'],
+            'accept_terms'     => ['required', 'accepted'],
         ]);
 
         /** @var \App\Models\User $user */
@@ -264,32 +279,72 @@ class UserBookingController extends Controller
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
             : $vehicle->price_per_day;
 
-        $totalPrice = $days * $pricePerDay;
+        $originalPrice = $days * $pricePerDay;
 
         $loyaltyService = app(LoyaltyService::class);
+
+        $discountChoice = $data['discount_choice'] ?? 'none';
         $requestedRedeemPoints = (int) ($data['redeem_points'] ?? 0);
-        $maxRedeemablePoints = $loyaltyService->getMaxRedeemablePoints($user, $totalPrice);
+        $enteredDiscountCode = strtoupper(trim($data['discount_code'] ?? ''));
 
-        if ($requestedRedeemPoints > 0) {
-            if ($requestedRedeemPoints < 100) {
-                return back()
-                    ->withErrors([
-                        'redeem_points' => 'Minimum redeemable points is 100.'
-                    ])
-                    ->withInput();
-            }
+        $discountType = 'none';
+        $discountCode = null;
+        $discountAmount = 0;
+        $loyaltyPointsRedeemed = 0;
+        $loyaltyDiscountAmount = 0;
 
-            if ($requestedRedeemPoints > $maxRedeemablePoints) {
-                return back()
-                    ->withErrors([
-                        'redeem_points' => 'Requested redeem points exceed your allowed limit.'
-                    ])
-                    ->withInput();
+        if ($discountChoice === 'loyalty') {
+            $maxRedeemablePoints = $loyaltyService->getMaxRedeemablePoints($user, $originalPrice);
+
+            if ($requestedRedeemPoints > 0) {
+                if ($requestedRedeemPoints < 100) {
+                    return back()
+                        ->withErrors([
+                            'redeem_points' => 'Minimum redeemable points is 100.'
+                        ])
+                        ->withInput();
+                }
+
+                if ($requestedRedeemPoints > $maxRedeemablePoints) {
+                    return back()
+                        ->withErrors([
+                            'redeem_points' => 'Requested redeem points exceed your allowed limit.'
+                        ])
+                        ->withInput();
+                }
+
+                $discountType = 'loyalty';
+                $discountAmount = $requestedRedeemPoints; // 1 point = 1 NPR
+                $loyaltyPointsRedeemed = $requestedRedeemPoints;
+                $loyaltyDiscountAmount = $requestedRedeemPoints;
             }
         }
 
-        $loyaltyDiscountAmount = $requestedRedeemPoints; // 1 point = 1 NPR
-        $finalTotalPrice = max(0, $totalPrice - $loyaltyDiscountAmount);
+        if ($discountChoice === 'code') {
+            if (empty($enteredDiscountCode)) {
+                return back()
+                    ->withErrors([
+                        'discount_code' => 'Please enter a discount code.'
+                    ])
+                    ->withInput();
+            }
+
+            $code = DiscountCode::whereRaw('UPPER(code) = ?', [$enteredDiscountCode])->first();
+
+            if (! $code || ! $code->isUsable()) {
+                return back()
+                    ->withErrors([
+                        'discount_code' => 'This discount code is invalid or expired.'
+                    ])
+                    ->withInput();
+            }
+
+            $discountType = 'code';
+            $discountCode = $code->code;
+            $discountAmount = $code->calculateDiscount($originalPrice);
+        }
+
+        $finalTotalPrice = max(0, $originalPrice - $discountAmount);
 
         $securityDeposit = $data['service'] === 'self'
             ? $vehicle->security_deposit
@@ -306,8 +361,14 @@ class UserBookingController extends Controller
             'special_request'          => $data['special_request'] ?? null,
             'status'                   => 'pending',
             'payment_status'           => 'unpaid',
+
+            'original_price'           => $originalPrice,
+            'discount_type'            => $discountType,
+            'discount_code'            => $discountCode,
+            'discount_amount'          => $discountAmount,
             'total_price'              => $finalTotalPrice,
-            'loyalty_points_redeemed'  => $requestedRedeemPoints,
+
+            'loyalty_points_redeemed'  => $loyaltyPointsRedeemed,
             'loyalty_discount_amount'  => $loyaltyDiscountAmount,
             'security_deposit'         => $securityDeposit,
             'driver_id'                => $data['service'] === 'driver' ? ($data['driver_id'] ?? null) : null,

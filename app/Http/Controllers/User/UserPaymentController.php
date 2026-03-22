@@ -39,9 +39,11 @@ class UserPaymentController extends Controller
         $commissionRate = 0.10;
         $depositRate = 0.20;
 
-        $totalAmount = $booking->total_price;
-        $platformCommission = round($totalAmount * $commissionRate, 2);
-        $vendorAmount = round($totalAmount - $platformCommission, 2);
+        $totalAmount = (float) $booking->total_price;
+        $originalAmount = (float) ($booking->original_price ?? $booking->total_price);
+
+        $platformCommission = round($originalAmount * $commissionRate, 2);
+        $vendorAmount = round($originalAmount - $platformCommission, 2);
 
         if ($data['payment_option'] === 'deposit_cash') {
             $depositAmount = round($totalAmount * $depositRate, 2);
@@ -153,9 +155,18 @@ class UserPaymentController extends Controller
                     'status' => 'confirmed',
                     'payment_status' => $payment->payment_type === 'full_online' ? 'paid' : 'partial',
                 ]);
+
                 if ($booking->loyalty_points_redeemed > 0) {
                     app(LoyaltyService::class)
                         ->redeemPointsForBooking($booking->fresh(), $booking->loyalty_points_redeemed);
+                }
+
+                if ($booking->discount_type === 'code' && $booking->discount_code) {
+                    $discountCode = \App\Models\DiscountCode::where('code', $booking->discount_code)->first();
+
+                    if ($discountCode && $discountCode->isUsable()) {
+                        $discountCode->increment('used_count');
+                    }
                 }
 
                 $booking->user->notify(new PaymentSuccessNotification($payment));

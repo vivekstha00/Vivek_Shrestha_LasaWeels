@@ -13,7 +13,22 @@
 
                     <div class="mb-4">
                         <p class="mb-1"><strong>Booking ID:</strong> #{{ $booking->id }}</p>
-                        <p class="mb-1"><strong>Total Amount:</strong> Rs. {{ number_format($booking->total_price, 2) }}</p>
+                        <p class="mb-1"><strong>Original Amount:</strong> Rs. {{ number_format($booking->original_price ?? $booking->total_price, 2) }}</p>
+                        <p class="mb-1">
+                            <strong>Discount:</strong>
+                            Rs. {{ number_format($booking->discount_amount ?? 0, 2) }}
+                            @if($booking->discount_type === 'loyalty')
+                                <span class="text-muted">(Loyalty Points)</span>
+                            @elseif($booking->discount_type === 'code')
+                                <span class="text-muted">({{ $booking->discount_code }})</span>
+                            @endif
+                        </p>
+                        <p class="mb-1"><strong>Final Payable Amount:</strong> Rs. {{ number_format($booking->total_price, 2) }}</p>
+
+                        @if($booking->security_deposit)
+                            <p class="mb-1"><strong>Refundable Security Deposit:</strong> Rs. {{ number_format($booking->security_deposit, 2) }}</p>
+                        @endif
+
                         <p class="mb-0 text-muted">
                             Choose your payment option to confirm the booking.
                         </p>
