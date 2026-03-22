@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Services\VendorSubscriptionService;
 
 class VendorVehicleController extends Controller
 {
@@ -51,16 +52,30 @@ class VendorVehicleController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('vendor.pages.vehicles.index', compact('vehicles'));
+        $subscriptionSummary = app(VendorSubscriptionService::class)->getSummary(Auth::id());
+
+        return view('vendor.pages.vehicles.index', compact('vehicles', 'subscriptionSummary'));
     }
 
     public function create()
     {
-        return view('vendor.pages.vehicles.create');
+        $subscriptionService = app(VendorSubscriptionService::class);
+        $subscriptionSummary = $subscriptionService->getSummary(Auth::id());
+        $canAddVehicle = $subscriptionService->canAddVehicle(Auth::id());
+
+        return view('vendor.pages.vehicles.create', compact('subscriptionSummary', 'canAddVehicle'));
     }
 
     public function store(Request $request)
     {
+        $subscriptionService = app(VendorSubscriptionService::class);
+
+        if (! $subscriptionService->canAddVehicle(Auth::id())) {
+            return redirect()
+                ->route('vendor.vehicles.index')
+                ->with('error', 'Your current plan allows only ' . $subscriptionService->getVehicleLimit(Auth::id()) . ' active vehicles. Upgrade your subscription to add more vehicles.');
+        }
+
         $data = $request->validate([
             'wheel_type' => ['required'],
             'vehicle_type' => ['required'],
@@ -83,7 +98,6 @@ class VendorVehicleController extends Controller
                 'min:0',
                 Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
             ],
-
             'battery_capacity' => [
                 'nullable',
                 'numeric',
@@ -108,7 +122,6 @@ class VendorVehicleController extends Controller
                 'max:100',
                 Rule::requiredIf($request->fuel_type === 'electric')
             ],
-
             'price_per_day' => ['required', 'numeric'],
             'with_driver_price_per_day' => ['nullable', 'numeric'],
             'description' => ['nullable'],
@@ -129,6 +142,7 @@ class VendorVehicleController extends Controller
             $data['mileage_per_litre'] = null;
             $data['fuel_tank_capacity'] = null;
         }
+
         $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
 
         $vehicle = Vehicle::create([
@@ -164,13 +178,10 @@ class VendorVehicleController extends Controller
             'reject_reason' => null,
         ]);
 
-        // 2️⃣ Save images
         if ($request->hasFile('images')) {
-
             $isFirst = true;
 
             foreach ($request->file('images') as $img) {
-
                 $path = $img->store('vehicles', 'public');
 
                 $vehicle->images()->create([
@@ -178,7 +189,6 @@ class VendorVehicleController extends Controller
                     'is_primary' => $isFirst,
                 ]);
 
-                // store first image in vehicles table for thumbnail
                 if ($isFirst) {
                     $vehicle->update(['image_url' => $path]);
                     $isFirst = false;

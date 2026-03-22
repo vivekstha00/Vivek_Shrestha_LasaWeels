@@ -5,6 +5,18 @@
 
     <h3>Add New Driver</h3>
 
+    @if(isset($subscriptionSummary))
+        <div class="alert {{ ($canAddDriver ?? false) ? 'alert-info' : 'alert-warning' }} rounded-3 mb-4">
+            <strong>Current Plan:</strong> {{ $subscriptionSummary['plan_name'] ?? 'Free Plan' }}<br>
+            <strong>Driver Usage:</strong> {{ $subscriptionSummary['driver_count'] ?? 0 }} / {{ $subscriptionSummary['driver_limit'] ?? 2 }}
+
+            @if(!($canAddDriver ?? true))
+                <hr class="my-2">
+                Free plan limit reached. Upgrade subscription to add more drivers.
+            @endif
+        </div>
+    @endif
+
     <form action="{{ route('vendor.drivers.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -41,7 +53,9 @@
             <input type="file" class="form-control" id="image" name="image">
         </div>
 
-        <button type="submit" class="btn btn-success mt-3">Save Driver</button>
+        <button type="submit" class="btn btn-primary" {{ !($canAddDriver ?? true) ? 'disabled' : '' }}>
+            Save Driver
+        </button>
     </form>
 </div>
 @endsection

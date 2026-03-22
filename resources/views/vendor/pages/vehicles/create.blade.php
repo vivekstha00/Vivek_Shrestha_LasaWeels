@@ -9,6 +9,18 @@
 
     <h3 class="mb-4">Create Vehicle</h3>
 
+    @if(isset($subscriptionSummary))
+        <div class="alert {{ ($canAddVehicle ?? false) ? 'alert-info' : 'alert-warning' }} rounded-3 mb-4">
+            <strong>Current Plan:</strong> {{ $subscriptionSummary['plan_name'] ?? 'Free Plan' }}<br>
+            <strong>Vehicle Usage:</strong> {{ $subscriptionSummary['vehicle_count'] ?? 0 }} / {{ $subscriptionSummary['vehicle_limit'] ?? 2 }}
+
+            @if(!($canAddVehicle ?? true))
+                <hr class="my-2">
+                Free plan limit reached. Upgrade subscription to add more vehicles.
+            @endif
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('vendor.vehicles.store') }}" enctype="multipart/form-data">
         @csrf
 
@@ -245,7 +257,9 @@
         </div>
 
         <div class="mt-4">
-            <button class="btn btn-primary">Save Vehicle</button>
+            <button type="submit" class="btn btn-primary" {{ !($canAddVehicle ?? true) ? 'disabled' : '' }}>
+                Save Vehicle
+            </button>
             <a href="{{ route('vendor.vehicles.index') }}" class="btn btn-outline-dark">Cancel</a>
         </div>
     </form>
