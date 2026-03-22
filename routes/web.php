@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\AdminDocumentController;
 use App\Http\Controllers\Admin\AdminLoyaltyController;
+use App\Http\Controllers\Admin\AdminDiscountCodeController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -140,6 +141,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::get('/loyalty', [AdminLoyaltyController::class, 'index'])->name('loyalty.index');
     Route::get('/loyalty/{user}', [AdminLoyaltyController::class, 'show'])->name('loyalty.show');
+
+    Route::get('/discount-codes', [AdminDiscountCodeController::class, 'index'])->name('discount-codes.index');
+    Route::get('/discount-codes/create', [AdminDiscountCodeController::class, 'create'])->name('discount-codes.create');
+    Route::post('/discount-codes', [AdminDiscountCodeController::class, 'store'])->name('discount-codes.store');
+    Route::get('/discount-codes/{discountCode}/edit', [AdminDiscountCodeController::class, 'edit'])->name('discount-codes.edit');
+    Route::put('/discount-codes/{discountCode}', [AdminDiscountCodeController::class, 'update'])->name('discount-codes.update');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
