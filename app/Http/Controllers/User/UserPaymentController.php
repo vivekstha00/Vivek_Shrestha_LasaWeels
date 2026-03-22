@@ -132,11 +132,13 @@ class UserPaymentController extends Controller
 
         $payment = Payment::where('booking_id', $booking->id)->first();
 
+        $alreadyCompleted = $payment && $payment->status === 'completed';
+
         if ($payment) {
             $payment->gateway_reference = $pidx;
             $payment->gateway_payload = $lookup->json();
 
-            if ($status === 'Completed') {
+            if ($status === 'Completed'&& ! $alreadyCompleted)  {
                 $payment->status = 'completed';
                 $payment->paid_amount = $payment->deposit_amount;
                 $payment->remaining_amount = $payment->amount - $payment->deposit_amount;

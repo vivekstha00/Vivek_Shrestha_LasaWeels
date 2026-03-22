@@ -103,6 +103,45 @@
 </section>
 {{--  HERO ENDS HERE --}}
 
+@if($activeOffers->isNotEmpty())
+    <section class="py-4 bg-white border-top">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h4 class="fw-bold mb-0">Active Offers & Discounts</h4>
+            </div>
+
+            <div class="position-relative">
+                <div class="d-flex overflow-auto gap-3 pb-2 offers-scroller">
+                    @foreach($activeOffers as $offer)
+                        <div class="card border-0 shadow-sm rounded-4 flex-shrink-0" style="min-width: 280px; max-width: 320px;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="fw-bold mb-0">{{ $offer->title }}</h6>
+                                    <span class="badge bg-dark px-3 py-1">{{ $offer->code }}</span>
+                                </div>
+
+                                <p class="fs-5 fw-bold text-success mb-1">
+                                    @if($offer->type === 'percentage')
+                                        {{ $offer->value }}% OFF
+                                    @else
+                                        NPR {{ number_format($offer->value) }} OFF
+                                    @endif
+                                </p>
+
+                                <div class="small text-muted mt-2">
+                                    @if($offer->max_discount_amount)
+                                        Max NPR {{ number_format($offer->max_discount_amount) }} •
+                                    @endif
+                                    Valid until {{ $offer->valid_until->format('d M Y') }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+@endif
 
 {{-- FEATURES SECTION (separate, white background) --}}
 <section class="py-5 bg-light">

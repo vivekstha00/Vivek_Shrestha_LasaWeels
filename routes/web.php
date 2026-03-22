@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -35,9 +34,9 @@ use App\Http\Controllers\User\UserPaymentController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserDocumentController;
 use App\Http\Controllers\User\UserReviewController;
+use App\Http\Controllers\HomeController;
 
-Route::view('/', 'user.pages.home')->name('home');
-
+Route::get('/', [HomeController::class, 'index'])->name('home');
 // User Auth
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');

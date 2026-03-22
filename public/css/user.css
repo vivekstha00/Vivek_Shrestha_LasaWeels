@@ -1,0 +1,34 @@
+.offers-scroller {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f8f9fa;
+}
+
+.offers-scroller::-webkit-scrollbar {
+    height: 6px;
+}
+
+.offers-scroller::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.offers-scroller::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 10px;
+}
+
+.offers-scroller::-webkit-scrollbar-thumb:hover {
+    background: #6c757d;
+}
+
+/* Optional card hover lift */
+.offers-card-hover {
+    transition: all 0.25s ease;
+}
+
+.offers-card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.11) !important;
+}
+
