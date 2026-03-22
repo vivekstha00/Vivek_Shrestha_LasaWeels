@@ -48,6 +48,11 @@ return new class extends Migration
                 'paid'
             ])->default('unpaid');
 
+            $table->decimal('original_price', 10, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->enum('discount_type', ['none', 'loyalty', 'code'])->default('none');
+            $table->string('discount_code')->nullable();
+
             $table->decimal('total_price', 10, 2)->default(0);
 
             $table->unsignedInteger('loyalty_points_earned')->default(0);

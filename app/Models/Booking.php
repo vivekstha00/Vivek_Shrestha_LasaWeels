@@ -20,6 +20,10 @@ class Booking extends Model
         'payment_status',
         'security_deposit',
         'status',
+        'original_price',
+        'discount_amount',
+        'discount_type',
+        'discount_code',
         'total_price',
         'reminder_sent_at',
         'loyalty_points_earned',
@@ -32,7 +36,10 @@ class Booking extends Model
     protected $casts = [
         'pickup_datetime' => 'datetime',
         'drop_datetime'   => 'datetime',
+        'original_price'  => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total_price'     => 'decimal:2',
+        'security_deposit'=> 'decimal:2',
     ];
 
     // Vehicle relation (vehicles.vehicle_id)
@@ -63,7 +70,7 @@ class Booking extends Model
     }
 
     public function loyaltyTransactions()
-{
-    return $this->hasMany(LoyaltyTransaction::class);
-}
+    {
+        return $this->hasMany(LoyaltyTransaction::class);
+    }
 }
