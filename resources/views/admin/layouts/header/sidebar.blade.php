@@ -24,6 +24,13 @@
         </li>
 
         <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.subscription-plans.*') ? 'active' : '' }}"
+               href="{{ route('admin.subscription-plans.index') }}">
+                <i class="fa-solid fa-list me-2"></i> Subscription Plans
+            </a>
+        </li>
+
+        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.discount-codes.*') ? 'active' : '' }}"
             href="{{ route('admin.discount-codes.index') }}">
                 <i class="fa-solid fa-tags me-2"></i> Discount Codes
