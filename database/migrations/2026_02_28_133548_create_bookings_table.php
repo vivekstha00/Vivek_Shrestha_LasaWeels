@@ -39,6 +39,7 @@ return new class extends Migration
                 'confirmed',
                 'active',
                 'completed',
+                'cancel_requested',
                 'cancelled'
             ])->default('pending');
 
@@ -63,6 +64,11 @@ return new class extends Migration
 
             $table->timestamp('reminder_sent_at')->nullable();
             $table->timestamp('loyalty_processed_at')->nullable();
+
+            $table->timestamp('cancellation_requested_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->foreignId('cancelled_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('cancellation_reason')->nullable();
 
             $table->timestamps();
 

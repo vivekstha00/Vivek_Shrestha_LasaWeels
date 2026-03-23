@@ -46,6 +46,12 @@ return new class extends Migration {
 
             $table->timestamp('paid_at')->nullable();
 
+            $table->decimal('refund_amount', 10, 2)->default(0);
+            $table->enum('refund_status', ['none', 'pending', 'refunded', 'rejected'])->default('none');
+            $table->timestamp('refund_requested_at')->nullable();
+            $table->timestamp('refund_processed_at')->nullable();
+            $table->text('refund_note')->nullable();
+
             $table->timestamps();
         });
     }

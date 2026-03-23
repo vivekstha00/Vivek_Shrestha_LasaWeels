@@ -7,6 +7,8 @@ use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\DiscountCode;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -391,5 +393,103 @@ class UserBookingController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
         return view('user.pages.booking.booking-success', compact('booking'));
+    }
+
+    private function canRequestCancellation(Booking $booking): bool
+    {
+        if (! in_array($booking->status, ['pending', 'confirmed'], true)) {
+            return false;
+        }
+
+        return now()->lt($booking->pickup_datetime->copy()->subDay());
+    }
+
+    private function calculateRefundAmount(?Payment $payment): float
+    {
+        if (! $payment) {
+            return 0;
+        }
+
+        if ((float) $payment->paid_amount > 0) {
+            return (float) $payment->paid_amount;
+        }
+
+        if ((float) $payment->deposit_amount > 0) {
+            return (float) $payment->deposit_amount;
+        }
+
+        return 0;
+    }
+
+    public function requestCancellation(Request $request, Booking $booking)
+    {
+        abort_unless($booking->user_id === Auth::id(), 403);
+
+        $request->validate([
+            'cancellation_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $booking->load('payment');
+
+        if (! $this->canRequestCancellation($booking)) {
+            return back()->withErrors([
+                'cancel' => 'Booking cannot be cancelled within 24 hours of pickup or after it has started.',
+            ]);
+        }
+
+        if ($booking->status === 'cancel_requested') {
+            return back()->withErrors([
+                'cancel' => 'Cancellation request has already been submitted.',
+            ]);
+        }
+
+        $payment = $booking->payment;
+        $refundAmount = $this->calculateRefundAmount($payment);
+
+        DB::transaction(function () use ($booking, $payment, $refundAmount, $request) {
+            if ($payment && $refundAmount > 0) {
+                $booking->update([
+                    'status' => 'cancel_requested',
+                    'cancellation_requested_at' => now(),
+                    'cancellation_reason' => $request->cancellation_reason,
+                ]);
+
+                $payment->update([
+                    'refund_amount' => $refundAmount,
+                    'refund_status' => 'pending',
+                    'refund_requested_at' => now(),
+                    'refund_note' => $request->cancellation_reason,
+                    'settlement_status' => 'refund_pending',
+                    'payout_status' => 'hold',
+                ]);
+            } else {
+                $booking->update([
+                    'status' => 'cancelled',
+                    'cancelled_at' => now(),
+                    'cancelled_by' => Auth::id(),
+                    'cancellation_requested_at' => now(),
+                    'cancellation_reason' => $request->cancellation_reason,
+                ]);
+
+                if ($payment) {
+                    $payment->update([
+                        'refund_amount' => 0,
+                        'refund_status' => 'none',
+                        'refund_note' => $request->cancellation_reason,
+                        'settlement_status' => 'cancelled',
+                        'payout_status' => 'hold',
+                    ]);
+                }
+            }
+        });
+
+        return redirect()
+            ->route('user.booking.show', $booking->id)
+            ->with(
+                'success',
+                $refundAmount > 0
+                    ? 'Cancellation request submitted successfully. Refund is pending admin review.'
+                    : 'Booking cancelled successfully.'
+            );
     }
 }

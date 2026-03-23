@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/booking-success/{booking}', [UserBookingController::class, 'success'])->name('user.booking.success');
 
+    Route::post('/my-bookings/{booking}/cancel-request', [UserBookingController::class, 'requestCancellation'])->name('user.booking.cancel-request');
+
     Route::post('/profile/bookings/{booking}/review', [UserReviewController::class, 'store'])->name('user.bookings.review.store');
 
     Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');

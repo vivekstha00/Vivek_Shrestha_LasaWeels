@@ -29,11 +29,26 @@ class Payment extends Model
         'gateway_reference',
         'gateway_payload',
         'paid_at',
+
+        'refund_amount',
+        'refund_status',
+        'refund_requested_at',
+        'refund_processed_at',
+        'refund_note',
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
+        'platform_commission' => 'decimal:2',
+        'vendor_amount' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
         'gateway_payload' => 'array',
         'paid_at' => 'datetime',
+        'refund_requested_at' => 'datetime',
+        'refund_processed_at' => 'datetime',
     ];
 
     public function booking(): BelongsTo
