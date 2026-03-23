@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Vehicle;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Booking;
+use App\Models\Driver;
 use App\Models\Payment;
+use App\Models\Vehicle;
+use App\Services\VendorSubscriptionService;
+use Illuminate\Support\Facades\Auth;
 
 class VendorDashboardController extends Controller
 {
@@ -14,52 +16,52 @@ class VendorDashboardController extends Controller
     {
         $vendorId = Auth::id();
 
-        $totalVehicles = Vehicle::where('vendor_id', $vendorId)->count();
-        $pendingVehicles = Vehicle::where('vendor_id', $vendorId)->where('status', 'pending')->count();
-        $recentVehicles = Vehicle::where('vendor_id', $vendorId)->latest()->take(5)->get();
+        $statistics = [
+            'totalVehicles' => Vehicle::where('vendor_id', $vendorId)->count(),
+            'activeVehicles' => Vehicle::where('vendor_id', $vendorId)
+                ->where('is_active', 1)
+                ->count(),
 
-        $activeBookings = Booking::whereHas('vehicle', function ($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId);
-        })
-        ->whereIn('status', ['confirmed', 'active'])
-        ->count();
+            'totalDrivers' => Driver::where('vendor_id', $vendorId)->count(),
+            'approvedDrivers' => Driver::where('vendor_id', $vendorId)
+                ->where('status', 'approved')
+                ->count(),
 
-        $monthlyRevenueValue = Payment::where('vendor_id', $vendorId)
-            ->where('status', 'completed')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->sum('vendor_amount');
+            'totalBookings' => Booking::whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })->count(),
 
-        $monthlyRevenue = 'Rs. ' . number_format($monthlyRevenueValue, 2);
+            'pendingBookings' => Booking::whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })->where('status', 'pending')->count(),
 
-        $totalCustomerPaid = Payment::where('vendor_id', $vendorId)->sum('amount');
-        $totalCommission = Payment::where('vendor_id', $vendorId)->sum('platform_commission');
-        $totalNet = Payment::where('vendor_id', $vendorId)->sum('vendor_amount');
+            'confirmedBookings' => Booking::whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })->where('status', 'confirmed')->count(),
 
-        $totalLoyaltyDiscount = Payment::where('vendor_id', $vendorId)
-            ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
-            ->sum('bookings.loyalty_discount_amount');
+            'completedBookings' => Booking::whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })->where('status', 'completed')->count(),
 
-        $discountedBookingsCount = Booking::whereHas('vehicle', function ($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId);
-        })
-        ->where('loyalty_discount_amount', '>', 0)
-        ->count();
+            'totalRevenue' => Payment::where('vendor_id', $vendorId)
+                ->where('status', 'completed')
+                ->sum('vendor_amount'),
+        ];
 
-        $originalBookingValue = $totalCustomerPaid + $totalLoyaltyDiscount;
+        $recentBookings = Booking::with(['user', 'vehicle'])
+            ->whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $subscriptionSummary = app(VendorSubscriptionService::class)->getSummary($vendorId);
 
         return view('vendor.pages.dashboard', compact(
-            'totalVehicles',
-            'pendingVehicles',
-            'recentVehicles',
-            'activeBookings',
-            'monthlyRevenue',
-            'totalCustomerPaid',
-            'totalCommission',
-            'totalNet',
-            'totalLoyaltyDiscount',
-            'discountedBookingsCount',
-            'originalBookingValue'
+            'statistics',
+            'recentBookings',
+            'subscriptionSummary'
         ));
     }
 }

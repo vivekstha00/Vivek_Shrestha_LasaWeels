@@ -24,7 +24,7 @@ class VendorApplicationController extends Controller
         $data = $request->validate([
             'company_name'    => ['required', 'string', 'max:255'],
             'contact_person'  => ['required', 'string', 'max:255'],
-            'phone'           => ['required', 'string', 'max:15'],
+            'phone'           => ['required', 'string', 'max:15', 'unique:users,phone'],
             'address'         => ['nullable', 'string', 'max:255'],
 
             // vendor login credentials

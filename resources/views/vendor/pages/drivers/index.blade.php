@@ -1,82 +1,83 @@
 @extends('vendor.layouts.master')
 
-@section('title', 'Drivers - Vendor')
-@section('page_title', 'Drivers')
-@section('page_subtitle', 'List of all drivers')
-
 @section('vendor-content')
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">My Drivers</h3>
-        <a href="{{ route('vendor.drivers.create') }}" class="btn btn-primary">+ Add Driver</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">My Drivers</h2>
+        <p class="text-muted mb-0">Manage drivers and track subscription usage.</p>
     </div>
+    <a href="{{ route('vendor.drivers.create') }}" class="btn btn-primary rounded-pill px-4">
+        + Add Driver
+    </a>
+</div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+@if(session('success'))
+    <div class="alert alert-success rounded-3">{{ session('success') }}</div>
+@endif
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+@if(session('error'))
+    <div class="alert alert-danger rounded-3">{{ session('error') }}</div>
+@endif
 
+@if(isset($subscriptionSummary))
+    <div class="alert alert-info rounded-3 mb-4">
+        <strong>Current Plan:</strong> {{ $subscriptionSummary['plan_name'] ?? 'Free Plan' }}<br>
+        <strong>Driver Usage:</strong> {{ $subscriptionSummary['driver_count'] ?? 0 }} / {{ $subscriptionSummary['driver_limit'] ?? 2 }}
+
+        @if(!empty($subscriptionSummary['ends_at']))
+            <br><strong>Expires On:</strong> {{ \Carbon\Carbon::parse($subscriptionSummary['ends_at'])->format('Y-m-d h:i A') }}
+        @endif
+    </div>
+@endif
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        @if($drivers->count())
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
-                            <th style="width:80px;">Image</th>
                             <th>Name</th>
                             <th>Phone</th>
-                            <th>License No</th>
-                            <th>Rating</th>
+                            <th>License</th>
                             <th>Availability</th>
                             <th>Status</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
-
                     <tbody>
-                        @forelse($drivers as $driver)
-                            @php
-                                $thumb = $driver->image ? asset('storage/'.$driver->image) : null;
-                            @endphp
-
-                            <tr onclick="window.location='{{ route('vendor.drivers.show', $driver->id) }}'"
-                                style="cursor:pointer;" class="driver-row">
-                                <td>
-                                    @if($thumb)
-                                        <img src="{{ $thumb }}"
-                                             alt="{{ $driver->name }}"
-                                             style="width:60px;height:40px;object-fit:cover;border-radius:6px;">
-                                    @else
-                                        <div style="width:60px;height:40px;border-radius:6px;"
-                                             class="bg-light d-flex align-items-center justify-content-center small text-muted">
-                                            No img
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <td>{{ $driver->name }}</td>
-                                <td>{{ $driver->phone ?? '—' }}</td>
-                                <td>{{ $driver->license_number }}</td>
-                                <td>{{ $driver->rating ? $driver->rating . ' / 5' : '—' }}</td>
-                                <td>
-                                    @if($driver->availability_status === 'available')
-                                        <span class="badge bg-success">Available</span>
-                                    @else
-                                        <span class="badge bg-secondary">Unavailable</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($driver->status === 'approved')
-                                        <span class="badge bg-primary">Approved</span>
-                                    @else
-                                        <span class="badge bg-danger">Removed</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
+                        @foreach($drivers as $driver)
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No drivers yet.</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $driver->name }}</div>
+                                    @if($driver->rating)
+                                        <small class="text-muted">Rating: {{ $driver->rating }}/5</small>
+                                    @endif
+                                </td>
+                                <td>{{ $driver->phone ?? 'N/A' }}</td>
+                                <td>{{ $driver->license_number }}</td>
+                                <td>
+                                    <span class="badge {{ $driver->availability_status === 'available' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                        {{ ucfirst($driver->availability_status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary text-capitalize">{{ $driver->status }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ route('vendor.drivers.show', $driver) }}"
+                                           class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                            View
+                                        </a>
+                                        <a href="{{ route('vendor.drivers.edit', $driver) }}"
+                                           class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            Edit
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -84,15 +85,15 @@
             <div class="mt-3">
                 {{ $drivers->links() }}
             </div>
-        </div>
+        @else
+            <div class="text-center py-5">
+                <h5 class="fw-bold">No drivers found</h5>
+                <p class="text-muted mb-3">Start by adding your first driver.</p>
+                <a href="{{ route('vendor.drivers.create') }}" class="btn btn-primary rounded-pill px-4">
+                    Add Driver
+                </a>
+            </div>
+        @endif
     </div>
-
 </div>
-
-{{-- Hover effect for rows --}}
-<style>
-    .driver-row:hover {
-        background-color: #f8f9fc;
-    }
-</style>
 @endsection

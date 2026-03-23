@@ -1,157 +1,161 @@
 @extends('vendor.layouts.master')
-@section('title', 'Vendor Dashboard')
-@section('page_title', 'Dashboard')
-@section('page_subtitle', 'Overview of your vehicle rental business')
 
 @section('vendor-content')
-<div class="container-fluid">
+<div class="mb-4">
+    <h2 class="fw-bold mb-1">Vendor Dashboard</h2>
+    <p class="text-muted mb-0">Monitor vehicles, drivers, bookings, and subscription usage.</p>
+</div>
 
-    <div class="row g-3 mb-3">
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Total Vehicles</div>
-                    <div class="fs-3 fw-bold">{{ $totalVehicles ?? 0 }}</div>
+@if(isset($subscriptionSummary))
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Current Plan: {{ $subscriptionSummary['plan_name'] ?? 'Free Plan' }}</h5>
+                    <p class="text-muted mb-0">
+                        Status: <strong class="text-capitalize">{{ $subscriptionSummary['status'] ?? 'free' }}</strong>
+                    </p>
+
+                    @if(!empty($subscriptionSummary['ends_at']))
+                        <p class="text-muted mb-0">
+                            Expires On: {{ \Carbon\Carbon::parse($subscriptionSummary['ends_at'])->format('Y-m-d h:i A') }}
+                        </p>
+                    @endif
+                </div>
+
+                <div class="text-md-end">
+                    <div><strong>Vehicles:</strong> {{ $subscriptionSummary['vehicle_count'] ?? 0 }} / {{ $subscriptionSummary['vehicle_limit'] ?? 2 }}</div>
+                    <div><strong>Drivers:</strong> {{ $subscriptionSummary['driver_count'] ?? 0 }} / {{ $subscriptionSummary['driver_limit'] ?? 2 }}</div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Active Bookings</div>
-                    <div class="fs-3 fw-bold">{{ $activeBookings ?? 0 }}</div>
+            @if(($subscriptionSummary['vehicle_count'] ?? 0) >= ($subscriptionSummary['vehicle_limit'] ?? 2)
+                || ($subscriptionSummary['driver_count'] ?? 0) >= ($subscriptionSummary['driver_limit'] ?? 2))
+                <div class="alert alert-warning rounded-3 mt-3 mb-0">
+                    You have reached your current free-plan limit. Upgrade subscription to add more vehicles or drivers.
                 </div>
-            </div>
+            @endif
         </div>
+    </div>
+@endif
 
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Monthly Revenue</div>
-                    <div class="fs-3 fw-bold">{{ $monthlyRevenue ?? '—' }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card card-soft border-start border-4 border-warning">
-                <div class="card-body">
-                    <div class="text-muted small">Pending Requests</div>
-                    <div class="fs-3 fw-bold">{{ $pendingVehicles ?? 0 }}</div>
-                </div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Total Vehicles</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['totalVehicles'] ?? 0 }}</h3>
+                <small class="text-muted">Active: {{ $statistics['activeVehicles'] ?? 0 }}</small>
             </div>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Original Booking Value</div>
-                    <div class="fs-4 fw-bold">Rs. {{ number_format($originalBookingValue ?? 0, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Loyalty Discount Impact</div>
-                    <div class="fs-4 fw-bold text-danger">Rs. {{ number_format($totalLoyaltyDiscount ?? 0, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Customer Paid</div>
-                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalCustomerPaid ?? 0, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Net Earnings</div>
-                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalNet ?? 0, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Platform Commission</div>
-                    <div class="fs-4 fw-bold">Rs. {{ number_format($totalCommission ?? 0, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card card-soft">
-                <div class="card-body">
-                    <div class="text-muted small">Bookings Using Loyalty Discount</div>
-                    <div class="fs-4 fw-bold">{{ $discountedBookingsCount ?? 0 }}</div>
-                </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Total Drivers</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['totalDrivers'] ?? 0 }}</h3>
+                <small class="text-muted">Approved: {{ $statistics['approvedDrivers'] ?? 0 }}</small>
             </div>
         </div>
     </div>
 
-    <div class="card card-soft table-card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">Recent Vehicle Submissions</h6>
-                <a class="small" href="{{ route('vendor.vehicles.index') }}">View all</a>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Total Bookings</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['totalBookings'] ?? 0 }}</h3>
+                <small class="text-muted">Pending: {{ $statistics['pendingBookings'] ?? 0 }}</small>
             </div>
+        </div>
+    </div>
 
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Total Revenue</div>
+                <h3 class="fw-bold mb-0">NPR {{ number_format($statistics['totalRevenue'] ?? 0, 2) }}</h3>
+                <small class="text-muted">Completed payouts only</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Pending Bookings</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['pendingBookings'] ?? 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Confirmed Bookings</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['confirmedBookings'] ?? 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small mb-1">Completed Bookings</div>
+                <h3 class="fw-bold mb-0">{{ $statistics['completedBookings'] ?? 0 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Recent Bookings</h5>
+            <a href="{{ route('vendor.bookings.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                View All
+            </a>
+        </div>
+
+        @if($recentBookings->count())
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th>Type</th>
-                            <th>City</th>
-                            <th>Price/Day</th>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Vehicle</th>
+                            <th>Pickup</th>
                             <th>Status</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse(($recentVehicles ?? []) as $v)
+                        @foreach($recentBookings as $booking)
                             <tr>
-                                <td class="fw-semibold">{{ $v->title }}</td>
-                                <td>{{ $v->vehicle_type }}</td>
-                                <td>{{ $v->location_city }}</td>
-                                <td>{{ number_format($v->price_per_day,2) }} {{ $v->currency }}</td>
+                                <td>#{{ $booking->id }}</td>
+                                <td>{{ $booking->user->name ?? 'N/A' }}</td>
+                                <td>{{ $booking->vehicle->brand ?? '' }} {{ $booking->vehicle->model ?? '' }}</td>
+                                <td>{{ optional($booking->pickup_datetime)->format('Y-m-d h:i A') }}</td>
                                 <td>
-                                    @if($v->status === 'pending')
-                                        <span class="badge badge-soft badge-pending">Pending</span>
-                                    @elseif($v->status === 'approved')
-                                        <span class="badge badge-soft badge-approved">Approved</span>
-                                    @else
-                                        <span class="badge badge-soft badge-rejected">Rejected</span>
-                                    @endif
+                                    <span class="badge bg-secondary text-capitalize">{{ $booking->status }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ route('vendor.bookings.show', $booking) }}"
+                                       class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                        View
+                                    </a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-muted py-3">No recent records.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-
-            <div class="mt-3 d-flex gap-2">
-                <a href="{{ route('vendor.vehicles.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add Vehicle
-                </a>
-                <button class="btn btn-outline-secondary" disabled>View Reports</button>
-            </div>
-        </div>
+        @else
+            <p class="text-muted mb-0">No recent bookings found.</p>
+        @endif
     </div>
-
 </div>
 @endsection
