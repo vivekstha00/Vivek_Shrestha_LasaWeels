@@ -28,6 +28,17 @@ class VendorSubscriptionPaymentController extends Controller
 
         $subscriptionSummary = app(VendorSubscriptionService::class)->getSummary($vendorId);
 
+        $currentActiveSubscription = VendorSubscription::with('plan')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            })
+            ->latest('ends_at')
+            ->first();
+
+        $currentActivePlanId = $currentActiveSubscription?->subscription_plan_id;
+
         $subscriptionPayments = SubscriptionPayment::with('plan')
             ->where('vendor_id', $vendorId)
             ->latest()
@@ -36,7 +47,8 @@ class VendorSubscriptionPaymentController extends Controller
         return view('vendor.pages.subscriptions.index', compact(
             'plans',
             'subscriptionSummary',
-            'subscriptionPayments'
+            'subscriptionPayments',
+            'currentActivePlanId'
         ));
     }
 
@@ -104,6 +116,7 @@ class VendorSubscriptionPaymentController extends Controller
     public function khaltiCallback(Request $request)
     {
         $pidx = $request->query('pidx');
+        $purchaseOrderId = $request->query('purchase_order_id');
 
         if (! $pidx) {
             return redirect()
@@ -111,8 +124,22 @@ class VendorSubscriptionPaymentController extends Controller
                 ->withErrors(['subscription' => 'Invalid Khalti callback.']);
         }
 
-        $subscriptionPaymentId = Cookie::get('khalti_subscription_payment_id');
-        $subscriptionPayment = SubscriptionPayment::with(['vendor', 'plan'])->find($subscriptionPaymentId);
+        $subscriptionPayment = null;
+
+        if ($purchaseOrderId) {
+            $subscriptionPayment = SubscriptionPayment::with(['vendor', 'plan'])
+                ->where('purchase_order_id', $purchaseOrderId)
+                ->first();
+        }
+
+        if (! $subscriptionPayment) {
+            $subscriptionPaymentId = Cookie::get('khalti_subscription_payment_id');
+
+            if ($subscriptionPaymentId) {
+                $subscriptionPayment = SubscriptionPayment::with(['vendor', 'plan'])
+                    ->find($subscriptionPaymentId);
+            }
+        }
 
         if (! $subscriptionPayment) {
             return redirect()
@@ -138,7 +165,15 @@ class VendorSubscriptionPaymentController extends Controller
             'gateway_payload' => $lookup->json(),
         ]);
 
-        if ($status === 'Completed' && ! $alreadyCompleted) {
+        if ($alreadyCompleted) {
+            Cookie::queue(Cookie::forget('khalti_subscription_payment_id'));
+
+            return redirect()
+                ->route('vendor.subscriptions.index')
+                ->with('info', 'This subscription payment has already been processed.');
+        }
+
+        if ($status === 'Completed') {
             $subscriptionPayment->update([
                 'status' => 'completed',
                 'paid_at' => now(),
@@ -156,22 +191,43 @@ class VendorSubscriptionPaymentController extends Controller
                 ->latest('ends_at')
                 ->first();
 
-            $baseDate = now();
+            // Case 1: same active plan exists -> extend its end date
+            if (
+                $currentActiveSubscription &&
+                $currentActiveSubscription->subscription_plan_id == $plan->id
+            ) {
+                $baseDate = now();
 
-            if ($currentActiveSubscription && $currentActiveSubscription->ends_at && $currentActiveSubscription->ends_at->gt(now())) {
-                $baseDate = $currentActiveSubscription->ends_at->copy();
+                if ($currentActiveSubscription->ends_at && $currentActiveSubscription->ends_at->gt(now())) {
+                    $baseDate = $currentActiveSubscription->ends_at->copy();
+                }
+
+                $newEndsAt = $this->calculateEndDate($plan, $baseDate);
+
+                $currentActiveSubscription->update([
+                    'ends_at' => $newEndsAt,
+                    'amount_paid' => (float) $currentActiveSubscription->amount_paid + (float) $subscriptionPayment->amount,
+                ]);
+
+                Cookie::queue(Cookie::forget('khalti_subscription_payment_id'));
+
+                return redirect()
+                    ->route('vendor.subscriptions.index')
+                    ->with('success', 'Subscription renewed successfully.');
             }
 
-            $endsAt = $this->calculateEndDate($plan, $baseDate);
-
+            // Case 2: different plan or no active plan -> activate new plan now
             VendorSubscription::where('vendor_id', $vendorId)
                 ->where('status', 'active')
                 ->update(['status' => 'expired']);
 
+            $startsAt = now();
+            $endsAt = $this->calculateEndDate($plan, $startsAt);
+
             VendorSubscription::create([
                 'vendor_id' => $vendorId,
                 'subscription_plan_id' => $plan->id,
-                'starts_at' => now(),
+                'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
                 'status' => 'active',
                 'amount_paid' => $subscriptionPayment->amount,
@@ -184,11 +240,9 @@ class VendorSubscriptionPaymentController extends Controller
                 ->with('success', 'Subscription payment successful. Your plan is now active.');
         }
 
-        if (! $alreadyCompleted) {
-            $subscriptionPayment->update([
-                'status' => 'failed',
-            ]);
-        }
+        $subscriptionPayment->update([
+            'status' => 'failed',
+        ]);
 
         Cookie::queue(Cookie::forget('khalti_subscription_payment_id'));
 

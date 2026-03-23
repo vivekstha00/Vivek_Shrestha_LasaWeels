@@ -12,6 +12,10 @@
     <div class="alert alert-success rounded-3">{{ session('success') }}</div>
 @endif
 
+@if(session('info'))
+    <div class="alert alert-info rounded-3">{{ session('info') }}</div>
+@endif
+
 @if($errors->any())
     <div class="alert alert-danger rounded-3">
         <ul class="mb-0">
@@ -44,12 +48,20 @@
                     <div><strong>Drivers:</strong> {{ $subscriptionSummary['driver_count'] ?? 0 }} / {{ $subscriptionSummary['driver_limit'] ?? 2 }}</div>
                 </div>
             </div>
+
+            <div class="alert alert-light border rounded-3 mt-3 mb-0">
+                Renewing the same plan extends your current expiry date. Switching to a different plan activates the new plan immediately.
+            </div>
         </div>
     </div>
 @endif
 
 <div class="row g-4 mb-4">
     @forelse($plans as $plan)
+        @php
+            $isCurrentPlan = isset($currentActivePlanId) && $currentActivePlanId == $plan->id;
+        @endphp
+
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
@@ -58,7 +70,12 @@
                             <h4 class="fw-bold mb-1">{{ $plan->name }}</h4>
                             <p class="text-muted mb-0 text-capitalize">{{ $plan->billing_cycle }} Plan</p>
                         </div>
-                        <span class="badge bg-success">Active</span>
+
+                        @if($isCurrentPlan)
+                            <span class="badge bg-primary">Current Plan</span>
+                        @else
+                            <span class="badge bg-success">Available</span>
+                        @endif
                     </div>
 
                     <h3 class="fw-bold mb-3">NPR {{ number_format($plan->price, 2) }}</h3>
@@ -73,9 +90,16 @@
 
                     <form action="{{ route('vendor.subscriptions.pay', $plan) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-primary rounded-pill px-4">
-                            Pay with Khalti
-                        </button>
+
+                        @if($isCurrentPlan)
+                            <button type="submit" class="btn btn-outline-primary rounded-pill px-4">
+                                Renew with Khalti
+                            </button>
+                        @else
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                Pay with Khalti
+                            </button>
+                        @endif
                     </form>
                 </div>
             </div>
