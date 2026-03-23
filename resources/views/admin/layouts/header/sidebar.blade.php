@@ -44,6 +44,14 @@
             </a>
         </li>
 
+        <li class="nav-item">
+            <a href="{{ route('admin.refunds.index') }}"
+            class="nav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                <span>Refund Requests</span>
+            </a>
+        </li>
+
         <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}"
                href="{{ route('admin.vendors.index') }}">

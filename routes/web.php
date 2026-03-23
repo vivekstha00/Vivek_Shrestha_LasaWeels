@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\User\AuthController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\Admin\AdminLoyaltyController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Admin\AdminVendorSubscriptionController;
+use App\Http\Controllers\Admin\AdminRefundController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -163,6 +163,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/vendor-subscriptions', [AdminVendorSubscriptionController::class, 'store'])->name('vendor-subscriptions.store');
     Route::get('/vendor-subscriptions/{vendorSubscription}/edit', [AdminVendorSubscriptionController::class, 'edit'])->name('vendor-subscriptions.edit');
     Route::put('/vendor-subscriptions/{vendorSubscription}', [AdminVendorSubscriptionController::class, 'update'])->name('vendor-subscriptions.update');
+
+    Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+    Route::put('/refunds/{payment}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+    Route::put('/refunds/{payment}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
