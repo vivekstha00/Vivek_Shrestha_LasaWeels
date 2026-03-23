@@ -31,6 +31,13 @@
         </li>
 
         <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.vendor-subscriptions.*') ? 'active' : '' }}"
+               href="{{ route('admin.vendor-subscriptions.index') }}">
+                <i class="fa-solid fa-user-shield me-2"></i> Vendor Subscriptions
+            </a>
+        </li>
+
+        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.discount-codes.*') ? 'active' : '' }}"
             href="{{ route('admin.discount-codes.index') }}">
                 <i class="fa-solid fa-tags me-2"></i> Discount Codes

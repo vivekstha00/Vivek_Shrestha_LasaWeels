@@ -50,6 +50,14 @@
                 <i class="fas fa-money-check-alt me-2"></i> Payments
             </a>
         </li>
+
+        <li class="nav-item mt-1">
+            <a class="nav-link {{ request()->routeIs('vendor.subscriptions.*') ? 'active' : '' }}"
+            href="{{ route('vendor.subscriptions.index') }}">
+                <i class="fas fa-bell me-2"></i> Subscriptions
+            </a>
+        </li>
+        
         <li class="nav-item mt-1">
             <a class="nav-link {{ request()->routeIs('vendor.reviews.*') ? 'active' : '' }}"
             href="{{ route('vendor.reviews.index') }}">

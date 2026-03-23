@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminDocumentController;
 use App\Http\Controllers\Admin\AdminLoyaltyController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminSubscriptionPlanController;
+use App\Http\Controllers\Admin\AdminVendorSubscriptionController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Vendor\VendorDriverController;
 use App\Http\Controllers\Vendor\VendorVehicleServiceController;
 use App\Http\Controllers\Vendor\VendorPaymentController;
 use App\Http\Controllers\Vendor\VendorReviewController;
+use App\Http\Controllers\Vendor\VendorSubscriptionPaymentController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
@@ -153,6 +155,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
     Route::get('/subscription-plans/{subscriptionPlan}/edit', [AdminSubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
     Route::put('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+
+    Route::get('/vendor-subscriptions', [AdminVendorSubscriptionController::class, 'index'])->name('vendor-subscriptions.index');
+    Route::get('/vendor-subscriptions/create', [AdminVendorSubscriptionController::class, 'create'])->name('vendor-subscriptions.create');
+    Route::post('/vendor-subscriptions', [AdminVendorSubscriptionController::class, 'store'])->name('vendor-subscriptions.store');
+    Route::get('/vendor-subscriptions/{vendorSubscription}/edit', [AdminVendorSubscriptionController::class, 'edit'])->name('vendor-subscriptions.edit');
+    Route::put('/vendor-subscriptions/{vendorSubscription}', [AdminVendorSubscriptionController::class, 'update'])->name('vendor-subscriptions.update');
 });
 
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
@@ -206,4 +214,8 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
 
     Route::get('/reviews', [VendorReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [VendorReviewController::class, 'show'])->name('reviews.show');
+
+    Route::get('/subscriptions', [VendorSubscriptionPaymentController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/pay/{subscriptionPlan}', [VendorSubscriptionPaymentController::class, 'initiate'])->name('subscriptions.pay');
+    Route::get('/subscriptions/khalti/callback', [VendorSubscriptionPaymentController::class, 'khaltiCallback'])->name('subscriptions.callback');
 });
