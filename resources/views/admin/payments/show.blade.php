@@ -20,8 +20,17 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    @php
+        $isRefunded = $payment->refund_status === 'refunded' || ($payment->booking && $payment->booking->status === 'cancelled');
+    @endphp
+
+    @if($isRefunded)
+        <div class="alert alert-danger rounded-3">
+            This booking/payment has been refunded. Vendor payout is blocked.
+        </div>
+    @endif
+
     <div class="row g-4">
-        {{-- Left Side --}}
         <div class="col-lg-8">
 
             <div class="card border-0 shadow-sm">
@@ -94,6 +103,39 @@
                         <div class="col-md-8">{{ ucfirst(str_replace('_', ' ', $payment->settlement_status ?? 'N/A')) }}</div>
                     </div>
 
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Refund Status</div>
+                        <div class="col-md-8">{{ ucfirst($payment->refund_status ?? 'none') }}</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Refund Amount</div>
+                        <div class="col-md-8">Rs. {{ number_format($payment->refund_amount ?? 0, 2) }}</div>
+                    </div>
+
+                    @if($payment->refund_requested_at)
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Refund Requested At</div>
+                            <div class="col-md-8">{{ $payment->refund_requested_at->format('Y-m-d h:i A') }}</div>
+                        </div>
+                    @endif
+
+                    @if($payment->refund_processed_at)
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Refund Processed At</div>
+                            <div class="col-md-8">{{ $payment->refund_processed_at->format('Y-m-d h:i A') }}</div>
+                        </div>
+                    @endif
+
+                    @if($payment->refund_note)
+                        <div class="row mb-2">
+                            <div class="col-md-4 text-muted">Refund Note</div>
+                            <div class="col-md-8">{{ $payment->refund_note }}</div>
+                        </div>
+                    @endif
+
                     @if($payment->gateway_reference)
                         <div class="row mb-2">
                             <div class="col-md-4 text-muted">Gateway Reference</div>
@@ -134,7 +176,6 @@
 
         </div>
 
-        {{-- Right Side --}}
         <div class="col-lg-4">
 
             <div class="card border-0 shadow-sm">
@@ -161,6 +202,7 @@
                                 <option value="unpaid" {{ $payment->payout_status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                                 <option value="pending" {{ $payment->payout_status === 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="paid" {{ $payment->payout_status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="hold" {{ $payment->payout_status === 'hold' ? 'selected' : '' }}>Hold</option>
                             </select>
                         </div>
 
@@ -172,6 +214,7 @@
                                 <option value="payout_pending" {{ $payment->settlement_status === 'payout_pending' ? 'selected' : '' }}>Payout Pending</option>
                                 <option value="paid_to_vendor" {{ $payment->settlement_status === 'paid_to_vendor' ? 'selected' : '' }}>Paid To Vendor</option>
                                 <option value="not_applicable" {{ $payment->settlement_status === 'not_applicable' ? 'selected' : '' }}>Not Applicable</option>
+                                <option value="refunded" {{ $payment->settlement_status === 'refunded' ? 'selected' : '' }}>Refunded</option>
                             </select>
                         </div>
 

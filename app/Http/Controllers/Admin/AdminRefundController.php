@@ -52,11 +52,14 @@ class AdminRefundController extends Controller
             ]);
 
             $payment->update([
+                'status' => 'refunded',
                 'refund_status' => 'refunded',
                 'refund_processed_at' => now(),
                 'refund_note' => $request->refund_note ?: $payment->refund_note,
                 'settlement_status' => 'refunded',
                 'payout_status' => 'hold',
+                'remaining_amount' => 0,
+                'deposit_status' => $payment->payment_type === 'deposit_cash' ? 'refunded' : $payment->deposit_status,
             ]);
 
             if ((int) $booking->loyalty_points_redeemed > 0) {
@@ -97,11 +100,13 @@ class AdminRefundController extends Controller
             ]);
 
             $payment->update([
+                'status' => 'completed',
                 'refund_status' => 'rejected',
                 'refund_processed_at' => now(),
                 'refund_note' => $request->refund_note,
                 'settlement_status' => 'payout_pending',
                 'payout_status' => 'unpaid',
+                'deposit_status' => $payment->payment_type === 'deposit_cash' ? 'paid' : $payment->deposit_status,
             ]);
         });
 

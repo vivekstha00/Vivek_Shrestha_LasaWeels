@@ -17,20 +17,38 @@ class VendorPaymentController extends Controller
             ->latest()
             ->paginate(10);
 
-        $totalCustomerPaid = Payment::where('vendor_id', $vendorId)->sum('amount');
-        $totalCommission = Payment::where('vendor_id', $vendorId)->sum('platform_commission');
-        $totalNet = Payment::where('vendor_id', $vendorId)->sum('vendor_amount');
+        $earningQuery = Payment::where('vendor_id', $vendorId)
+            ->where('status', 'completed')
+            ->where('refund_status', '!=', 'refunded')
+            ->whereHas('booking', function ($q) {
+                $q->where('status', '!=', 'cancelled');
+            });
+
+        $totalCustomerPaid = (clone $earningQuery)->sum('amount');
+        $totalCommission = (clone $earningQuery)->sum('platform_commission');
+        $totalNet = (clone $earningQuery)->sum('vendor_amount');
 
         $pendingPayout = Payment::where('vendor_id', $vendorId)
             ->whereIn('payout_status', ['unpaid', 'pending'])
+            ->where('refund_status', '!=', 'refunded')
+            ->whereHas('booking', function ($q) {
+                $q->where('status', '!=', 'cancelled');
+            })
             ->sum('vendor_amount');
 
         $paidPayout = Payment::where('vendor_id', $vendorId)
             ->where('payout_status', 'paid')
+            ->where('refund_status', '!=', 'refunded')
+            ->whereHas('booking', function ($q) {
+                $q->where('status', '!=', 'cancelled');
+            })
             ->sum('vendor_amount');
 
         $totalLoyaltyDiscount = Payment::where('vendor_id', $vendorId)
+            ->where('status', 'completed')
+            ->where('refund_status', '!=', 'refunded')
             ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
+            ->where('bookings.status', '!=', 'cancelled')
             ->sum('bookings.loyalty_discount_amount');
 
         $totalOriginalValue = $totalCustomerPaid + $totalLoyaltyDiscount;

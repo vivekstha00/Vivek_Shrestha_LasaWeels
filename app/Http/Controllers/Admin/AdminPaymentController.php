@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class AdminPaymentController extends Controller
 {
-    // LIST all payments
     public function index(Request $request)
     {
         $query = Payment::query()->with([
@@ -17,7 +16,6 @@ class AdminPaymentController extends Controller
             'booking.vehicle',
         ]);
 
-        // Filters
         if ($request->filled('method')) {
             $query->where('method', $request->method);
         }
@@ -51,7 +49,6 @@ class AdminPaymentController extends Controller
         return view('admin.payments.index', compact('payments'));
     }
 
-    // SHOW one payment
     public function show(Payment $payment)
     {
         $payment->load([
@@ -64,15 +61,41 @@ class AdminPaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
-    // UPDATE payment / settlement / payout status
     public function update(Request $request, Payment $payment)
     {
         $data = $request->validate([
             'status' => 'required|in:pending,completed,failed,refunded',
-            'payout_status' => 'nullable|in:unpaid,pending,paid',
+            'payout_status' => 'nullable|in:unpaid,pending,paid,hold',
             'deposit_status' => 'nullable|in:pending,paid,refunded,forfeited',
-            'settlement_status' => 'nullable|in:pending_balance,balance_received,payout_pending,paid_to_vendor,not_applicable',
+            'settlement_status' => 'nullable|in:pending_balance,balance_received,payout_pending,paid_to_vendor,not_applicable,refunded',
         ]);
+
+        $isRefundedAction =
+            ($data['status'] ?? null) === 'refunded' ||
+            ($data['settlement_status'] ?? null) === 'refunded' ||
+            $payment->refund_status === 'refunded';
+
+        if ($isRefundedAction) {
+            $payment->update([
+                'status' => 'refunded',
+                'refund_status' => 'refunded',
+                'refund_processed_at' => $payment->refund_processed_at ?? now(),
+                'payout_status' => 'hold',
+                'settlement_status' => 'refunded',
+                'deposit_status' => $payment->payment_type === 'deposit_cash' ? 'refunded' : $payment->deposit_status,
+                'remaining_amount' => 0,
+            ]);
+
+            if ($payment->booking) {
+                $payment->booking->update([
+                    'status' => 'cancelled',
+                ]);
+            }
+
+            return redirect()
+                ->route('admin.payments.show', $payment->id)
+                ->with('success', 'Refunded payment updated successfully.');
+        }
 
         $payment->update([
             'status' => $data['status'],
@@ -95,12 +118,6 @@ class AdminPaymentController extends Controller
                         'payment_status' => 'unpaid',
                     ]);
                 }
-
-                if ($payment->status === 'refunded') {
-                    $payment->booking->update([
-                        'payment_status' => 'refunded',
-                    ]);
-                }
             }
 
             if ($payment->payment_type === 'deposit_cash') {
@@ -118,12 +135,6 @@ class AdminPaymentController extends Controller
                     $payment->booking->update([
                         'payment_status' => 'partial',
                         'status' => 'confirmed',
-                    ]);
-                }
-
-                if ($payment->status === 'refunded') {
-                    $payment->booking->update([
-                        'payment_status' => 'refunded',
                     ]);
                 }
 

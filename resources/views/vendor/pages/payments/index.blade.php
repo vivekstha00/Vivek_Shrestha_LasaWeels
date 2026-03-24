@@ -80,7 +80,7 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body">
             <div class="alert alert-info mb-0">
-                Loyalty discounts are platform-funded. The customer may pay a reduced amount, but your payout breakdown is shown separately.
+                Loyalty discounts are platform-funded. Refunded or cancelled bookings remain in history but are excluded from payout totals.
             </div>
         </div>
     </div>
@@ -99,6 +99,7 @@
                         <th>Customer Paid</th>
                         <th>Commission</th>
                         <th>Net Amount</th>
+                        <th>Refund</th>
                         <th>Payout</th>
                     </tr>
                 </thead>
@@ -107,15 +108,19 @@
                         @php
                             $discount = (float) ($payment->booking->loyalty_discount_amount ?? 0);
                             $original = (float) $payment->amount + $discount;
+                            $isRefunded = $payment->refund_status === 'refunded' || ($payment->booking && $payment->booking->status === 'cancelled');
                         @endphp
 
                         <tr
                             onclick="window.location='{{ route('vendor.payments.show', $payment->id) }}'"
                             style="cursor:pointer;"
-                            class="vendor-payment-row"
+                            class="vendor-payment-row {{ $isRefunded ? 'table-danger' : '' }}"
                         >
                             <td class="px-4 fw-semibold">#{{ $payment->id }}</td>
-                            <td>#{{ $payment->booking_id }}</td>
+                            <td>
+                                <div>#{{ $payment->booking_id }}</div>
+                                <small class="text-muted text-capitalize">{{ $payment->booking->status ?? 'N/A' }}</small>
+                            </td>
 
                             <td>
                                 <div class="fw-semibold">{{ $payment->user->name ?? 'N/A' }}</div>
@@ -134,10 +139,30 @@
                             <td class="text-danger">Rs. {{ number_format($discount, 2) }}</td>
                             <td>Rs. {{ number_format($payment->amount, 2) }}</td>
                             <td>Rs. {{ number_format($payment->platform_commission, 2) }}</td>
-                            <td>Rs. {{ number_format($payment->vendor_amount, 2) }}</td>
+                            <td>
+                                @if($isRefunded)
+                                    <span class="text-muted">Blocked</span>
+                                @else
+                                    Rs. {{ number_format($payment->vendor_amount, 2) }}
+                                @endif
+                            </td>
 
                             <td>
-                                @if($payment->payout_status === 'paid')
+                                @if($payment->refund_status === 'pending')
+                                    <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
+                                @elseif($payment->refund_status === 'refunded')
+                                    <span class="badge text-bg-danger rounded-pill px-3 py-2">Refunded</span>
+                                @elseif($payment->refund_status === 'rejected')
+                                    <span class="badge text-bg-secondary rounded-pill px-3 py-2">Rejected</span>
+                                @else
+                                    <span class="badge text-bg-light rounded-pill px-3 py-2">None</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if($isRefunded || $payment->payout_status === 'hold')
+                                    <span class="badge text-bg-dark rounded-pill px-3 py-2">Blocked</span>
+                                @elseif($payment->payout_status === 'paid')
                                     <span class="badge text-bg-success rounded-pill px-3 py-2">Paid</span>
                                 @elseif($payment->payout_status === 'pending')
                                     <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
@@ -148,7 +173,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-5">No payment records found.</td>
+                            <td colspan="11" class="text-center text-muted py-5">No payment records found.</td>
                         </tr>
                     @endforelse
                 </tbody>

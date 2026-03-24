@@ -73,17 +73,21 @@
                         <th>Vendor</th>
                         <th>Booking</th>
                         <th>Type</th>
-                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Refund</th>
                         <th>Total</th>
                         <th>Paid</th>
-                        <th>Remaining</th>
                         <th>Payout</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($payments as $p)
+                        @php
+                            $isRefunded = $p->refund_status === 'refunded' || ($p->booking && $p->booking->status === 'cancelled');
+                        @endphp
+
                         <tr
-                            class="payment-row"
+                            class="payment-row {{ $isRefunded ? 'table-danger' : '' }}"
                             onclick="window.location='{{ route('admin.payments.show', $p->id) }}'"
                             style="cursor:pointer;"
                         >
@@ -99,7 +103,10 @@
                                 <small class="text-muted">{{ $p->vendor->email ?? '' }}</small>
                             </td>
 
-                            <td class="fw-medium">#{{ $p->booking_id }}</td>
+                            <td>
+                                <div class="fw-medium">#{{ $p->booking_id }}</div>
+                                <small class="text-muted text-capitalize">{{ $p->booking->status ?? 'N/A' }}</small>
+                            </td>
 
                             <td>
                                 @if($p->payment_type === 'deposit_cash')
@@ -110,23 +117,36 @@
                             </td>
 
                             <td>
-                                @if($p->status === 'completed')
+                                @if($p->status === 'refunded')
+                                    <span class="badge text-bg-dark rounded-pill px-3 py-2">Refunded</span>
+                                @elseif($p->status === 'completed')
                                     <span class="badge text-bg-success rounded-pill px-3 py-2">Completed</span>
                                 @elseif($p->status === 'failed')
                                     <span class="badge text-bg-danger rounded-pill px-3 py-2">Failed</span>
-                                @elseif($p->status === 'refunded')
-                                    <span class="badge text-bg-dark rounded-pill px-3 py-2">Refunded</span>
                                 @else
                                     <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
                                 @endif
                             </td>
 
+                            <td>
+                                @if($p->refund_status === 'pending')
+                                    <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
+                                @elseif($p->refund_status === 'refunded')
+                                    <span class="badge text-bg-danger rounded-pill px-3 py-2">Refunded</span>
+                                @elseif($p->refund_status === 'rejected')
+                                    <span class="badge text-bg-secondary rounded-pill px-3 py-2">Rejected</span>
+                                @else
+                                    <span class="badge text-bg-light rounded-pill px-3 py-2">None</span>
+                                @endif
+                            </td>
+
                             <td>Rs. {{ number_format($p->amount, 2) }}</td>
                             <td>Rs. {{ number_format($p->paid_amount, 2) }}</td>
-                            <td>Rs. {{ number_format($p->remaining_amount, 2) }}</td>
 
                             <td>
-                                @if($p->payout_status === 'paid')
+                                @if($isRefunded || $p->payout_status === 'hold')
+                                    <span class="badge text-bg-dark rounded-pill px-3 py-2">Hold</span>
+                                @elseif($p->payout_status === 'paid')
                                     <span class="badge text-bg-success rounded-pill px-3 py-2">Paid</span>
                                 @elseif($p->payout_status === 'pending')
                                     <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
