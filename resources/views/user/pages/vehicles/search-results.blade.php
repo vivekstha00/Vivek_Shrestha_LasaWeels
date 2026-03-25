@@ -187,7 +187,10 @@
                         ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
                         : $vehicle->price_per_day;
 
-                    $estimated = (float) $pricePerDay * $days;
+                    $basePrice = (float) $pricePerDay * $days;
+                    $durationDiscountPercent = (float) $vehicle->getDurationDiscountPercent($days);
+                    $durationDiscountAmount = round($basePrice * ($durationDiscountPercent / 100), 2);
+                    $estimated = max(0, $basePrice - $durationDiscountAmount);
 
                     $img = $vehicle->primaryImage ?? $vehicle->images->first();
                 @endphp
@@ -231,6 +234,15 @@
                                         <div class="fs-5 fw-bold text-success">
                                             Rs. {{ number_format($estimated, 2) }}
                                         </div>
+
+                                        @if($durationDiscountPercent > 0)
+                                            <div class="small text-success mt-1">
+                                                {{ rtrim(rtrim(number_format($durationDiscountPercent, 2), '0'), '.') }}% long booking discount applied
+                                            </div>
+                                            <div class="small text-muted">
+                                                Base: Rs. {{ number_format($basePrice, 2) }}
+                                            </div>
+                                        @endif
                                     </div>
 
                                     {{-- Build query from LIVE alpine state --}}

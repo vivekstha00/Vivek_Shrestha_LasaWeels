@@ -32,6 +32,20 @@ class UserPaymentController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
+        $booking->load('vehicle');
+
+        if (! $booking->vehicle) {
+            return back()->withErrors([
+                'payment' => 'Vehicle information not found for this booking.',
+            ]);
+        }
+
+        if ($booking->payment_status === 'paid') {
+            return redirect()
+                ->route('user.booking.show', $booking->id)
+                ->with('success', 'This booking has already been paid.');
+        }
+
         $data = $request->validate([
             'payment_option' => 'required|in:full_online,deposit_cash',
         ]);
@@ -39,21 +53,25 @@ class UserPaymentController extends Controller
         $commissionRate = 0.10;
         $depositRate = 0.20;
 
-        $totalAmount = (float) $booking->total_price;
-        $originalAmount = (float) ($booking->original_price ?? $booking->total_price);
+        // Customer actually pays this amount
+        $finalPayableAmount = (float) $booking->total_price;
 
-        $platformCommission = round($originalAmount * $commissionRate, 2);
-        $vendorAmount = round($originalAmount - $platformCommission, 2);
+        // Vendor pricing base = after vendor long-duration discount,
+        // but before loyalty/code discount
+        $commissionBaseAmount = (float) ($booking->original_price ?? $booking->total_price);
+
+        $platformCommission = round($commissionBaseAmount * $commissionRate, 2);
+        $vendorAmount = round($commissionBaseAmount - $platformCommission, 2);
 
         if ($data['payment_option'] === 'deposit_cash') {
-            $depositAmount = round($totalAmount * $depositRate, 2);
-            $remainingAmount = round($totalAmount - $depositAmount, 2);
+            $depositAmount = round($finalPayableAmount * $depositRate, 2);
+            $remainingAmount = round($finalPayableAmount - $depositAmount, 2);
         } else {
-            $depositAmount = $totalAmount;
+            $depositAmount = $finalPayableAmount;
             $remainingAmount = 0;
         }
 
-        $vendorId = $booking->vehicle->vendor_id ?? $booking->vehicle->user_id ?? null;
+        $vendorId = $booking->vehicle->vendor_id ?? null;
 
         $payment = Payment::updateOrCreate(
             ['booking_id' => $booking->id],
@@ -61,7 +79,7 @@ class UserPaymentController extends Controller
                 'user_id' => Auth::id(),
                 'vendor_id' => $vendorId,
                 'booking_id' => $booking->id,
-                'amount' => $totalAmount,
+                'amount' => $finalPayableAmount,
                 'method' => 'khalti',
                 'payment_type' => $data['payment_option'],
                 'paid_amount' => 0,
@@ -93,6 +111,7 @@ class UserPaymentController extends Controller
 
         if ($response->successful() && $response->json('payment_url')) {
             Cookie::queue('khalti_booking_id', $booking->id, 10);
+
             return redirect($response->json('payment_url'));
         }
 

@@ -11,11 +11,34 @@
                 <div class="card-body p-4">
                     <h3 class="fw-bold mb-3">Complete Your Payment</h3>
 
+                    @php
+                        $days = max(1, ceil(\Carbon\Carbon::parse($booking->pickup_datetime)->diffInHours(\Carbon\Carbon::parse($booking->drop_datetime)) / 24));
+
+                        $pricePerDay = $booking->service === 'driver'
+                            ? (float) ($booking->vehicle->with_driver_price_per_day ?? $booking->vehicle->price_per_day ?? 0)
+                            : (float) ($booking->vehicle->price_per_day ?? 0);
+
+                        $baseAmount = round($days * $pricePerDay, 2);
+                        $durationDiscountPercent = $booking->vehicle ? $booking->vehicle->getDurationDiscountPercent($days) : 0;
+                        $durationDiscountAmount = round($baseAmount * ($durationDiscountPercent / 100), 2);
+                    @endphp
+
                     <div class="mb-4">
                         <p class="mb-1"><strong>Booking ID:</strong> #{{ $booking->id }}</p>
-                        <p class="mb-1"><strong>Original Amount:</strong> Rs. {{ number_format($booking->original_price ?? $booking->total_price, 2) }}</p>
+
+                        <p class="mb-1"><strong>Base Amount:</strong> Rs. {{ number_format($baseAmount, 2) }}</p>
+
+                        @if($durationDiscountPercent > 0)
+                            <p class="mb-1">
+                                <strong>Long Duration Discount ({{ rtrim(rtrim(number_format($durationDiscountPercent, 2), '0'), '.') }}%):</strong>
+                                Rs. {{ number_format($durationDiscountAmount, 2) }}
+                            </p>
+                        @endif
+
+                        <p class="mb-1"><strong>Amount After Duration Discount:</strong> Rs. {{ number_format($booking->original_price ?? $booking->total_price, 2) }}</p>
+
                         <p class="mb-1">
-                            <strong>Discount:</strong>
+                            <strong>Checkout Discount:</strong>
                             Rs. {{ number_format($booking->discount_amount ?? 0, 2) }}
                             @if($booking->discount_type === 'loyalty')
                                 <span class="text-muted">(Loyalty Points)</span>
@@ -23,6 +46,7 @@
                                 <span class="text-muted">({{ $booking->discount_code }})</span>
                             @endif
                         </p>
+
                         <p class="mb-1"><strong>Final Payable Amount:</strong> Rs. {{ number_format($booking->total_price, 2) }}</p>
 
                         @if($booking->security_deposit)

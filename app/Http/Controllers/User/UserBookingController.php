@@ -85,6 +85,9 @@ class UserBookingController extends Controller
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
+        $hours = $pickup->diffInHours($drop);
+        $days  = max(1, ceil($hours / 24));
+
         $sortColumn = $data['service'] === 'driver'
             ? 'with_driver_price_per_day'
             : 'price_per_day';
@@ -178,7 +181,12 @@ class UserBookingController extends Controller
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
             : $vehicle->price_per_day;
 
-        $estimatedTotal = $days * $pricePerDay;
+        $durationPricing = $this->getDurationDiscountBreakdown($vehicle, $days, (float) $pricePerDay);
+
+        $basePrice = $durationPricing['base_price'];
+        $durationDiscountPercent = $durationPricing['duration_discount_percent'];
+        $durationDiscountAmount = $durationPricing['duration_discount_amount'];
+        $estimatedTotal = $durationPricing['price_after_duration_discount'];
 
         $loyaltyService = app(LoyaltyService::class);
         $maxRedeemablePoints = $loyaltyService->getMaxRedeemablePoints($user, $estimatedTotal);
@@ -211,6 +219,9 @@ class UserBookingController extends Controller
             'data',
             'days',
             'estimatedTotal',
+            'basePrice',
+            'durationDiscountPercent',
+            'durationDiscountAmount',
             'securityDeposit',
             'service',
             'selectedDriver',
@@ -281,7 +292,13 @@ class UserBookingController extends Controller
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
             : $vehicle->price_per_day;
 
-        $originalPrice = $days * $pricePerDay;
+        $durationPricing = $this->getDurationDiscountBreakdown($vehicle, $days, (float) $pricePerDay);
+
+        $basePrice = $durationPricing['base_price'];
+        $durationDiscountPercent = $durationPricing['duration_discount_percent'];
+        $durationDiscountAmount = $durationPricing['duration_discount_amount'];
+
+        $originalPrice = $durationPricing['price_after_duration_discount'];
 
         $loyaltyService = app(LoyaltyService::class);
 
@@ -492,4 +509,22 @@ class UserBookingController extends Controller
                     : 'Booking cancelled successfully.'
             );
     }
+
+    private function getDurationDiscountBreakdown(Vehicle $vehicle, int $days, float $pricePerDay): array
+    {
+        $basePrice = round($days * $pricePerDay, 2);
+
+        $durationDiscountPercent = (float) $vehicle->getDurationDiscountPercent($days);
+        $durationDiscountAmount = round($basePrice * ($durationDiscountPercent / 100), 2);
+
+        $priceAfterDurationDiscount = max(0, $basePrice - $durationDiscountAmount);
+
+        return [
+            'base_price' => $basePrice,
+            'duration_discount_percent' => $durationDiscountPercent,
+            'duration_discount_amount' => $durationDiscountAmount,
+            'price_after_duration_discount' => $priceAfterDurationDiscount,
+        ];
+    }
+
 }

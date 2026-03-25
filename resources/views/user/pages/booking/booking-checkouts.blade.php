@@ -13,7 +13,12 @@
         ? (float) ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day ?? 0)
         : (float) ($vehicle->price_per_day ?? 0);
 
-    $actualPrice = (float) ($estimatedTotal ?? 0);
+    $basePriceForSummary = (float) ($basePrice ?? ($estimatedTotal ?? 0));
+    $durationDiscountPercentValue = (float) ($durationDiscountPercent ?? 0);
+    $durationDiscountAmountValue = (float) ($durationDiscountAmount ?? 0);
+
+    $priceAfterDurationDiscount = max(0, $basePriceForSummary - $durationDiscountAmountValue);
+    $actualPrice = (float) $priceAfterDurationDiscount;
 @endphp
 
 <div class="container mt-5 pt-5">
@@ -41,6 +46,12 @@
                             Price per day:
                             <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
                         </p>
+                        @if($durationDiscountPercentValue > 0)
+                            <p class="mb-1 text-success">
+                                Long booking offer applied:
+                                <strong>{{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}% off</strong>
+                            </p>
+                        @endif
 
                         @if(!empty($securityDeposit) && $selectedService === 'self')
                             <p class="mb-0 text-muted">
@@ -318,19 +329,33 @@
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Original Price</span>
+                        <span>Base Price</span>
+                        <strong>NPR {{ number_format($basePriceForSummary, 2) }}</strong>
+                    </div>
+
+                    @if($durationDiscountPercentValue > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Long Duration Discount ({{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}%)</span>
+                            <strong class="text-primary">
+                                - NPR {{ number_format($durationDiscountAmountValue, 2) }}
+                            </strong>
+                        </div>
+                    @endif
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Price After Duration Discount</span>
                         <strong id="actual_price" data-value="{{ $actualPrice }}">
                             NPR {{ number_format($actualPrice, 2) }}
                         </strong>
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Discount Type</span>
+                        <span>Checkout Discount Type</span>
                         <strong id="discount_type_label">None</strong>
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Discount Amount</span>
+                        <span>Checkout Discount Amount</span>
                         <strong class="text-danger" id="discount_price">- NPR 0.00</strong>
                     </div>
 
@@ -360,112 +385,112 @@
 </div>
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const actualPriceEl = document.getElementById('actual_price');
-        const finalPriceEl = document.getElementById('final_price');
-        const discountPriceEl = document.getElementById('discount_price');
-        const discountTypeLabelEl = document.getElementById('discount_type_label');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const actualPriceEl = document.getElementById('actual_price');
+            const finalPriceEl = document.getElementById('final_price');
+            const discountPriceEl = document.getElementById('discount_price');
+            const discountTypeLabelEl = document.getElementById('discount_type_label');
 
-        const redeemInput = document.getElementById('redeem_points');
-        const discountCodeInput = document.getElementById('discount_code');
+            const redeemInput = document.getElementById('redeem_points');
+            const discountCodeInput = document.getElementById('discount_code');
 
-        const loyaltyBox = document.getElementById('loyalty_box');
-        const codeBox = document.getElementById('code_box');
+            const loyaltyBox = document.getElementById('loyalty_box');
+            const codeBox = document.getElementById('code_box');
 
-        const radioNone = document.getElementById('discount_none');
-        const radioLoyalty = document.getElementById('discount_loyalty');
-        const radioCode = document.getElementById('discount_code_option');
+            const radioNone = document.getElementById('discount_none');
+            const radioLoyalty = document.getElementById('discount_loyalty');
+            const radioCode = document.getElementById('discount_code_option');
 
-        const actualPrice = parseFloat(actualPriceEl?.dataset.value || 0);
-        const maxRedeemable = parseInt(redeemInput?.max || 0);
+            const actualPrice = parseFloat(actualPriceEl?.dataset.value || 0);
+            const maxRedeemable = parseInt(redeemInput?.max || 0);
 
-        function formatNpr(amount) {
-            return 'NPR ' + Number(amount).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            function formatNpr(amount) {
+                return 'NPR ' + Number(amount).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            function getSelectedDiscountChoice() {
+                const checked = document.querySelector('input[name="discount_choice"]:checked');
+                return checked ? checked.value : 'none';
+            }
+
+            function toggleDiscountFields() {
+                const selected = getSelectedDiscountChoice();
+
+                if (loyaltyBox) {
+                    loyaltyBox.style.display = selected === 'loyalty' ? 'block' : 'none';
+                }
+
+                if (codeBox) {
+                    codeBox.style.display = selected === 'code' ? 'block' : 'none';
+                }
+
+                if (selected !== 'loyalty' && redeemInput) {
+                    redeemInput.value = 0;
+                }
+
+                if (selected !== 'code' && discountCodeInput) {
+                    discountCodeInput.value = '';
+                }
+
+                updateSummary();
+            }
+
+            function updateSummary() {
+                const selected = getSelectedDiscountChoice();
+
+                let discount = 0;
+                let label = 'None';
+
+                if (selected === 'loyalty' && redeemInput) {
+                    let points = parseInt(redeemInput.value || 0);
+
+                    if (isNaN(points) || points < 0) {
+                        points = 0;
+                    }
+
+                    if (points > maxRedeemable) {
+                        points = maxRedeemable;
+                    }
+
+                    redeemInput.value = points;
+                    discount = points;
+                    label = 'Loyalty Points';
+                }
+
+                if (selected === 'code') {
+                    label = 'Discount Code';
+                    discount = 0;
+                }
+
+                const finalPrice = Math.max(0, actualPrice - discount);
+
+                if (discountTypeLabelEl) {
+                    discountTypeLabelEl.textContent = label;
+                }
+
+                if (discountPriceEl) {
+                    discountPriceEl.textContent = '- ' + formatNpr(discount);
+                }
+
+                if (finalPriceEl) {
+                    finalPriceEl.textContent = formatNpr(finalPrice);
+                }
+            }
+
+            document.querySelectorAll('.discount-choice').forEach(function (radio) {
+                radio.addEventListener('change', toggleDiscountFields);
             });
-        }
 
-        function getSelectedDiscountChoice() {
-            const checked = document.querySelector('input[name="discount_choice"]:checked');
-            return checked ? checked.value : 'none';
-        }
-
-        function toggleDiscountFields() {
-            const selected = getSelectedDiscountChoice();
-
-            if (loyaltyBox) {
-                loyaltyBox.style.display = selected === 'loyalty' ? 'block' : 'none';
+            if (redeemInput) {
+                redeemInput.addEventListener('input', updateSummary);
             }
 
-            if (codeBox) {
-                codeBox.style.display = selected === 'code' ? 'block' : 'block';
-            }
-
-            if (selected !== 'loyalty' && redeemInput) {
-                redeemInput.value = 0;
-            }
-
-            if (selected !== 'code' && discountCodeInput) {
-                discountCodeInput.value = '';
-            }
-
-            updateSummary();
-        }
-
-        function updateSummary() {
-            const selected = getSelectedDiscountChoice();
-
-            let discount = 0;
-            let label = 'None';
-
-            if (selected === 'loyalty' && redeemInput) {
-                let points = parseInt(redeemInput.value || 0);
-
-                if (isNaN(points) || points < 0) {
-                    points = 0;
-                }
-
-                if (points > maxRedeemable) {
-                    points = maxRedeemable;
-                }
-
-                redeemInput.value = points;
-                discount = points;
-                label = 'Loyalty Points';
-            }
-
-            if (selected === 'code') {
-                label = 'Discount Code';
-                discount = 0;
-            }
-
-            const finalPrice = Math.max(0, actualPrice - discount);
-
-            if (discountTypeLabelEl) {
-                discountTypeLabelEl.textContent = label;
-            }
-
-            if (discountPriceEl) {
-                discountPriceEl.textContent = '- ' + formatNpr(discount);
-            }
-
-            if (finalPriceEl) {
-                finalPriceEl.textContent = formatNpr(finalPrice);
-            }
-        }
-
-        document.querySelectorAll('.discount-choice').forEach(function (radio) {
-            radio.addEventListener('change', toggleDiscountFields);
+            toggleDiscountFields();
         });
-
-        if (redeemInput) {
-            redeemInput.addEventListener('input', updateSummary);
-        }
-
-        toggleDiscountFields();
-    });
-</script>
+    </script>
 @endpush
 @endsection
