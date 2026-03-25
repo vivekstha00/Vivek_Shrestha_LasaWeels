@@ -75,6 +75,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/booking/{booking}/payment', [UserPaymentController::class, 'process'])->name('booking.payment.process');
 
+    Route::get('/my-bookings/{booking}/invoice', [UserPaymentController::class, 'downloadInvoice'])->name('user.booking.invoice');
+
     Route::get('/my-bookings', [UserBookingController::class, 'index'])->name('user.booking.index');
 
     Route::get('/my-bookings/{booking}', [UserBookingController::class, 'show'])->name('user.booking.show');

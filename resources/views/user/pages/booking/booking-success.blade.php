@@ -96,6 +96,12 @@
                     My Bookings
                 </a>
 
+                @if($payment && in_array($payment->status, ['completed', 'refunded']))
+                    <a href="{{ route('user.booking.invoice', $booking->id) }}" class="btn btn-outline-dark">
+                        Download Invoice
+                    </a>
+                @endif
+
                 @if(!$isPaid)
                     <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-success">
                         Pay Now

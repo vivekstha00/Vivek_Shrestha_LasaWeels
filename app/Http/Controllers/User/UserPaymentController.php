@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
 use App\Services\LoyaltyService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserPaymentController extends Controller
 {
@@ -208,5 +209,66 @@ class UserPaymentController extends Controller
 
         return redirect()->route('booking.payment', $booking->id)
             ->withErrors(['payment' => 'Khalti payment failed. Please try again.']);
+    }
+
+    public function downloadInvoice(Booking $booking)
+    {
+        abort_unless($booking->user_id === Auth::id(), 403);
+
+        $booking->load([
+            'user',
+            'vehicle',
+            'driver',
+            'payment',
+        ]);
+
+        if (! $booking->payment) {
+            return back()->withErrors([
+                'invoice' => 'Invoice is not available because payment record was not found.',
+            ]);
+        }
+
+        if (! in_array($booking->payment->status, ['completed', 'refunded'])) {
+            return back()->withErrors([
+                'invoice' => 'Invoice is available only after payment is completed.',
+            ]);
+        }
+
+        $payment = $booking->payment;
+
+        $days = max(
+            1,
+            ceil(
+                \Carbon\Carbon::parse($booking->pickup_datetime)
+                    ->diffInHours(\Carbon\Carbon::parse($booking->drop_datetime)) / 24
+            )
+        );
+
+        $pricePerDay = $booking->service === 'driver'
+            ? (float) ($booking->vehicle->with_driver_price_per_day ?? $booking->vehicle->price_per_day ?? 0)
+            : (float) ($booking->vehicle->price_per_day ?? 0);
+
+        $baseAmount = round($days * $pricePerDay, 2);
+
+        $durationDiscountPercent = $booking->vehicle
+            ? (float) $booking->vehicle->getDurationDiscountPercent($days)
+            : 0;
+
+        $durationDiscountAmount = round($baseAmount * ($durationDiscountPercent / 100), 2);
+
+        $invoiceNumber = 'INV-BOOK-' . $booking->id . '-' . $payment->id;
+
+        $pdf = Pdf::loadView('user.invoices.booking-invoice', [
+            'booking' => $booking,
+            'payment' => $payment,
+            'invoiceNumber' => $invoiceNumber,
+            'days' => $days,
+            'pricePerDay' => $pricePerDay,
+            'baseAmount' => $baseAmount,
+            'durationDiscountPercent' => $durationDiscountPercent,
+            'durationDiscountAmount' => $durationDiscountAmount,
+        ])->setPaper('a4');
+
+        return $pdf->download($invoiceNumber . '.pdf');
     }
 };
