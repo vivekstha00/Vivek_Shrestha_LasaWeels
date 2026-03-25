@@ -15,14 +15,31 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
-            $table->string('company_name');
-            $table->string('contact_person');
+            // personal info
+            $table->string('full_name');
             $table->string('phone');
-            $table->string('address')->nullable();
+            $table->string('national_id_number');
+            $table->text('residential_address');
 
-            // vendor verification workflow
-            $table->string('status')->default('pending');
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
+            // business info
+            $table->string('business_name');
+            $table->string('business_type');
+            $table->string('business_registration_number')->nullable();
+            $table->string('tax_id_number')->nullable();
+            $table->text('business_address');
+
+            // workflow
+            $table->unsignedTinyInteger('current_step')->default(1);
+            $table->boolean('is_submitted')->default(false);
+
+            $table->string('status')->default('draft');
+            // draft, pending, under_review, approved, rejected
+
+            $table->foreignId('reviewed_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->timestamp('reviewed_at')->nullable();
             $table->text('remarks')->nullable();
 

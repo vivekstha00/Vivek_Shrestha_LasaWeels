@@ -15,13 +15,18 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
+            $table->string('purpose')->default('user_verification');
+
             $table->string('type');
 
             $table->string('document_number')->nullable();
             $table->date('issued_at')->nullable();
             $table->date('expires_at')->nullable();
-            
+
             $table->string('file_path');
+            $table->string('original_name')->nullable();
+            $table->string('file_type')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
 
             $table->string('status')->default('pending');
 
@@ -35,7 +40,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['user_id', 'type']);
+            $table->unique(['user_id', 'purpose', 'type']);
         });
     }
 

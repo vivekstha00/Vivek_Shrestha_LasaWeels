@@ -12,11 +12,15 @@ class Document extends Model
 
     protected $fillable = [
         'user_id',
+        'purpose',
         'type',
         'document_number',
         'issued_at',
         'expires_at',
         'file_path',
+        'original_name',
+        'file_type',
+        'file_size',
         'status',
         'reviewed_by',
         'reviewed_at',

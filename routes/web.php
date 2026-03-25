@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\User\AuthController;
+use App\Http\Controllers\Auth\VendorRegisterController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\AdminVehicleController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\Admin\AdminRefundController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
-use App\Http\Controllers\Vendor\VendorApplicationController;
 use App\Http\Controllers\Vendor\VendorVehicleController;
 use App\Http\Controllers\Vendor\VendorUserController;
 use App\Http\Controllers\Vendor\VendorBookingController;
@@ -51,7 +51,8 @@ Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('
 
 Route::get('/vehicles', [UserVehicleController::class, 'index'])->name('vehicles.index');
 
-Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browseShow'])->name('vehicles.browse.show');
+Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browseShow'])
+    ->name('vehicles.browse.show');
 
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
 
@@ -96,9 +97,6 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/khalti/callback', [UserPaymentController::class, 'khaltiCallback'])->name('user.khalti.callback');
 
-// Corporate rent -> vendor request
-Route::get('/corporate-rent', [VendorApplicationController::class, 'create'])->name('corporate.rent');
-Route::post('/corporate-rent', [VendorApplicationController::class, 'store'])->name('vendor.apply');
 
 Route::get('/blog', [UserBlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [UserBlogController::class, 'show'])->name('blog.show');
@@ -171,10 +169,27 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/refunds/{payment}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 });
 
-Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
+Route::prefix('vendor/register')->name('vendor.register.')->group(function () {
+    Route::get('/step-1', [VendorRegisterController::class, 'showStep1'])->name('step1');
+    Route::post('/step-1', [VendorRegisterController::class, 'storeStep1'])->name('step1.store');
 
-    Route::get('/verification', [VendorApplicationController::class, 'verification'])->name('verification');
-    Route::post('/verification/resubmit', [VendorApplicationController::class, 'resubmit'])->name('verification.resubmit');
+    Route::get('/step-2', [VendorRegisterController::class, 'showStep2'])->name('step2');
+    Route::post('/step-2', [VendorRegisterController::class, 'storeStep2'])->name('step2.store');
+
+    Route::get('/step-3', [VendorRegisterController::class, 'showStep3'])->name('step3');
+    Route::post('/step-3', [VendorRegisterController::class, 'storeStep3'])->name('step3.store');
+
+    Route::get('/step-4', [VendorRegisterController::class, 'showStep4'])->name('step4');
+    Route::post('/step-4', [VendorRegisterController::class, 'storeStep4'])->name('step4.store');
+
+    Route::get('/review', [VendorRegisterController::class, 'showReview'])->name('review');
+    Route::post('/submit', [VendorRegisterController::class, 'submit'])->name('submit');
+});
+
+Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(function () {
+    Route::get('/verification', [VendorRegisterController::class, 'verification'])->name('verification');
+    Route::post('/verification/resubmit', [VendorRegisterController::class, 'resubmit'])
+        ->name('verification.resubmit');
 
     Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [VendorProfileController::class, 'edit'])->name('profile');
@@ -223,7 +238,12 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
     Route::get('/reviews', [VendorReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [VendorReviewController::class, 'show'])->name('reviews.show');
 
-    Route::get('/subscriptions', [VendorSubscriptionPaymentController::class, 'index'])->name('subscriptions.index');
-    Route::post('/subscriptions/pay/{subscriptionPlan}', [VendorSubscriptionPaymentController::class, 'initiate'])->name('subscriptions.pay');
-    Route::get('/subscriptions/khalti/callback', [VendorSubscriptionPaymentController::class, 'khaltiCallback'])->name('subscriptions.callback');
+    Route::get('/subscriptions', [VendorSubscriptionPaymentController::class, 'index'])
+        ->name('subscriptions.index');
+
+    Route::post('/subscriptions/pay/{subscriptionPlan}', [VendorSubscriptionPaymentController::class, 'initiate'])
+        ->name('subscriptions.pay');
+
+    Route::get('/subscriptions/khalti/callback', [VendorSubscriptionPaymentController::class, 'khaltiCallback'])
+        ->name('subscriptions.callback');
 });

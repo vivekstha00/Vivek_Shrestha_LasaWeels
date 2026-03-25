@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
@@ -14,11 +15,6 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Mass-assignable attributes.
-     *
-     * Note: include only columns that actually exist in your users table migration.
-     */
     protected $fillable = [
         'name',
         'email',
@@ -34,9 +30,6 @@ class User extends Authenticatable
         'verification_note',
     ];
 
-    /**
-     * Hidden attributes for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -54,25 +47,30 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * A user can upload many documents.
-     */
+
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
-    /**
-     * Admin who verified this user (if applicable).
-     */
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
 
-    public function vendorProfile()
+    public function vendorProfile(): HasOne
     {
         return $this->hasOne(VendorProfile::class);
+    }
+
+    public function vendorDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class)->where('purpose', 'vendor_verification');
+    }
+
+    public function userVerificationDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class)->where('purpose', 'user_verification');
     }
 
     public function review()
