@@ -73,7 +73,10 @@ class VendorVehicleController extends Controller
         if (! $subscriptionService->canAddVehicle(Auth::id())) {
             return redirect()
                 ->route('vendor.vehicles.index')
-                ->with('error', 'Your current plan allows only ' . $subscriptionService->getVehicleLimit(Auth::id()) . ' active vehicles. Upgrade your subscription to add more vehicles.');
+                ->with(
+                    'error',
+                    'Your current plan allows only ' . $subscriptionService->getVehicleLimit(Auth::id()) . ' active vehicles. Upgrade your subscription to add more vehicles.'
+                );
         }
 
         $data = $request->validate([
@@ -86,6 +89,7 @@ class VendorVehicleController extends Controller
             'fuel_type' => ['required', Rule::in(['petrol', 'diesel', 'electric'])],
             'transmission' => ['required'],
             'seating_capacity' => ['required', 'integer'],
+
             'mileage_per_litre' => [
                 'nullable',
                 'numeric',
@@ -98,6 +102,7 @@ class VendorVehicleController extends Controller
                 'min:0',
                 Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
             ],
+
             'battery_capacity' => [
                 'nullable',
                 'numeric',
@@ -122,14 +127,40 @@ class VendorVehicleController extends Controller
                 'max:100',
                 Rule::requiredIf($request->fuel_type === 'electric')
             ],
-            'price_per_day' => ['required', 'numeric'],
-            'with_driver_price_per_day' => ['nullable', 'numeric'],
-            'description' => ['nullable'],
+
+            'price_per_day' => ['required', 'numeric', 'min:0'],
+            'with_driver_price_per_day' => ['nullable', 'numeric', 'min:0'],
+
+            'discount_15_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_30_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_60_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+
+            'description' => ['nullable', 'string'],
             'location_city' => ['required', 'string', 'max:100'],
 
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'max:2048'],
         ]);
+
+        $discount15 = (float) ($data['discount_15_days'] ?? 0);
+        $discount30 = (float) ($data['discount_30_days'] ?? 0);
+        $discount60 = (float) ($data['discount_60_days'] ?? 0);
+
+        if ($discount15 > $discount30) {
+            return back()
+                ->withErrors([
+                    'discount_15_days' => '15+ days discount cannot be greater than 30+ days discount.',
+                ])
+                ->withInput();
+        }
+
+        if ($discount30 > $discount60) {
+            return back()
+                ->withErrors([
+                    'discount_30_days' => '30+ days discount cannot be greater than 60+ days discount.',
+                ])
+                ->withInput();
+        }
 
         if (in_array($data['fuel_type'], ['petrol', 'diesel'])) {
             $data['battery_capacity'] = null;
@@ -168,6 +199,11 @@ class VendorVehicleController extends Controller
 
             'price_per_day' => $data['price_per_day'],
             'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
+
+            'discount_15_days' => $data['discount_15_days'] ?? 0,
+            'discount_30_days' => $data['discount_30_days'] ?? 0,
+            'discount_60_days' => $data['discount_60_days'] ?? 0,
+
             'description' => $data['description'] ?? null,
             'location_city' => $data['location_city'],
 
@@ -219,16 +255,18 @@ class VendorVehicleController extends Controller
         }
 
         $data = $request->validate([
-            'title' => ['nullable', 'string', 'max:255'],
             'wheel_type' => ['required'],
-            'vehicle_type' => ['required', 'string', 'max:100'],
-            'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:100'],
-            'registration_no' => ['required', 'string', 'max:50', 'unique:vehicles,registration_no,' . $vehicle->id],
+            'vehicle_type' => ['required'],
+            'brand' => ['required'],
+            'model' => ['required'],
+            'registration_no' => [
+                'required',
+                Rule::unique('vehicles', 'registration_no')->ignore($vehicle->id),
+            ],
             'manufacture_year' => ['required', 'integer'],
             'fuel_type' => ['required', Rule::in(['petrol', 'diesel', 'electric'])],
-            'transmission' => ['required', 'string', 'max:50'],
-            'seating_capacity' => ['required', 'integer', 'min:1', 'max:20'],
+            'transmission' => ['required'],
+            'seating_capacity' => ['required', 'integer'],
 
             'mileage_per_litre' => [
                 'nullable',
@@ -270,12 +308,25 @@ class VendorVehicleController extends Controller
 
             'price_per_day' => ['required', 'numeric', 'min:0'],
             'with_driver_price_per_day' => ['nullable', 'numeric'],
+
+            'discount_15_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_30_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_60_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
+
             'location_city' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
 
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'max:2048'],
         ]);
+
+        $discountOrderError = $this->validateDurationDiscountOrder($data);
+
+        if ($discountOrderError) {
+            return back()->withErrors([
+                'discount_15_days' => $discountOrderError,
+            ])->withInput();
+        }
 
         if (in_array($data['fuel_type'], ['petrol', 'diesel'])) {
             $data['battery_capacity'] = null;
@@ -288,8 +339,8 @@ class VendorVehicleController extends Controller
             $data['mileage_per_litre'] = null;
             $data['fuel_tank_capacity'] = null;
         }
+
         $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
-        $updatePayload['title'] = $title;
 
         $vehicle->update([
             'title' => $title,
@@ -312,6 +363,11 @@ class VendorVehicleController extends Controller
 
             'price_per_day' => $data['price_per_day'],
             'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
+
+            'discount_15_days' => $data['discount_15_days'] ?? 0,
+            'discount_30_days' => $data['discount_30_days'] ?? 0,
+            'discount_60_days' => $data['discount_60_days'] ?? 0,
+
             'location_city' => $data['location_city'],
             'description' => $data['description'] ?? null,
 
@@ -321,6 +377,7 @@ class VendorVehicleController extends Controller
             'approved_at' => null,
             'reject_reason' => null,
         ]);
+
         // Append new images
         if ($request->hasFile('images')) {
             $hasPrimary = $vehicle->images()->where('is_primary', true)->exists();
@@ -328,24 +385,21 @@ class VendorVehicleController extends Controller
             foreach ($request->file('images') as $img) {
                 $path = $img->store('vehicles', 'public');
 
-                $makePrimary = false;
-                if (!$hasPrimary) {
-                    $makePrimary = true;
-                    $hasPrimary = true;
-
-                    // keep image_url updated for compatibility
-                    $vehicle->update(['image_url' => $path]);
-                }
-
                 $vehicle->images()->create([
                     'path' => $path,
-                    'is_primary' => $makePrimary,
+                    'is_primary' => ! $hasPrimary,
                 ]);
+
+                if (! $hasPrimary) {
+                    $vehicle->update(['image_url' => $path]);
+                    $hasPrimary = true;
+                }
             }
         }
 
-        return redirect()->route('vendor.vehicles.index')
-            ->with('success', 'Vehicle updated. Sent for admin approval again.');
+        return redirect()
+            ->route('vendor.vehicles.index')
+            ->with('success', 'Vehicle updated successfully and sent for re-approval.');
     }
 
     public function destroy(Vehicle $vehicle)
@@ -364,5 +418,22 @@ class VendorVehicleController extends Controller
         $vehicle->delete();
 
         return back()->with('success', 'Vehicle deleted successfully.');
+    }
+
+    private function validateDurationDiscountOrder(array $data)
+    {
+        $discount15 = (float) ($data['discount_15_days'] ?? 0);
+        $discount30 = (float) ($data['discount_30_days'] ?? 0);
+        $discount60 = (float) ($data['discount_60_days'] ?? 0);
+
+        if ($discount15 > $discount30) {
+            return '15+ days discount cannot be greater than 30+ days discount.';
+        }
+
+        if ($discount30 > $discount60) {
+            return '30+ days discount cannot be greater than 60+ days discount.';
+        }
+
+        return null;
     }
 }

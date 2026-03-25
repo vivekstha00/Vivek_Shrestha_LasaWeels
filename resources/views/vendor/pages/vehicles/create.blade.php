@@ -221,6 +221,50 @@
                         @error('with_driver_price_per_day') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
+                    <div class="col-12">
+                        <div class="card border rounded-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">Long Duration Discount (Vendor Pricing Rule)</h6>
+                                <p class="text-muted small mb-3">
+                                    These discounts are applied automatically for long bookings. Use 0 if you do not want to offer a discount.
+                                </p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">15+ Days Discount (%)</label>
+                                        <input type="number" step="0.01" min="0" max="100"
+                                            name="discount_15_days"
+                                            class="form-control"
+                                            value="{{ old('discount_15_days', 0) }}">
+                                        @error('discount_15_days') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">30+ Days Discount (%)</label>
+                                        <input type="number" step="0.01" min="0" max="100"
+                                            name="discount_30_days"
+                                            class="form-control"
+                                            value="{{ old('discount_30_days', 0) }}">
+                                        @error('discount_30_days') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">60+ Days Discount (%)</label>
+                                        <input type="number" step="0.01" min="0" max="100"
+                                            name="discount_60_days"
+                                            class="form-control"
+                                            value="{{ old('discount_60_days', 0) }}">
+                                        @error('discount_60_days') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Recommended order: 15+ days ≤ 30+ days ≤ 60+ days
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Images --}}
                     <div class="col-md-6">
                         <label class="form-label">Vehicle Images</label>

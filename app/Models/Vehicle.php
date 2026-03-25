@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-
-use Illuminate\Database\Eloquent\Model;
 
 class Vehicle extends Model
 {
@@ -39,6 +39,10 @@ class Vehicle extends Model
         'with_driver_price_per_day',
         'security_deposit',
 
+        'discount_15_days',
+        'discount_30_days',
+        'discount_60_days',
+
         'location_city',
         'location_area',
         'pickup_address',
@@ -60,6 +64,12 @@ class Vehicle extends Model
         'battery_capacity' => 'decimal:2',
         'range_per_charge' => 'decimal:2',
         'charging_time' => 'decimal:2',
+        'price_per_day' => 'decimal:2',
+        'with_driver_price_per_day' => 'decimal:2',
+        'security_deposit' => 'decimal:2',
+        'discount_15_days' => 'decimal:2',
+        'discount_30_days' => 'decimal:2',
+        'discount_60_days' => 'decimal:2',
         'is_active' => 'boolean',
         'approved_at' => 'datetime',
     ];
@@ -73,6 +83,7 @@ class Vehicle extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
     public function images(): HasMany
     {
         return $this->hasMany(VehicleImage::class, 'vehicle_id', 'id');
@@ -98,5 +109,20 @@ class Vehicle extends Model
         return $this->hasOne(Review::class);
     }
 
-}
+    public function getDurationDiscountPercent(int $days): float
+    {
+        if ($days >= 60) {
+            return (float) ($this->discount_60_days ?? 0);
+        }
 
+        if ($days >= 30) {
+            return (float) ($this->discount_30_days ?? 0);
+        }
+
+        if ($days >= 15) {
+            return (float) ($this->discount_15_days ?? 0);
+        }
+
+        return 0;
+    }
+}

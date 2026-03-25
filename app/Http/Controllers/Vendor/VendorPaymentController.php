@@ -45,8 +45,8 @@ class VendorPaymentController extends Controller
             ->sum('vendor_amount');
 
         $totalLoyaltyDiscount = Payment::where('vendor_id', $vendorId)
-            ->where('status', 'completed')
-            ->where('refund_status', '!=', 'refunded')
+            ->where('payments.status', 'completed')
+            ->where('payments.refund_status', '!=', 'refunded')
             ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
             ->where('bookings.status', '!=', 'cancelled')
             ->sum('bookings.loyalty_discount_amount');

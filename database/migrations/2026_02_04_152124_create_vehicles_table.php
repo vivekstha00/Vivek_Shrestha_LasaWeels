@@ -45,6 +45,11 @@ return new class extends Migration
             $table->decimal('with_driver_price_per_day', 10, 2)->nullable();
             $table->decimal('security_deposit', 10, 2)->default(0);
 
+            // Vendor long-duration discount percentages
+            $table->decimal('discount_15_days', 5, 2)->default(0);
+            $table->decimal('discount_30_days', 5, 2)->default(0);
+            $table->decimal('discount_60_days', 5, 2)->default(0);
+
             // Location / pickup
             $table->string('location_city');
             $table->string('location_area')->nullable();
