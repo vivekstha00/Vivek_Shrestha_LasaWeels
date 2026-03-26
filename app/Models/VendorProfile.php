@@ -21,6 +21,8 @@ class VendorProfile extends Model
         'business_registration_number',
         'tax_id_number',
         'business_address',
+        'latitude',
+        'longitude',
         'current_step',
         'is_submitted',
         'status',
@@ -32,6 +34,8 @@ class VendorProfile extends Model
     protected $casts = [
         'is_submitted' => 'boolean',
         'reviewed_at'  => 'datetime',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'created_at'   => 'datetime',
         'updated_at'   => 'datetime',
     ];

@@ -11,7 +11,16 @@ class UserContactController extends Controller
 {
     public function create()
     {
-        return view('user.pages.contact');
+        $vendors = \App\Models\User::with('vendorProfile')
+            ->where('role', 'vendor')
+            ->where('vendor_status', 'approved')
+            ->whereHas('vendorProfile', function ($query) {
+                $query->where('status', 'approved');
+            })
+            ->latest()
+            ->get();
+
+        return view('user.pages.contact', compact('vendors'));
     }
 
     public function store(Request $request)

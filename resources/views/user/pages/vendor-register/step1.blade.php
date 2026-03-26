@@ -1,6 +1,6 @@
-@extends('auth.vendor-register.layout', ['title' => 'Vendor Register - Step 1', 'currentStep' => 1])
+@extends('user.pages.vendor-register.layout', ['title' => 'Vendor Register - Step 1', 'currentStep' => 1])
 
-@section('content')
+@section('register-content')
     <h3 class="section-title mb-1">Account Information</h3>
     <p class="text-muted mb-4">Create your vendor account credentials.</p>
 

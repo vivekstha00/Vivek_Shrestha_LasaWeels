@@ -9,12 +9,7 @@
         @yield('user-content')
     </main>
 
-    <footer class="bg-dark text-light py-5 mt-auto">
-        <div class="container text-center">
-            <p class="mb-2">© {{ date('Y') }} LasaWheels. All rights reserved.</p>
-            <p class="small opacity-75">Simple, reliable, and affordable vehicle rental in Nepal.</p>
-        </div>
-    </footer>
+    @include('user.layouts.footer.index')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

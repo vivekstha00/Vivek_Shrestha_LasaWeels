@@ -1,6 +1,6 @@
-@extends('auth.vendor-register.layout', ['title' => 'Vendor Register - Step 4', 'currentStep' => 4])
+@extends('user.pages.vendor-register.layout', ['title' => 'Vendor Register - Step 4', 'currentStep' => 4])
 
-@section('content')
+@section('register-content')
     <h3 class="section-title mb-1">Document Upload</h3>
     <p class="text-muted mb-4">Upload required documents for vendor verification.</p>
 

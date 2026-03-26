@@ -1,6 +1,6 @@
-@extends('auth.vendor-register.layout', ['title' => 'Vendor Register - Review', 'currentStep' => 5])
+@extends('user.pages.vendor-register.layout', ['title' => 'Vendor Register - Review', 'currentStep' => 5])
 
-@section('content')
+@section('register-content')
     <h3 class="section-title mb-1">Review & Submit</h3>
     <p class="text-muted mb-4">Please review your information before submitting.</p>
 
@@ -24,7 +24,9 @@
         <p class="mb-2"><strong>Business Type:</strong> {{ ucfirst($vendorProfile->business_type) }}</p>
         <p class="mb-2"><strong>Registration Number:</strong> {{ $vendorProfile->business_registration_number ?: 'N/A' }}</p>
         <p class="mb-2"><strong>Tax / VAT Number:</strong> {{ $vendorProfile->tax_id_number ?: 'N/A' }}</p>
-        <p class="mb-0"><strong>Business Address:</strong> {{ $vendorProfile->business_address }}</p>
+        <p class="mb-2"><strong>Business Address:</strong> {{ $vendorProfile->business_address }}</p>
+        <p class="mb-2"><strong>Latitude:</strong> {{ $vendorProfile->latitude ?: 'N/A' }}</p>
+        <p class="mb-0"><strong>Longitude:</strong> {{ $vendorProfile->longitude ?: 'N/A' }}</p>
     </div>
 
     <div class="border rounded-4 p-4 mb-4">

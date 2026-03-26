@@ -1,6 +1,6 @@
-@extends('auth.vendor-register.layout', ['title' => 'Vendor Register - Step 2', 'currentStep' => 2])
+@extends('user.pages.vendor-register.layout', ['title' => 'Vendor Register - Step 2', 'currentStep' => 2])
 
-@section('content')
+@section('register-content')
     <h3 class="section-title mb-1">Personal Information</h3>
     <p class="text-muted mb-4">Provide your personal details for verification.</p>
 

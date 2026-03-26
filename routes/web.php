@@ -2,7 +2,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\User\AuthController;
-use App\Http\Controllers\Auth\VendorRegisterController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\AdminVehicleController;
@@ -38,6 +37,7 @@ use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserDocumentController;
 use App\Http\Controllers\User\UserReviewController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Vendor\VendorRegisterController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 // User Auth

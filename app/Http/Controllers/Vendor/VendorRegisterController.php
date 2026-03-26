@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
@@ -36,7 +36,7 @@ class VendorRegisterController extends Controller
             return redirect()->route('vendor.register.step2');
         }
 
-        return view('auth.vendor-register.step1');
+    return view('user.pages.vendor-register.step1');
     }
 
     public function storeStep1(Request $request)
@@ -95,7 +95,7 @@ class VendorRegisterController extends Controller
         $user = $this->getRegistrationUser();
         $vendorProfile = $user->vendorProfile;
 
-        return view('auth.vendor-register.step2', compact('user', 'vendorProfile'));
+    return view('user.pages.vendor-register.step2', compact('user', 'vendorProfile'));
     }
 
     public function storeStep2(Request $request)
@@ -143,7 +143,7 @@ class VendorRegisterController extends Controller
         $user = $this->getRegistrationUser();
         $vendorProfile = $user->vendorProfile;
 
-        return view('auth.vendor-register.step3', compact('user', 'vendorProfile'));
+    return view('user.pages.vendor-register.step3', compact('user', 'vendorProfile'));
     }
 
     public function storeStep3(Request $request)
@@ -156,6 +156,8 @@ class VendorRegisterController extends Controller
             'business_registration_number' => ['nullable', 'string', 'max:100'],
             'tax_id_number' => ['nullable', 'string', 'max:100'],
             'business_address' => ['required', 'string', 'max:1000'],
+            'latitude' => ['required', 'numeric'],
+            'longitude' => ['required', 'numeric'],
         ]);
 
         DB::beginTransaction();
@@ -167,9 +169,10 @@ class VendorRegisterController extends Controller
                 'business_registration_number' => $validated['business_registration_number'] ?? null,
                 'tax_id_number' => $validated['tax_id_number'] ?? null,
                 'business_address' => $validated['business_address'],
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
                 'current_step' => 3,
             ]);
-
             DB::commit();
 
             return redirect()->route('vendor.register.step4')
@@ -188,7 +191,7 @@ class VendorRegisterController extends Controller
         $user = $this->getRegistrationUser();
         $documents = $user->vendorDocuments()->get()->keyBy('type');
 
-        return view('auth.vendor-register.step4', compact('user', 'documents'));
+    return view('user.pages.vendor-register.step4', compact('user', 'documents'));
     }
 
     public function storeStep4(Request $request)
@@ -251,7 +254,7 @@ class VendorRegisterController extends Controller
             }
         }
 
-        return view('auth.vendor-register.review', compact('user', 'vendorProfile', 'documents'));
+    return view('user.pages.vendor-register.review', compact('user', 'vendorProfile', 'documents'));
     }
 
     public function submit()
@@ -314,7 +317,7 @@ class VendorRegisterController extends Controller
     {
         $vendor = Auth::user();
         /** @var \App\Models\User $vendor */
-        
+
         $validated = $request->validate([
             'type' => ['required', 'in:national_id,business_license,tax_certificate,proof_of_address'],
             'document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],

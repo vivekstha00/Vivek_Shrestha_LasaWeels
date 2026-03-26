@@ -44,10 +44,10 @@ class AuthController extends Controller
 
         // Vendor
         if ($user->role === 'vendor') {
-            // status must be approved to login (your rule)
-            if ($user->status !== 'approved') {
+            // Check if user is active (not suspended)
+            if (!in_array($user->status, ['active', 'approved'])) {
                 Auth::logout();
-                return back()->withErrors(['email' => 'Your account is pending approval.']);
+                return back()->withErrors(['email' => 'Your account is pending approval or suspended.']);
             }
 
             // if vendor not verified, send to verification page
