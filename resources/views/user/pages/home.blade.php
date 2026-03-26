@@ -1,6 +1,6 @@
 @extends('user.layouts.master')
 
-@section('title', 'LasaWheels - Looking for a Car?')
+@section('title', 'LasaWheels - Rent Your Ride')
 
 @section('user-content')
 
@@ -10,48 +10,81 @@
             <div class="col-lg-11 text-white">
 
                 <h1 class="display-3 fw-bold mb-2">
-                    Looking for a <span class="text-success">Car</span>?
+                    Rent a <span class="text-success">Vehicle</span> Easily
                 </h1>
 
                 <p class="lead mb-4">
-                    Rent a car in just few easy steps.
+                    Choose 4-wheel or 2-wheel rentals in just a few easy steps.
                 </p>
 
-                {{-- Search/Booking Card --}}
                 <div class="bg-white text-dark rounded shadow p-4 p-md-5"
-                     x-data="{ service: 'self' }">
+                     x-data="{
+                        wheelType: '4_wheeler',
+                        service: 'self',
+                        setWheelType(type) {
+                            this.wheelType = type;
+                            if (type === '2_wheeler') {
+                                this.service = 'self';
+                            }
+                        }
+                     }">
                     <form method="GET" action="{{ route('user.search.vehicles') }}">
                         <input type="hidden" name="service" :value="service">
+                        <input type="hidden" name="wheel_type" :value="wheelType">
 
                         <div class="row g-4 align-items-start">
-                            {{-- Left: service select --}}
+
                             <div class="col-lg-4">
-                                <div class="fw-bold mb-3 fs-5">Choose a service</div>
+                                <div class="fw-bold mb-3 fs-5">Choose vehicle category</div>
 
-                                <div class="d-flex gap-4">
-
-                                    <!-- Self Drive -->
+                                <div class="d-flex gap-3 mb-4">
                                     <button type="button"
                                             class="service-square"
-                                            :class="service === 'self' ? 'active' : ''"
-                                            @click="service='self'">
+                                            :class="wheelType === '4_wheeler' ? 'active' : ''"
+                                            @click="setWheelType('4_wheeler')">
                                         <i class="fa-solid fa-car mb-2"></i>
-                                        <span>Self Drive</span>
+                                        <span>4 Wheeler</span>
                                     </button>
 
-                                    <!-- With Driver -->
                                     <button type="button"
                                             class="service-square"
-                                            :class="service === 'driver' ? 'active' : ''"
-                                            @click="service='driver'">
-                                        <i class="fa-solid fa-user-tie mb-2"></i>
-                                        <span>With Driver</span>
+                                            :class="wheelType === '2_wheeler' ? 'active' : ''"
+                                            @click="setWheelType('2_wheeler')">
+                                        <i class="fa-solid fa-motorcycle mb-2"></i>
+                                        <span>2 Wheeler</span>
                                     </button>
-
                                 </div>
+
+                                <template x-if="wheelType === '4_wheeler'">
+                                    <div>
+                                        <div class="fw-bold mb-3 fs-6">Choose a service</div>
+                                        <div class="d-flex gap-3">
+                                            <button type="button"
+                                                    class="service-square"
+                                                    :class="service === 'self' ? 'active' : ''"
+                                                    @click="service='self'">
+                                                <i class="fa-solid fa-car-side mb-2"></i>
+                                                <span>Self Drive</span>
+                                            </button>
+
+                                            <button type="button"
+                                                    class="service-square"
+                                                    :class="service === 'driver' ? 'active' : ''"
+                                                    @click="service='driver'">
+                                                <i class="fa-solid fa-user-tie mb-2"></i>
+                                                <span>With Driver</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="wheelType === '2_wheeler'">
+                                    <div class="alert alert-light border rounded-3 mb-0">
+                                        <strong>2 Wheeler:</strong> Self-drive only
+                                    </div>
+                                </template>
                             </div>
 
-                            {{-- Right: inputs --}}
                             <div class="col-lg-8">
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -68,7 +101,7 @@
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To' : 'Drop Off Location'"></label>
                                         <input type="text" name="drop_location" class="form-control"
-                                               :placeholder="service==='self' ? 'Please enter to location' : 'Please enter drop location'"
+                                               :placeholder="service==='self' ? 'Please enter destination' : 'Please enter drop location'"
                                                required>
                                     </div>
 
@@ -87,7 +120,7 @@
 
                                 <div class="d-flex justify-content-end mt-4">
                                     <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
-                                        <span x-text="service === 'driver' ? 'Find Driver' : 'Find Vehicle'"></span>
+                                        <span x-text="wheelType === '2_wheeler' ? 'Find Bikes & Scooters' : (service === 'driver' ? 'Find Driver Vehicles' : 'Find Vehicle')"></span>
                                     </button>
                                 </div>
                             </div>
@@ -95,13 +128,11 @@
                         </div>
                     </form>
                 </div>
-                {{-- END search card --}}
 
             </div>
         </div>
     </div>
 </section>
-{{--  HERO ENDS HERE --}}
 
 @if($activeOffers->isNotEmpty())
     <section class="py-4 bg-white border-top">
@@ -143,7 +174,6 @@
     </section>
 @endif
 
-{{-- FEATURES SECTION (separate, white background) --}}
 <section class="py-5 bg-light">
     <div class="container">
         <div class="row g-4 justify-content-center">
@@ -151,16 +181,16 @@
             <div class="col-md-4">
                 <div class="bg-white rounded shadow-sm p-4 h-100">
                     <i class="fa-solid fa-car fa-2x text-success mb-3"></i>
-                    <h5 class="fw-bold">Find the Perfect Ride</h5>
-                    <p class="mb-0 text-secondary">Everyday cars to premium rides.</p>
+                    <h5 class="fw-bold">4-Wheel Rentals</h5>
+                    <p class="mb-0 text-secondary">Cars, SUVs, pickups and more.</p>
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="bg-white rounded shadow-sm p-4 h-100">
-                    <i class="fa-solid fa-dollar-sign fa-2x text-success mb-3"></i>
-                    <h5 class="fw-bold">Transparent Pricing</h5>
-                    <p class="mb-0 text-secondary">No hidden fees. Clear pricing.</p>
+                    <i class="fa-solid fa-motorcycle fa-2x text-success mb-3"></i>
+                    <h5 class="fw-bold">2-Wheel Rentals</h5>
+                    <p class="mb-0 text-secondary">Bikes and scooters for easy city travel.</p>
                 </div>
             </div>
 

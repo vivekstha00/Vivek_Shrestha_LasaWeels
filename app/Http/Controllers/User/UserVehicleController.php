@@ -14,6 +14,14 @@ class UserVehicleController extends Controller
             ->where('status', 'available')
             ->where('is_active', 1);
 
+        if ($request->filled('wheel_type')) {
+            $query->where('wheel_type', $request->wheel_type);
+        }
+
+        if ($request->filled('vehicle_type')) {
+            $query->where('vehicle_type', $request->vehicle_type);
+        }
+
         if ($request->filled('fuel_type')) {
             $query->where('fuel_type', $request->fuel_type);
         }
@@ -76,6 +84,7 @@ class UserVehicleController extends Controller
     {
         $search = $request->validate([
             'service'         => ['nullable', 'in:self,driver'],
+            'wheel_type'      => ['nullable', 'in:2_wheeler,4_wheeler'],
             'pickup_location' => ['nullable', 'string', 'max:255'],
             'drop_location'   => ['nullable', 'string', 'max:255'],
             'pickup_datetime' => ['nullable', 'date'],
@@ -83,6 +92,12 @@ class UserVehicleController extends Controller
         ]);
 
         $service = $search['service'] ?? 'self';
+
+        if ($vehicle->wheel_type === '2_wheeler') {
+            $service = 'self';
+            $search['service'] = 'self';
+            $search['wheel_type'] = '2_wheeler';
+        }
 
         $vehicle->load([
             'images',

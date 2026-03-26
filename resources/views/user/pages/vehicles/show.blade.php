@@ -87,10 +87,10 @@
 
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
-                            {{ ucfirst($vehicle->vehicle_type) }}
+                            {{ ucwords(str_replace('_', ' ', $vehicle->vehicle_type)) }}
                         </span>
                         <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">
-                            {{ ucfirst(str_replace('_', ' ', $vehicle->wheel_type ?? '')) }}
+                            {{ ucwords(str_replace('_', ' ', $vehicle->wheel_type ?? '')) }}
                         </span>
                         <span class="badge px-3 py-2 rounded-pill
                             {{ $vehicle->fuel_type === 'electric'
@@ -101,11 +101,22 @@
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-4"><strong>Seats:</strong> {{ $vehicle->seating_capacity }}</div>
-                        <div class="col-md-4"><strong>Transmission:</strong> {{ ucfirst($vehicle->transmission) }}</div>
-                        <div class="col-md-4"><strong>Year:</strong> {{ $vehicle->manufacture_year }}</div>
-                        <div class="col-md-6"><strong>Registration:</strong> {{ $vehicle->registration_no }}</div>
-                        <div class="col-md-6"><strong>City:</strong> {{ $vehicle->location_city }}</div>
+                        <div class="col-md-4">
+                            <strong>{{ $vehicle->wheel_type === '2_wheeler' ? 'Rider Capacity' : 'Seats' }}:</strong>
+                            {{ $vehicle->seating_capacity }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Transmission:</strong> {{ $vehicle->transmission ? ucfirst($vehicle->transmission) : '—' }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Year:</strong> {{ $vehicle->manufacture_year ?? '—' }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Registration:</strong> {{ $vehicle->registration_no }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>City:</strong> {{ $vehicle->location_city }}
+                        </div>
 
                         @if($vehicle->fuel_type === 'electric')
                             @if($vehicle->battery_capacity)
@@ -225,16 +236,16 @@
                         <div class="fw-bold">Rs. {{ number_format($selfPerDay, 2) }}/day</div>
                     </div>
 
-                    @if($driverPerDay > 0)
+                    @if($vehicle->wheel_type !== '2_wheeler' && $driverPerDay > 0)
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="text-muted">With Driver</div>
                             <div class="fw-bold">Rs. {{ number_format($driverPerDay, 2) }}/day</div>
                         </div>
                     @endif
 
-                    <a href="{{ route('home', ['vehicle_id' => $vehicle->id]) }}#booking-form"
-                       class="btn btn-success w-100 py-2">
-                        Book This Vehicle
+                    <a href="{{ route('vehicles.index', ['wheel_type' => $vehicle->wheel_type]) }}"
+                    class="btn btn-success w-100 py-2">
+                        Browse Similar Vehicles
                     </a>
 
                     <a href="{{ route('vehicles.index') }}"

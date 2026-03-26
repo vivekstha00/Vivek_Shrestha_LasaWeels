@@ -104,11 +104,22 @@
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-4"><strong>Seats:</strong> {{ $vehicle->seating_capacity }}</div>
-                        <div class="col-md-4"><strong>Transmission:</strong> {{ ucfirst($vehicle->transmission) }}</div>
-                        <div class="col-md-4"><strong>Year:</strong> {{ $vehicle->manufacture_year }}</div>
-                        <div class="col-md-6"><strong>Registration:</strong> {{ $vehicle->registration_no }}</div>
-                        <div class="col-md-6"><strong>City:</strong> {{ $vehicle->location_city }}</div>
+                        <div class="col-md-4">
+                            <strong>{{ $vehicle->wheel_type === '2_wheeler' ? 'Rider Capacity' : 'Seats' }}:</strong>
+                            {{ $vehicle->seating_capacity }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Transmission:</strong>{{ ucfirst($vehicle->transmission) }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Year:</strong> {{ $vehicle->manufacture_year }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Registration:</strong> {{ $vehicle->registration_no }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>City:</strong> {{ $vehicle->location_city }}
+                        </div>
 
                         @if($vehicle->fuel_type === 'electric')
                             @if($vehicle->battery_capacity)
@@ -218,7 +229,10 @@
                     <h5 class="fw-bold mb-3">Booking Detail</h5>
 
                     <div class="small text-muted mb-3">
-                        Service: <span class="fw-semibold text-dark">{{ $service === 'driver' ? 'With Driver' : 'Self Drive' }}</span>
+                        Service:
+                        <span class="fw-semibold text-dark">
+                            {{ $vehicle->wheel_type === '2_wheeler' ? 'Self Drive' : ($service === 'driver' ? 'With Driver' : 'Self Drive') }}
+                        </span>
                     </div>
 
                     <div class="mb-2">
@@ -246,7 +260,7 @@
                         $selfPerDay   = (float) ($vehicle->price_per_day ?? 0);
                         $driverPerDay = (float) ($vehicle->with_driver_price_per_day ?? 0);
 
-                        $perDay = $service === 'driver'
+                        $perDay = ($vehicle->wheel_type !== '2_wheeler' && $service === 'driver')
                             ? ($driverPerDay > 0 ? $driverPerDay : $selfPerDay)
                             : $selfPerDay;
                     @endphp
@@ -261,7 +275,8 @@
                         @csrf
 
                         {{-- Pass service & search data --}}
-                        <input type="hidden" name="service" value="{{ $service }}">
+                        <input type="hidden" name="service" value="{{ $vehicle->wheel_type === '2_wheeler' ? 'self' : $service }}">
+                        <input type="hidden" name="wheel_type" value="{{ $vehicle->wheel_type }}">
                         <input type="hidden" name="pickup_location" value="{{ $search['pickup_location'] ?? '' }}">
                         <input type="hidden" name="drop_location" value="{{ $search['drop_location'] ?? '' }}">
                         <input type="hidden" name="pickup_datetime" value="{{ $search['pickup_datetime'] ?? '' }}">

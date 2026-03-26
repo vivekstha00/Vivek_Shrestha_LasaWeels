@@ -1,21 +1,19 @@
-{{-- resources/views/user/pages/search-results.blade.php --}}
+{{-- resources/views/user/pages/vehicles/search-results.blade.php --}}
 @extends('user.layouts.master')
 
 @section('title', 'Available Vehicles')
 
 @section('user-content')
 @php
-    // safe defaults
     $service = $search['service'] ?? request('service', 'self');
+    $wheelType = $search['wheel_type'] ?? request('wheel_type', '4_wheeler');
 @endphp
 
-{{-- Page-only spacing (no master changes) --}}
 <div class="container pb-5" style="padding-top: 2px;"
      x-data="{
         openEdit: false,
-
-        // state (single source of truth)
         service: @js($service),
+        wheelType: @js($wheelType),
 
         pickup_location: @js($search['pickup_location'] ?? request('pickup_location','')),
         drop_location: @js($search['drop_location'] ?? request('drop_location','')),
@@ -23,9 +21,25 @@
         drop_datetime: @js($search['drop_datetime'] ?? request('drop_datetime','')),
 
         setService(val) {
+            if (this.wheelType === '2_wheeler') {
+                this.service = 'self';
+                return;
+            }
+
             this.service = val;
 
-            // business rule: self-drive pickup fixed
+            if (this.service === 'self') {
+                this.pickup_location = 'Pokhara Matepani';
+            }
+        },
+
+        setWheelType(val) {
+            this.wheelType = val;
+
+            if (val === '2_wheeler') {
+                this.service = 'self';
+            }
+
             if (this.service === 'self') {
                 this.pickup_location = 'Pokhara Matepani';
             }
@@ -34,7 +48,6 @@
      x-cloak
 >
 
-    {{-- Title --}}
     <div class="text-center mb-4">
         <h2 class="fw-bold mb-1">Select Vehicle</h2>
         <div class="text-muted">Choose the best option for your trip</div>
@@ -45,15 +58,15 @@
         {{-- LEFT SIDE --}}
         <div class="col-lg-4">
 
-            {{--  Filters (like your reference screenshot) --}}
+            {{-- Filters --}}
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0">Filters</h5>
 
-                        {{-- Clear (keeps base search only) --}}
                         <a href="{{ route('user.search.vehicles', [
                                 'service' => request('service', $service),
+                                'wheel_type' => request('wheel_type', $wheelType),
                                 'pickup_location' => request('pickup_location', $search['pickup_location'] ?? ''),
                                 'drop_location' => request('drop_location', $search['drop_location'] ?? ''),
                                 'pickup_datetime' => request('pickup_datetime', $search['pickup_datetime'] ?? ''),
@@ -65,8 +78,8 @@
                     </div>
 
                     <form method="GET" action="{{ route('user.search.vehicles') }}" class="vstack gap-3">
-                        {{-- keep base search params --}}
-                        <input type="hidden" name="service" :value="service">
+                        <input type="hidden" name="service" :value="wheelType === '2_wheeler' ? 'self' : service">
+                        <input type="hidden" name="wheel_type" :value="wheelType">
                         <input type="hidden" name="pickup_location" :value="pickup_location">
                         <input type="hidden" name="drop_location" :value="drop_location">
                         <input type="hidden" name="pickup_datetime" :value="pickup_datetime">
@@ -76,9 +89,14 @@
                             <label class="form-label fw-semibold mb-1">Vehicle Type</label>
                             <select name="vehicle_type" class="form-select">
                                 <option value="">All</option>
-                                <option value="suv" @selected(request('vehicle_type')==='suv')>SUV</option>
-                                <option value="car" @selected(request('vehicle_type')==='car')>Car</option>
-                                <option value="pickup" @selected(request('vehicle_type')==='pickup')>Pickup</option>
+                                <option value="car" @selected(request('vehicle_type') === 'car')>Car</option>
+                                <option value="suv" @selected(request('vehicle_type') === 'suv')>SUV</option>
+                                <option value="pickup" @selected(request('vehicle_type') === 'pickup')>Pickup</option>
+                                <option value="jeep" @selected(request('vehicle_type') === 'jeep')>Jeep</option>
+                                <option value="van" @selected(request('vehicle_type') === 'van')>Van</option>
+                                <option value="ev" @selected(request('vehicle_type') === 'ev')>EV Car</option>
+                                <option value="bike" @selected(request('vehicle_type') === 'bike')>Bike</option>
+                                <option value="scooter" @selected(request('vehicle_type') === 'scooter')>Scooter</option>
                             </select>
                         </div>
 
@@ -126,14 +144,15 @@
                 </div>
             </div>
 
-            {{-- Booking Summary (LIVE) --}}
+            {{-- Booking Summary --}}
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Booking Detail</h5>
 
                     <div class="small text-muted mb-2">
                         Service:
-                        <span class="fw-semibold text-dark" x-text="service === 'driver' ? 'With Driver' : 'Self Drive'"></span>
+                        <span class="fw-semibold text-dark"
+                              x-text="wheelType === '2_wheeler' ? 'Self Drive' : (service === 'driver' ? 'With Driver' : 'Self Drive')"></span>
                     </div>
 
                     <div class="mb-2">
@@ -183,7 +202,7 @@
                         $days = max(1, (int) ceil($pickup->diffInHours($drop) / 24));
                     }
 
-                    $pricePerDay = $service === 'driver'
+                    $pricePerDay = ($vehicle->wheel_type !== '2_wheeler' && $service === 'driver')
                         ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
                         : $vehicle->price_per_day;
 
@@ -198,7 +217,6 @@
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="row g-0 align-items-center">
 
-                        {{-- Image --}}
                         <div class="col-md-4">
                             @if($img)
                                 <img
@@ -215,7 +233,6 @@
                             @endif
                         </div>
 
-                        {{-- Details --}}
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title fw-bold mb-1">
@@ -223,9 +240,10 @@
                                 </h5>
 
                                 <div class="text-muted small mb-3">
+                                    {{ ucfirst(str_replace('_', ' ', $vehicle->wheel_type)) }} •
                                     {{ ucfirst($vehicle->fuel_type) }} •
                                     {{ ucfirst($vehicle->transmission) }} •
-                                    Seats {{ $vehicle->seating_capacity }}
+                                    {{ $vehicle->wheel_type === '2_wheeler' ? 'Riders' : 'Seats' }} {{ $vehicle->seating_capacity }}
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center">
@@ -245,10 +263,10 @@
                                         @endif
                                     </div>
 
-                                    {{-- Build query from LIVE alpine state --}}
                                     <a
                                         :href="`{{ route('vehicles.show', $vehicle->id) }}?` + new URLSearchParams({
-                                            service: service,
+                                            service: wheelType === '2_wheeler' ? 'self' : service,
+                                            wheel_type: wheelType,
                                             pickup_location: pickup_location,
                                             drop_location: drop_location,
                                             pickup_datetime: pickup_datetime,
@@ -282,14 +300,12 @@
         aria-modal="true"
         role="dialog"
     >
-        {{-- Backdrop --}}
         <div
             class="position-absolute top-0 start-0 w-100 h-100"
             style="background: rgba(0,0,0,.5);"
             @click="openEdit = false"
         ></div>
 
-        {{-- Modal box --}}
         <div class="position-relative d-flex align-items-center justify-content-center h-100 p-3">
             <div class="bg-white rounded-4 shadow w-100" style="max-width: 900px;">
                 <div class="d-flex justify-content-between align-items-center p-4 pb-2">
@@ -300,24 +316,48 @@
                 <form method="GET" action="{{ route('user.search.vehicles') }}">
                     <div class="p-4 pt-2">
 
-                        {{-- Service Switch --}}
                         <div class="d-flex gap-2 mb-3">
                             <button type="button"
                                     class="btn"
-                                    :class="service==='self' ? 'btn-success' : 'btn-outline-success'"
-                                    @click="setService('self')">
-                                <i class="fa-solid fa-car me-2"></i> Self Drive
+                                    :class="wheelType==='4_wheeler' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="setWheelType('4_wheeler')">
+                                <i class="fa-solid fa-car me-2"></i> 4 Wheeler
                             </button>
 
                             <button type="button"
                                     class="btn"
-                                    :class="service==='driver' ? 'btn-success' : 'btn-outline-success'"
-                                    @click="setService('driver')">
-                                <i class="fa-solid fa-user-tie me-2"></i> With Driver
+                                    :class="wheelType==='2_wheeler' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="setWheelType('2_wheeler')">
+                                <i class="fa-solid fa-motorcycle me-2"></i> 2 Wheeler
                             </button>
                         </div>
 
-                        <input type="hidden" name="service" :value="service">
+                        <template x-if="wheelType === '4_wheeler'">
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button"
+                                        class="btn"
+                                        :class="service==='self' ? 'btn-success' : 'btn-outline-success'"
+                                        @click="setService('self')">
+                                    <i class="fa-solid fa-car me-2"></i> Self Drive
+                                </button>
+
+                                <button type="button"
+                                        class="btn"
+                                        :class="service==='driver' ? 'btn-success' : 'btn-outline-success'"
+                                        @click="setService('driver')">
+                                    <i class="fa-solid fa-user-tie me-2"></i> With Driver
+                                </button>
+                            </div>
+                        </template>
+
+                        <template x-if="wheelType === '2_wheeler'">
+                            <div class="alert alert-light border rounded-3 mb-3">
+                                <strong>2 Wheeler:</strong> Self-drive only
+                            </div>
+                        </template>
+
+                        <input type="hidden" name="service" :value="wheelType === '2_wheeler' ? 'self' : service">
+                        <input type="hidden" name="wheel_type" :value="wheelType">
 
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -389,7 +429,6 @@
 </div>
 @endsection
 
-{{-- ✅ Alpine loaded ONLY on this page (no master change) --}}
 @push('scripts')
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak]{display:none !important;}</style>

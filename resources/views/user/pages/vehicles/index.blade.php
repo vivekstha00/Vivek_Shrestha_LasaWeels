@@ -8,10 +8,20 @@
         <h1 class="fw-bold">All Vehicles</h1>
         <p class="text-muted">Browse all available vehicles</p>
     </div>
+
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <form method="GET" action="{{ route('vehicles.index') }}">
                 <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Wheel Type</label>
+                        <select name="wheel_type" class="form-select rounded-3">
+                            <option value="">All</option>
+                            <option value="4_wheeler" {{ request('wheel_type') == '4_wheeler' ? 'selected' : '' }}>4 Wheeler</option>
+                            <option value="2_wheeler" {{ request('wheel_type') == '2_wheeler' ? 'selected' : '' }}>2 Wheeler</option>
+                        </select>
+                    </div>
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Fuel Type</label>
@@ -34,24 +44,14 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Min Price</label>
-                        <input
-                            type="number"
-                            name="min_price"
-                            class="form-control rounded-3"
-                            placeholder="5000"
-                            value="{{ request('min_price') }}"
-                        >
+                        <input type="number" name="min_price" class="form-control rounded-3"
+                               placeholder="5000" value="{{ request('min_price') }}">
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Max Price</label>
-                        <input
-                            type="number"
-                            name="max_price"
-                            class="form-control rounded-3"
-                            placeholder="15000"
-                            value="{{ request('max_price') }}"
-                        >
+                        <input type="number" name="max_price" class="form-control rounded-3"
+                               placeholder="15000" value="{{ request('max_price') }}">
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end gap-2">
@@ -80,15 +80,18 @@
 
             <div class="col-md-6 col-lg-4 mb-4">
                 <a href="{{ route('vehicles.browse.show', $vehicle->id) }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 0.5rem 1rem rgba(0, 0, 0, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 0.5rem 1rem rgba(0, 0, 0, 0.15)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';">
                         <img src="{{ $img }}" class="card-img-top" style="height: 220px; object-fit: cover;" alt="{{ $vehicle->brand }} {{ $vehicle->model }}">
 
                         <div class="card-body d-flex flex-column">
                             <h5 class="fw-bold mb-1">{{ $vehicle->brand }} {{ $vehicle->model }}</h5>
                             <p class="text-muted small mb-2">
+                                {{ ucfirst(str_replace('_', ' ', $vehicle->wheel_type)) }} ·
                                 {{ ucfirst($vehicle->fuel_type) }} ·
                                 {{ ucfirst($vehicle->transmission) }} ·
-                                Seats {{ $vehicle->seating_capacity }}
+                                {{ $vehicle->wheel_type === '2_wheeler' ? 'Riders' : 'Seats' }} {{ $vehicle->seating_capacity }}
                             </p>
 
                             <div class="fw-bold text-success fs-5 mb-3">
