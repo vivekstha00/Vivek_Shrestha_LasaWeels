@@ -88,7 +88,7 @@
                             <p class="text-muted small mb-2">
                                 {{ ucfirst($vehicle->fuel_type) }} ·
                                 {{ ucfirst($vehicle->transmission) }} ·
-                                Seats {{ $vehicle->seats }}
+                                Seats {{ $vehicle->seating_capacity }}
                             </p>
 
                             <div class="fw-bold text-success fs-5 mb-3">

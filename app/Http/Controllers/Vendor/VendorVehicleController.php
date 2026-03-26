@@ -80,53 +80,22 @@ class VendorVehicleController extends Controller
         }
 
         $data = $request->validate([
-            'wheel_type' => ['required'],
-            'vehicle_type' => ['required'],
-            'brand' => ['required'],
-            'model' => ['required'],
-            'registration_no' => ['required', 'unique:vehicles,registration_no'],
-            'manufacture_year' => ['required', 'integer'],
+            'wheel_type' => ['required', Rule::in(['2_wheeler', '4_wheeler'])],
+            'vehicle_type' => ['required', 'string', 'max:50'],
+            'brand' => ['required', 'string', 'max:100'],
+            'model' => ['required', 'string', 'max:100'],
+            'registration_no' => ['required', 'string', 'max:100', 'unique:vehicles,registration_no'],
+            'manufacture_year' => ['required', 'integer', 'min:1990', 'max:' . (date('Y') + 1)],
             'fuel_type' => ['required', Rule::in(['petrol', 'diesel', 'electric'])],
-            'transmission' => ['required'],
-            'seating_capacity' => ['required', 'integer'],
+            'transmission' => ['nullable', 'string', 'max:50'],
+            'seating_capacity' => ['nullable', 'integer', 'min:1', 'max:12'],
 
-            'mileage_per_litre' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
-            ],
-            'fuel_tank_capacity' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
-            ],
-
-            'battery_capacity' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'range_per_charge' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'charging_time' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'charger_type' => [
-                'nullable',
-                'string',
-                'max:100',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
+            'mileage_per_litre' => ['nullable', 'numeric', 'min:0'],
+            'fuel_tank_capacity' => ['nullable', 'numeric', 'min:0'],
+            'battery_capacity' => ['nullable', 'numeric', 'min:0'],
+            'range_per_charge' => ['nullable', 'numeric', 'min:0'],
+            'charging_time' => ['nullable', 'numeric', 'min:0'],
+            'charger_type' => ['nullable', 'string', 'max:100'],
 
             'price_per_day' => ['required', 'numeric', 'min:0'],
             'with_driver_price_per_day' => ['nullable', 'numeric', 'min:0'],
@@ -142,39 +111,23 @@ class VendorVehicleController extends Controller
             'images.*' => ['image', 'max:2048'],
         ]);
 
-        $discount15 = (float) ($data['discount_15_days'] ?? 0);
-        $discount30 = (float) ($data['discount_30_days'] ?? 0);
-        $discount60 = (float) ($data['discount_60_days'] ?? 0);
+        $this->normalizeVehicleData($data);
 
-        if ($discount15 > $discount30) {
-            return back()
-                ->withErrors([
-                    'discount_15_days' => '15+ days discount cannot be greater than 30+ days discount.',
-                ])
-                ->withInput();
+        $vehicleTypeError = $this->validateVehicleTypeForWheelType($data['wheel_type'], $data['vehicle_type']);
+        if ($vehicleTypeError) {
+            return back()->withErrors([
+                'vehicle_type' => $vehicleTypeError,
+            ])->withInput();
         }
 
-        if ($discount30 > $discount60) {
-            return back()
-                ->withErrors([
-                    'discount_30_days' => '30+ days discount cannot be greater than 60+ days discount.',
-                ])
-                ->withInput();
+        $discountOrderError = $this->validateDurationDiscountOrder($data);
+        if ($discountOrderError) {
+            return back()->withErrors([
+                'discount_15_days' => $discountOrderError,
+            ])->withInput();
         }
 
-        if (in_array($data['fuel_type'], ['petrol', 'diesel'])) {
-            $data['battery_capacity'] = null;
-            $data['range_per_charge'] = null;
-            $data['charging_time'] = null;
-            $data['charger_type'] = null;
-        }
-
-        if ($data['fuel_type'] === 'electric') {
-            $data['mileage_per_litre'] = null;
-            $data['fuel_tank_capacity'] = null;
-        }
-
-        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
+        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper(str_replace('_', ' ', $data['vehicle_type'])) . ')';
 
         $vehicle = Vehicle::create([
             'vendor_id' => Auth::id(),
@@ -189,16 +142,15 @@ class VendorVehicleController extends Controller
             'transmission' => $data['transmission'],
             'seating_capacity' => $data['seating_capacity'],
 
-            'mileage_per_litre' => $data['mileage_per_litre'] ?? null,
-            'fuel_tank_capacity' => $data['fuel_tank_capacity'] ?? null,
-
-            'battery_capacity' => $data['battery_capacity'] ?? null,
-            'range_per_charge' => $data['range_per_charge'] ?? null,
-            'charging_time' => $data['charging_time'] ?? null,
-            'charger_type' => $data['charger_type'] ?? null,
+            'mileage_per_litre' => $data['mileage_per_litre'],
+            'fuel_tank_capacity' => $data['fuel_tank_capacity'],
+            'battery_capacity' => $data['battery_capacity'],
+            'range_per_charge' => $data['range_per_charge'],
+            'charging_time' => $data['charging_time'],
+            'charger_type' => $data['charger_type'],
 
             'price_per_day' => $data['price_per_day'],
-            'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
+            'with_driver_price_per_day' => $data['with_driver_price_per_day'],
 
             'discount_15_days' => $data['discount_15_days'] ?? 0,
             'discount_30_days' => $data['discount_30_days'] ?? 0,
@@ -237,10 +189,8 @@ class VendorVehicleController extends Controller
             ->with('success', 'Vehicle added successfully.');
     }
 
-
     public function edit(Vehicle $vehicle)
     {
-        // Only own vehicle
         if ($vehicle->vendor_id !== Auth::id()) {
             abort(403);
         }
@@ -255,59 +205,30 @@ class VendorVehicleController extends Controller
         }
 
         $data = $request->validate([
-            'wheel_type' => ['required'],
-            'vehicle_type' => ['required'],
-            'brand' => ['required'],
-            'model' => ['required'],
+            'wheel_type' => ['required', Rule::in(['2_wheeler', '4_wheeler'])],
+            'vehicle_type' => ['required', 'string', 'max:50'],
+            'brand' => ['required', 'string', 'max:100'],
+            'model' => ['required', 'string', 'max:100'],
             'registration_no' => [
                 'required',
-                Rule::unique('vehicles', 'registration_no')->ignore($vehicle->id),
-            ],
-            'manufacture_year' => ['required', 'integer'],
-            'fuel_type' => ['required', Rule::in(['petrol', 'diesel', 'electric'])],
-            'transmission' => ['required'],
-            'seating_capacity' => ['required', 'integer'],
-
-            'mileage_per_litre' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
-            ],
-            'fuel_tank_capacity' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf(in_array($request->fuel_type, ['petrol', 'diesel']))
-            ],
-
-            'battery_capacity' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'range_per_charge' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'charging_time' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                Rule::requiredIf($request->fuel_type === 'electric')
-            ],
-            'charger_type' => [
-                'nullable',
                 'string',
                 'max:100',
-                Rule::requiredIf($request->fuel_type === 'electric')
+                Rule::unique('vehicles', 'registration_no')->ignore($vehicle->id),
             ],
+            'manufacture_year' => ['required', 'integer', 'min:1990', 'max:' . (date('Y') + 1)],
+            'fuel_type' => ['required', Rule::in(['petrol', 'diesel', 'electric'])],
+            'transmission' => ['nullable', 'string', 'max:50'],
+            'seating_capacity' => ['nullable', 'integer', 'min:1', 'max:12'],
+
+            'mileage_per_litre' => ['nullable', 'numeric', 'min:0'],
+            'fuel_tank_capacity' => ['nullable', 'numeric', 'min:0'],
+            'battery_capacity' => ['nullable', 'numeric', 'min:0'],
+            'range_per_charge' => ['nullable', 'numeric', 'min:0'],
+            'charging_time' => ['nullable', 'numeric', 'min:0'],
+            'charger_type' => ['nullable', 'string', 'max:100'],
 
             'price_per_day' => ['required', 'numeric', 'min:0'],
-            'with_driver_price_per_day' => ['nullable', 'numeric'],
+            'with_driver_price_per_day' => ['nullable', 'numeric', 'min:0'],
 
             'discount_15_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'discount_30_days' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -320,27 +241,23 @@ class VendorVehicleController extends Controller
             'images.*' => ['image', 'max:2048'],
         ]);
 
-        $discountOrderError = $this->validateDurationDiscountOrder($data);
+        $this->normalizeVehicleData($data);
 
+        $vehicleTypeError = $this->validateVehicleTypeForWheelType($data['wheel_type'], $data['vehicle_type']);
+        if ($vehicleTypeError) {
+            return back()->withErrors([
+                'vehicle_type' => $vehicleTypeError,
+            ])->withInput();
+        }
+
+        $discountOrderError = $this->validateDurationDiscountOrder($data);
         if ($discountOrderError) {
             return back()->withErrors([
                 'discount_15_days' => $discountOrderError,
             ])->withInput();
         }
 
-        if (in_array($data['fuel_type'], ['petrol', 'diesel'])) {
-            $data['battery_capacity'] = null;
-            $data['range_per_charge'] = null;
-            $data['charging_time'] = null;
-            $data['charger_type'] = null;
-        }
-
-        if ($data['fuel_type'] === 'electric') {
-            $data['mileage_per_litre'] = null;
-            $data['fuel_tank_capacity'] = null;
-        }
-
-        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper($data['vehicle_type']) . ')';
+        $title = trim($data['brand'] . ' ' . $data['model']) . ' (' . strtoupper(str_replace('_', ' ', $data['vehicle_type'])) . ')';
 
         $vehicle->update([
             'title' => $title,
@@ -354,15 +271,15 @@ class VendorVehicleController extends Controller
             'transmission' => $data['transmission'],
             'seating_capacity' => $data['seating_capacity'],
 
-            'mileage_per_litre' => $data['mileage_per_litre'] ?? null,
-            'fuel_tank_capacity' => $data['fuel_tank_capacity'] ?? null,
-            'battery_capacity' => $data['battery_capacity'] ?? null,
-            'range_per_charge' => $data['range_per_charge'] ?? null,
-            'charging_time' => $data['charging_time'] ?? null,
-            'charger_type' => $data['charger_type'] ?? null,
+            'mileage_per_litre' => $data['mileage_per_litre'],
+            'fuel_tank_capacity' => $data['fuel_tank_capacity'],
+            'battery_capacity' => $data['battery_capacity'],
+            'range_per_charge' => $data['range_per_charge'],
+            'charging_time' => $data['charging_time'],
+            'charger_type' => $data['charger_type'],
 
             'price_per_day' => $data['price_per_day'],
-            'with_driver_price_per_day' => $data['with_driver_price_per_day'] ?? null,
+            'with_driver_price_per_day' => $data['with_driver_price_per_day'],
 
             'discount_15_days' => $data['discount_15_days'] ?? 0,
             'discount_30_days' => $data['discount_30_days'] ?? 0,
@@ -371,14 +288,12 @@ class VendorVehicleController extends Controller
             'location_city' => $data['location_city'],
             'description' => $data['description'] ?? null,
 
-            // re-approval workflow
             'status' => 'pending',
             'approved_by' => null,
             'approved_at' => null,
             'reject_reason' => null,
         ]);
 
-        // Append new images
         if ($request->hasFile('images')) {
             $hasPrimary = $vehicle->images()->where('is_primary', true)->exists();
 
@@ -408,7 +323,6 @@ class VendorVehicleController extends Controller
             abort(403);
         }
 
-        // delete image files
         foreach ($vehicle->images as $img) {
             if ($img->path && Storage::disk('public')->exists($img->path)) {
                 Storage::disk('public')->delete($img->path);
@@ -420,7 +334,52 @@ class VendorVehicleController extends Controller
         return back()->with('success', 'Vehicle deleted successfully.');
     }
 
-    private function validateDurationDiscountOrder(array $data)
+    private function normalizeVehicleData(array &$data): void
+    {
+        $wheelType = $data['wheel_type'] ?? null;
+        $fuelType = $data['fuel_type'] ?? null;
+
+        if ($wheelType === '2_wheeler') {
+            $data['seating_capacity'] = 2;
+            $data['with_driver_price_per_day'] = null;
+
+            if (empty($data['transmission'])) {
+                $data['transmission'] = $fuelType === 'electric' ? 'automatic' : 'manual';
+            }
+        } else {
+            $data['seating_capacity'] = (int) ($data['seating_capacity'] ?? 4);
+        }
+
+        if (in_array($fuelType, ['petrol', 'diesel'])) {
+            $data['battery_capacity'] = null;
+            $data['range_per_charge'] = null;
+            $data['charging_time'] = null;
+            $data['charger_type'] = null;
+        }
+
+        if ($fuelType === 'electric') {
+            $data['mileage_per_litre'] = null;
+            $data['fuel_tank_capacity'] = null;
+        }
+    }
+
+    private function validateVehicleTypeForWheelType(string $wheelType, string $vehicleType): ?string
+    {
+        $twoWheelTypes = ['bike', 'scooter'];
+        $fourWheelTypes = ['car', 'suv', 'pickup', 'jeep', 'van', 'ev'];
+
+        if ($wheelType === '2_wheeler' && ! in_array($vehicleType, $twoWheelTypes)) {
+            return 'For 2 wheeler, vehicle type must be bike or scooter.';
+        }
+
+        if ($wheelType === '4_wheeler' && ! in_array($vehicleType, $fourWheelTypes)) {
+            return 'For 4 wheeler, select a valid 4-wheel vehicle type.';
+        }
+
+        return null;
+    }
+
+    private function validateDurationDiscountOrder(array $data): ?string
     {
         $discount15 = (float) ($data['discount_15_days'] ?? 0);
         $discount30 = (float) ($data['discount_30_days'] ?? 0);

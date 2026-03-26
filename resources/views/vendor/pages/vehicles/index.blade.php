@@ -50,12 +50,28 @@
                             <tr>
                                 <td>
                                     <div class="fw-semibold">{{ $vehicle->brand }} {{ $vehicle->model }}</div>
-                                    <small class="text-muted text-capitalize">{{ $vehicle->vehicle_type }} | {{ $vehicle->fuel_type }}</small>
+                                    <small class="text-muted text-capitalize">
+                                        {{ str_replace('_', ' ', $vehicle->wheel_type) }}
+                                        | {{ $vehicle->vehicle_type }}
+                                        | {{ $vehicle->fuel_type }}
+                                    </small>
                                 </td>
                                 <td>{{ $vehicle->registration_no }}</td>
                                 <td>NPR {{ number_format($vehicle->price_per_day, 2) }}</td>
                                 <td>
-                                    <span class="badge bg-secondary text-capitalize">{{ $vehicle->status }}</span>
+                                    @php
+                                        $statusClass = match($vehicle->status) {
+                                            'available' => 'bg-success',
+                                            'pending' => 'bg-warning text-dark',
+                                            'rejected' => 'bg-danger',
+                                            'maintenance' => 'bg-secondary',
+                                            'inactive' => 'bg-dark',
+                                            default => 'bg-secondary',
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusClass }} text-capitalize">
+                                        {{ str_replace('_', ' ', $vehicle->status) }}
+                                    </span>
                                 </td>
                                 <td>
                                     @if($vehicle->is_active)
@@ -65,7 +81,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2">
+                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
                                         <a href="{{ route('vendor.vehicles.show', $vehicle) }}"
                                            class="btn btn-sm btn-outline-dark rounded-pill px-3">
                                             View
