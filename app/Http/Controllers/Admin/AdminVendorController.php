@@ -15,8 +15,11 @@ class AdminVendorController extends Controller
 {
     public function index()
     {
-        $vendors = VendorProfile::with('user')->latest()->get();
-        return view('admin.pages.manage-vendor', compact('vendors'));
+        $vendors = VendorProfile::with('user')
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.vendors.index', compact('vendors'));
     }
 
     public function show($id)
@@ -24,7 +27,7 @@ class AdminVendorController extends Controller
         $profile = VendorProfile::with('user')->findOrFail($id);
         $docs = Document::where('user_id', $profile->user_id)->latest()->get();
 
-        return view('admin.pages.vendor-details', compact('profile', 'docs'));
+        return view('admin.vendors.show', compact('profile', 'docs'));
     }
 
     public function approve($id)
@@ -76,7 +79,7 @@ class AdminVendorController extends Controller
 
         Document::where('user_id', $profile->user_id)
             ->update(['status' => 'rejected']);
-            
+
         $vendorUser = User::find($profile->user_id);
         if ($vendorUser) {
             $vendorUser->notify(new VendorRejectedNotification($request->remarks));

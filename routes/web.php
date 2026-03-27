@@ -157,12 +157,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
     Route::get('/subscription-plans/create', [AdminSubscriptionPlanController::class, 'create'])->name('subscription-plans.create');
     Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+    Route::get('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'show'])->name('subscription-plans.show');
     Route::get('/subscription-plans/{subscriptionPlan}/edit', [AdminSubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
     Route::put('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
 
     Route::get('/vendor-subscriptions', [AdminVendorSubscriptionController::class, 'index'])->name('vendor-subscriptions.index');
     Route::get('/vendor-subscriptions/create', [AdminVendorSubscriptionController::class, 'create'])->name('vendor-subscriptions.create');
     Route::post('/vendor-subscriptions', [AdminVendorSubscriptionController::class, 'store'])->name('vendor-subscriptions.store');
+    Route::get('/vendor-subscriptions/{vendorSubscription}', [AdminVendorSubscriptionController::class, 'show'])->name('vendor-subscriptions.show');
     Route::get('/vendor-subscriptions/{vendorSubscription}/edit', [AdminVendorSubscriptionController::class, 'edit'])->name('vendor-subscriptions.edit');
     Route::put('/vendor-subscriptions/{vendorSubscription}', [AdminVendorSubscriptionController::class, 'update'])->name('vendor-subscriptions.update');
 
