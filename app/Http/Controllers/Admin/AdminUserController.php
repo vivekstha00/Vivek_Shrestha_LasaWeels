@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,7 +34,7 @@ class AdminUserController extends Controller
             'suspended' => User::where('role','user')->where('status','suspended')->count(),
         ];
 
-        return view('admin.pages.manage-user', compact('users','counts'));
+        return view('admin.user.index', compact('users','counts'));
     }
 
 
@@ -72,5 +73,20 @@ class AdminUserController extends Controller
 
 
         return redirect()->route('admin.users.index')->with('success', 'User rejected successfully.');
+    }
+
+    public function show($id)
+    {
+        $user = User::with(['documents', 'loyaltyAccount'])
+            ->withCount('bookings')
+            ->findOrFail($id);
+
+        $bookings = Booking::with(['vehicle', 'driver', 'payment'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.user.show', compact('user', 'bookings'));
     }
 }

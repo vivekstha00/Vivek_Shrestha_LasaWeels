@@ -108,6 +108,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/dashboard', [AdminDashboardController::class,'index'])->name('dashboard');
 
     Route::get('/users', [AdminUserController::class,'index'])->name('users.index');
+    Route::get('/users/{id}', [AdminUserController::class,'show'])->name('users.show');
     Route::post('/users/{id}/approve', [AdminUserController::class,'approve'])->name('users.approve');
     Route::post('/users/{id}/reject', [AdminUserController::class,'reject'])->name('users.reject');
 
