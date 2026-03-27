@@ -20,7 +20,7 @@ class AdminVehicleController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.pages.manage-vehicle', compact('vehicles', 'status'));
+        return view('admin.vehicle.index', compact('vehicles', 'status'));
     }
 
     // Approve a vehicle
@@ -52,6 +52,13 @@ class AdminVehicleController extends Controller
         ]);
 
         return back()->with('success', 'Vehicle rejected successfully.');
+    }
+
+    public function show(Vehicle $vehicle)
+    {
+        $vehicle->load(['images', 'vendor', 'bookings']);
+
+        return view('admin.vehicle.show', compact('vehicle'));
     }
 
     public function toggleActive(Vehicle $vehicle)
