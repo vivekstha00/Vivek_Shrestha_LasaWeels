@@ -56,11 +56,33 @@ class VendorDashboardController extends Controller
             ->take(5)
             ->get();
 
+        $availableDrivers = Driver::where('vendor_id', $vendorId)
+            ->where('status', 'approved')
+            ->where('availability_status', 'available')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentCustomers = Booking::with('user')
+            ->whereHas('vehicle', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })
+            ->latest()
+            ->take(20)
+            ->get()
+            ->pluck('user')
+            ->filter(fn ($user) => $user && $user->role === 'user')
+            ->unique('id')
+            ->values()
+            ->take(5);
+
         $subscriptionSummary = app(VendorSubscriptionService::class)->getSummary($vendorId);
 
         return view('vendor.pages.dashboard', compact(
             'statistics',
             'recentBookings',
+            'availableDrivers',
+            'recentCustomers',
             'subscriptionSummary'
         ));
     }

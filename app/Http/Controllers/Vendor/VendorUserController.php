@@ -21,6 +21,7 @@ class VendorUserController extends Controller
                         ->orWhere('phone', 'like', "%{$q}%");
                 });
             })
+            ->withCount('bookings')
             ->latest()
             ->paginate(10)
             ->withQueryString();
