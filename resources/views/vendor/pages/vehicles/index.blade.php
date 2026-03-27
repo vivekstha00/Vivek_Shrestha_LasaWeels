@@ -42,12 +42,16 @@
                             <th>Price/Day</th>
                             <th>Status</th>
                             <th>Active</th>
-                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($vehicles as $vehicle)
-                            <tr>
+                            <tr
+                                style="cursor: pointer;"
+                                onclick="window.location='{{ route('vendor.vehicles.show', $vehicle) }}'"
+                                onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                onmouseout="this.style.backgroundColor=''"
+                            >
                                 <td>
                                     <div class="fw-semibold">{{ $vehicle->brand }} {{ $vehicle->model }}</div>
                                     <small class="text-muted text-capitalize">
@@ -79,18 +83,6 @@
                                     @else
                                         <span class="badge bg-danger">No</span>
                                     @endif
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                        <a href="{{ route('vendor.vehicles.show', $vehicle) }}"
-                                           class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                                            View
-                                        </a>
-                                        <a href="{{ route('vendor.vehicles.edit', $vehicle) }}"
-                                           class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                            Edit
-                                        </a>
-                                    </div>
                                 </td>
                             </tr>
                         @endforeach

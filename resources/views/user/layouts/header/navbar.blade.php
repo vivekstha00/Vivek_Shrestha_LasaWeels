@@ -43,7 +43,10 @@
                     <a href="{{ route('login') }}" class="btn btn-signin px-4">Sign In</a>
                 @else
                     <div class="dropdown">
-                        <button class="btn btn-signin dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                        <button class="btn btn-signin dropdown-toggle d-flex align-items-center gap-2"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
                             <i class="fa-solid fa-user-circle me-1"></i> {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow rounded-3">

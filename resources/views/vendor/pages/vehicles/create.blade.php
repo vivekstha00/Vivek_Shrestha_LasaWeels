@@ -46,6 +46,24 @@
                         <select name="vehicle_type" id="vehicle_type" class="form-select" required></select>
                         @error('vehicle_type') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fuel Type *</label>
+                        <select name="fuel_type" id="fuel_type" class="form-select" required>
+                            <option value="">Select Fuel Type</option>
+                            <option value="petrol" {{ old('fuel_type') == 'petrol' ? 'selected' : '' }}>Petrol</option>
+                            <option value="diesel" {{ old('fuel_type') == 'diesel' ? 'selected' : '' }}>Diesel</option>
+                            <option value="electric" {{ old('fuel_type') == 'electric' ? 'selected' : '' }}>Electric</option>
+                        </select>
+                        @error('fuel_type') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+                    <div class="col-md-6" id="transmissionGroup">
+                        <label class="form-label">Transmission *</label>
+                        <select name="transmission" id="transmission" class="form-select">
+                            <option value="manual" {{ old('transmission') == 'manual' ? 'selected' : '' }}>Manual</option>
+                            <option value="automatic" {{ old('transmission') == 'automatic' ? 'selected' : '' }}>Automatic</option>
+                        </select>
+                        @error('transmission') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Brand *</label>
@@ -79,25 +97,7 @@
                         @error('manufacture_year') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Fuel Type *</label>
-                        <select name="fuel_type" id="fuel_type" class="form-select" required>
-                            <option value="">Select Fuel Type</option>
-                            <option value="petrol" {{ old('fuel_type') == 'petrol' ? 'selected' : '' }}>Petrol</option>
-                            <option value="diesel" {{ old('fuel_type') == 'diesel' ? 'selected' : '' }}>Diesel</option>
-                            <option value="electric" {{ old('fuel_type') == 'electric' ? 'selected' : '' }}>Electric</option>
-                        </select>
-                        @error('fuel_type') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
 
-                    <div class="col-md-6" id="transmissionGroup">
-                        <label class="form-label">Transmission *</label>
-                        <select name="transmission" id="transmission" class="form-select">
-                            <option value="manual" {{ old('transmission') == 'manual' ? 'selected' : '' }}>Manual</option>
-                            <option value="automatic" {{ old('transmission') == 'automatic' ? 'selected' : '' }}>Automatic</option>
-                        </select>
-                        @error('transmission') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
 
                     <div class="col-md-6" id="seatingGroup">
                         <label class="form-label">Seating Capacity *</label>
@@ -166,6 +166,19 @@
                         @error('with_driver_price_per_day') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
+
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Images</label>
+                        <input type="file" name="images[]" multiple class="form-control" accept="image/*">
+                        @error('images') <small class="text-danger">{{ $message }}</small> @enderror
+                        @error('images.*') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
+                        @error('description') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
                     <div class="col-12">
                         <div class="card border rounded-3 bg-light">
                             <div class="card-body">
@@ -194,19 +207,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Vehicle Images</label>
-                        <input type="file" name="images[]" multiple class="form-control" accept="image/*">
-                        @error('images') <small class="text-danger">{{ $message }}</small> @enderror
-                        @error('images.*') <small class="text-danger">{{ $message }}</small> @enderror
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
-                        @error('description') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                 </div>
@@ -280,7 +280,8 @@
     function toggleWheelTypeFields() {
         const wheelType = document.getElementById('wheel_type').value;
         const driverPriceGroup = document.getElementById('driverPriceGroup');
-        const seatingInput = document.getElementById('seating_capacity');
+        const seatingGroup = document.getElementById('seatingGroup');
+        const transmissionGroup = document.getElementById('transmissionGroup');
         const transmissionSelect = document.getElementById('transmission');
         const fuelType = document.getElementById('fuel_type').value;
 
@@ -288,8 +289,8 @@
 
         if (wheelType === '2_wheeler') {
             driverPriceGroup.style.display = 'none';
-            seatingInput.value = 2;
-            seatingInput.readOnly = true;
+            seatingGroup.style.display = 'none';
+            transmissionGroup.style.display = 'none';
 
             if (fuelType === 'electric') {
                 transmissionSelect.value = 'automatic';
@@ -298,10 +299,8 @@
             }
         } else {
             driverPriceGroup.style.display = 'block';
-            seatingInput.readOnly = false;
-            if (!seatingInput.value || seatingInput.value == 2) {
-                seatingInput.value = 5;
-            }
+            seatingGroup.style.display = 'block';
+            transmissionGroup.style.display = 'block';
         }
 
         toggleFuelFields();

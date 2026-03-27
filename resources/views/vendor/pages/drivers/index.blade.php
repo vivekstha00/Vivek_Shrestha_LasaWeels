@@ -42,12 +42,16 @@
                             <th>License</th>
                             <th>Availability</th>
                             <th>Status</th>
-                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($drivers as $driver)
-                            <tr>
+                            <tr
+                                style="cursor: pointer;"
+                                onclick="window.location='{{ route('vendor.drivers.show', $driver) }}'"
+                                onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                onmouseout="this.style.backgroundColor=''"
+                            >
                                 <td>
                                     <div class="fw-semibold">{{ $driver->name }}</div>
                                     @if($driver->rating)
@@ -63,18 +67,6 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary text-capitalize">{{ $driver->status }}</span>
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('vendor.drivers.show', $driver) }}"
-                                           class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                                            View
-                                        </a>
-                                        <a href="{{ route('vendor.drivers.edit', $driver) }}"
-                                           class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                            Edit
-                                        </a>
-                                    </div>
                                 </td>
                             </tr>
                         @endforeach
