@@ -3,15 +3,12 @@
 @include('vendor.layouts.header.index')
 
 <body>
-
-    {{-- Sidebar --}}
     @include('vendor.layouts.header.sidebar')
 
-    {{-- Content --}}
     <div class="vendor-content">
         @include('vendor.layouts.header.navbar')
 
-        <main class="vendor-main p-4">
+        <main class="vendor-main">
             @yield('vendor-content')
         </main>
     </div>

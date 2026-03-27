@@ -1,96 +1,65 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'My Payments')
+@section('page_title', 'My Payments')
+@section('page_subtitle', 'Track customer payments, commission, and payouts')
 
 @section('vendor-content')
-<div class="container-fluid py-4">
+<div class="mb-5">
+    <h2 class="fw-bold mb-1">My Payments</h2>
+    <p class="text-muted mb-0">Track customer payments, loyalty discount impact, commission, and payouts</p>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">My Payments</h3>
-            <p class="text-muted mb-0">Track customer payments, loyalty discount impact, commission, and payouts</p>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Original Booking Value</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalOriginalValue, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Loyalty Discount</small>
-                    <h4 class="fw-bold mb-0 text-danger">Rs. {{ number_format($totalLoyaltyDiscount, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Customer Paid</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalCustomerPaid, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Net Earnings</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalNet, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Platform Commission</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($totalCommission, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Pending Payouts</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($pendingPayout, 2) }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-12 col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body">
-                    <small class="text-muted d-block mb-1">Paid Payouts</small>
-                    <h4 class="fw-bold mb-0">Rs. {{ number_format($paidPayout, 2) }}</h4>
-                </div>
+<div class="row g-4 mb-5">
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Original Booking Value</small>
+                <h4 class="fw-bold mt-2">Rs. {{ number_format($totalOriginalValue ?? 0, 2) }}</h4>
             </div>
         </div>
     </div>
-
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body">
-            <div class="alert alert-info mb-0">
-                Loyalty discounts are platform-funded. Refunded or cancelled bookings remain in history but are excluded from payout totals.
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Loyalty Discount</small>
+                <h4 class="fw-bold text-danger mt-2">Rs. {{ number_format($totalLoyaltyDiscount ?? 0, 2) }}</h4>
             </div>
         </div>
     </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Customer Paid</small>
+                <h4 class="fw-bold mt-2">Rs. {{ number_format($totalCustomerPaid ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Net Earnings</small>
+                <h4 class="fw-bold mt-2">Rs. {{ number_format($totalNet ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            Loyalty discounts are platform-funded. Refunded or cancelled bookings are excluded from payout totals.
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
-                        <th class="px-4">#</th>
+                        <th>#</th>
                         <th>Booking</th>
                         <th>Customer</th>
                         <th>Payment Type</th>
@@ -99,7 +68,6 @@
                         <th>Customer Paid</th>
                         <th>Commission</th>
                         <th>Net Amount</th>
-                        <th>Refund</th>
                         <th>Payout</th>
                     </tr>
                 </thead>
@@ -173,24 +141,15 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center text-muted py-5">No payment records found.</td>
+                            <td colspan="10" class="text-center py-5 text-muted">No payment records found.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+        <div class="p-4 border-top">
+            {{ $payments->links() }}
+        </div>
     </div>
-
-    <div class="mt-3">
-        {{ $payments->links() }}
-    </div>
-
 </div>
-
-<style>
-    .vendor-payment-row:hover {
-        background-color: #f8f9fa;
-        transition: 0.2s ease;
-    }
-</style>
 @endsection
