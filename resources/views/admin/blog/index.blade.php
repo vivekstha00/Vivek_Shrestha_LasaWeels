@@ -1,37 +1,48 @@
 @extends('admin.layouts.master')
 
+@section('title', 'Blog Posts')
+
 @section('admin-content')
-<div class="container-fluid">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Blog Posts</h3>
-        <a href="{{ route('admin.blog.create') }}" class="btn btn-dark">
-            <i class="fa fa-plus"></i> Add New Post
-        </a>
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Blog Posts</h2>
+        <p class="text-muted">Manage your blog content</p>
     </div>
+    <a href="{{ route('admin.blog.create') }}" class="btn btn-primary">
+        + Add New Post
+    </a>
+</div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+<div class="card">
+    <div class="card-body p-0">
+        @if($posts->count())
             <div class="table-responsive">
-                <table class="table align-middle">
+                <table class="table align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Title</th>
                             <th>Status</th>
                             <th>Published At</th>
-                            <th width="180">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($posts as $post)
-                            <tr>
+                        @foreach($posts as $post)
+                            <tr class="cursor-pointer"
+                                role="button"
+                                tabindex="0"
+                                onclick="window.location='{{ route('admin.blog.show', $post) }}'"
+                                onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); window.location='{{ route('admin.blog.show', $post) }}'; }">
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $post->title }}</td>
+                                <td class="fw-semibold">
+                                    <a href="{{ route('admin.blog.show', $post) }}" class="text-decoration-none text-dark">
+                                        {{ $post->title }}
+                                    </a>
+                                </td>
                                 <td>
                                     @if($post->is_published)
                                         <span class="badge bg-success">Published</span>
@@ -39,42 +50,21 @@
                                         <span class="badge bg-secondary">Draft</span>
                                     @endif
                                 </td>
-                                <td>
-                                    {{ $post->published_at ? $post->published_at->format('d M Y') : '-' }}
-                                </td>
-                                <td>
-                                    <a href="{{ route('admin.blog.edit', $post->id) }}"
-                                       class="btn btn-sm btn-warning">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-
-                                    <form action="{{ route('admin.blog.destroy', $post->id) }}"
-                                          method="POST"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Delete this post?')">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
+                                <td>{{ $post->published_at?->format('d M Y') ?? '—' }}</td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center">No blog posts found.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-
-            <div class="mt-3">
+            <div class="p-3 border-top">
                 {{ $posts->links() }}
             </div>
-
-        </div>
+        @else
+            <div class="text-center py-5">
+                <h5 class="fw-bold">No blog posts found</h5>
+                <p class="text-muted">Create your first blog post.</p>
+            </div>
+        @endif
     </div>
-
 </div>
 @endsection

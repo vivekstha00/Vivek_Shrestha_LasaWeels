@@ -30,6 +30,16 @@ class BlogController extends Controller
     }
 
     /**
+     * Display the specified blog post.
+     */
+    public function show(BlogPost $blog)
+    {
+        $post = $blog->load('author');
+
+        return view('admin.blog.show', compact('post'));
+    }
+
+    /**
      * Store a newly created blog post.
      */
     public function store(Request $request)

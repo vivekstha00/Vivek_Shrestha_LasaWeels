@@ -1,21 +1,18 @@
 @extends('admin.layouts.master')
 
+@section('title', 'Contact Requests')
+
 @section('admin-content')
-<div class="container-fluid">
+<div class="mb-5">
+    <h2 class="fw-bold mb-1">Contact Requests</h2>
+    <p class="text-muted">View and manage customer inquiries</p>
+</div>
 
-    <h3 class="fw-bold mb-4">Contact Requests</h3>
-
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-
+<div class="card">
+    <div class="card-body p-0">
+        @if($contacts->count())
             <div class="table-responsive">
-                <table class="table align-middle">
+                <table class="table align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -23,58 +20,38 @@
                             <th>Subject</th>
                             <th>Status</th>
                             <th>Date</th>
-                            <th width="180">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($contacts as $contact)
-                            <tr>
+                        @foreach($contacts as $contact)
+                            <tr class="cursor-pointer"
+                                role="button"
+                                tabindex="0"
+                                onclick="window.location='{{ route('admin.contacts.show', $contact) }}'"
+                                onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); window.location='{{ route('admin.contacts.show', $contact) }}'; }">
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $contact->user->name ?? 'N/A' }}</td>
+                                <td>{{ $contact->user->name ?? 'Guest' }}</td>
                                 <td>{{ $contact->subject }}</td>
                                 <td>
-                                    @if($contact->status == 'pending')
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    @elseif($contact->status == 'replied')
-                                        <span class="badge bg-success">Replied</span>
-                                    @elseif($contact->status == 'closed')
-                                        <span class="badge bg-secondary">Closed</span>
-                                    @endif
+                                    <span class="badge {{ $contact->status === 'replied' ? 'bg-success' : 'bg-warning' }}">
+                                        {{ ucfirst($contact->status) }}
+                                    </span>
                                 </td>
                                 <td>{{ $contact->created_at->format('d M Y') }}</td>
-                                <td>
-                                    <a href="{{ route('admin.contacts.show', $contact->id) }}"
-                                       class="btn btn-sm btn-primary">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-
-                                    <form action="{{ route('admin.contacts.destroy', $contact->id) }}"
-                                          method="POST"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Delete this query?')">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">No contact requests found.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-
-            <div class="mt-3">
+            <div class="p-3 border-top">
                 {{ $contacts->links() }}
             </div>
-
-        </div>
+        @else
+            <div class="text-center py-5">
+                <h5 class="fw-bold">No contact requests found</h5>
+                <p class="text-muted">Customer messages will appear here.</p>
+            </div>
+        @endif
     </div>
-
 </div>
 @endsection
