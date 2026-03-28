@@ -22,6 +22,13 @@ class AdminRefundController extends Controller
         return view('admin.refunds.index', compact('refundPayments'));
     }
 
+    public function show(Payment $payment)
+    {
+        $payment->load(['booking.user', 'booking.vehicle', 'vendor']);
+
+        return view('admin.refunds.show', compact('payment'));
+    }
+
     public function approve(Request $request, Payment $payment)
     {
         $request->validate([

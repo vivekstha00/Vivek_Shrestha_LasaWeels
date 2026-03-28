@@ -171,6 +171,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/vendor-subscriptions/{vendorSubscription}', [AdminVendorSubscriptionController::class, 'update'])->name('vendor-subscriptions.update');
 
     Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+    Route::get('/refunds/{payment}', [AdminRefundController::class, 'show'])->name('refunds.show');
     Route::put('/refunds/{payment}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
     Route::put('/refunds/{payment}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 });
