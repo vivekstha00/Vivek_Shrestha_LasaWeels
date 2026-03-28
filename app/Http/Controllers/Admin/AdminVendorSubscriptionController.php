@@ -69,6 +69,13 @@ class AdminVendorSubscriptionController extends Controller
         ));
     }
 
+    public function show(VendorSubscription $vendorSubscription)
+    {
+        $vendorSubscription->load(['vendor', 'plan']);
+
+        return view('admin.vendor-subscriptions.show', compact('vendorSubscription'));
+    }
+
     public function update(Request $request, VendorSubscription $vendorSubscription)
     {
         $data = $this->validateData($request);

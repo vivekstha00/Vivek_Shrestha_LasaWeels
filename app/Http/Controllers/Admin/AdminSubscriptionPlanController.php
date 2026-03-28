@@ -38,6 +38,15 @@ class AdminSubscriptionPlanController extends Controller
         return view('admin.subscription-plans.edit', compact('subscriptionPlan'));
     }
 
+    public function show(SubscriptionPlan $subscriptionPlan)
+    {
+        $activeSubscribers = \App\Models\VendorSubscription::where('subscription_plan_id', $subscriptionPlan->id)
+            ->where('status', 'active')
+            ->count();
+
+        return view('admin.subscription-plans.show', compact('subscriptionPlan', 'activeSubscribers'));
+    }
+
     public function update(Request $request, SubscriptionPlan $subscriptionPlan)
     {
         $data = $this->validateData($request, $subscriptionPlan->id);
