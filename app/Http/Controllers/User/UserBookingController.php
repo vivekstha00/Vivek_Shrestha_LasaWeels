@@ -82,6 +82,10 @@ class UserBookingController extends Controller
             'price_sort'       => ['nullable', 'in:low_high,high_low'],
         ]);
 
+        if (($data['wheel_type'] ?? null) === '2_wheeler') {
+            $data['service'] = 'self';
+        }
+
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
 
@@ -95,6 +99,9 @@ class UserBookingController extends Controller
         $vehicles = Vehicle::query()
             ->with(['primaryImage', 'images'])
             ->where('status', 'available')
+            ->when($data['service'] === 'driver', fn ($q) =>
+                $q->where('wheel_type', '!=', '2_wheeler')
+            )
             ->whereDoesntHave('bookings', function ($q) use ($pickup, $drop) {
                 $q->whereIn('status', ['pending', 'confirmed'])
                     ->where('pickup_datetime', '<=', $drop)
@@ -106,7 +113,7 @@ class UserBookingController extends Controller
             ->when(!empty($data['fuel_type']), fn ($q) =>
                 $q->where('fuel_type', $data['fuel_type'])
             )
-            ->when(!empty($data['transmission']), fn ($q) =>
+            ->when(!empty($data['transmission']) && ($data['wheel_type'] ?? null) !== '2_wheeler', fn ($q) =>
                 $q->where('transmission', $data['transmission'])
             )
             ->when(!empty($data['wheel_type']), fn ($q) =>

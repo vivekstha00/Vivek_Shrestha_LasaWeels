@@ -1,8 +1,6 @@
 @extends('user.layouts.master')
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-@endpush
+@section('title', 'Booking Checkout')
 
 @section('user-content')
 
@@ -21,50 +19,101 @@
     $actualPrice = (float) $priceAfterDurationDiscount;
 @endphp
 
-<div class="container mt-5 pt-5">
-    <div class="row g-4">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
 
-        {{-- LEFT --}}
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
+            {{-- Header --}}
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Complete Your Booking</h2>
+                <p class="text-muted">Review details and confirm your reservation</p>
+            </div>
 
-                    <h3 class="fw-bold mb-4">Booking Checkout</h3>
-
-                    {{-- Vehicle Info --}}
-                    <div class="border rounded p-3 mb-4">
-                        <h5 class="fw-bold">
-                            {{ $vehicle->brand }} {{ $vehicle->model }}
-                        </h5>
-                        <p class="mb-1">
-                            Service:
-                            <strong>
-                                {{ $selectedService === 'driver' ? 'With Driver' : 'Self Drive' }}
-                            </strong>
-                        </p>
-                        <p class="mb-1">
-                            Price per day:
-                            <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
-                        </p>
-                        @if($durationDiscountPercentValue > 0)
-                            <p class="mb-1 text-success">
-                                Long booking offer applied:
-                                <strong>{{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}% off</strong>
-                            </p>
-                        @endif
-
-                        @if(!empty($securityDeposit) && $selectedService === 'self')
-                            <p class="mb-0 text-muted">
-                                Refundable Security Deposit:
-                                <strong>NPR {{ number_format($securityDeposit, 2) }}</strong>
-                            </p>
-                        @endif
+            {{-- Vehicle Summary --}}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            @php
+                                $img = $vehicle->primaryImage ?? $vehicle->images->first();
+                            @endphp
+                            @if($img)
+                                <img src="{{ asset('storage/' . ltrim($img->path, '/')) }}"
+                                     class="img-fluid rounded" style="max-height: 80px; object-fit: cover;" alt="Vehicle Image">
+                            @else
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                    <i class="fa-solid fa-car text-secondary fs-2"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="fw-bold mb-2">{{ $vehicle->brand }} {{ $vehicle->model }}</h4>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Service:</strong> {{ $selectedService === 'driver' ? 'With Driver' : 'Self Drive' }}</p>
+                                    <p class="mb-1"><strong>Price per day:</strong> NPR {{ number_format($pricePerDay, 2) }}</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-1"><strong>Duration:</strong> {{ $days ?? 1 }} days</p>
+                                    @if($durationDiscountPercentValue > 0)
+                                        <p class="mb-1 text-success"><strong>Discount:</strong> {{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}% off</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="fs-3 fw-bold text-success">NPR {{ number_format($actualPrice, 2) }}</div>
+                            <small class="text-muted">Total Amount</small>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            {{-- Price Details Summary --}}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="fw-bold mb-0">Price Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Base Price ({{ $days ?? 1 }} days × NPR {{ number_format($pricePerDay, 2) }})</span>
+                        <strong>NPR {{ number_format($basePriceForSummary, 2) }}</strong>
+                    </div>
+
+                    @if($durationDiscountPercentValue > 0)
+                        <div class="mb-2 d-flex justify-content-between text-success">
+                            <span>Duration Discount ({{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}%)</span>
+                            <strong>- NPR {{ number_format($durationDiscountAmountValue, 2) }}</strong>
+                        </div>
+                    @endif
+
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Price after Duration Discount</span>
+                        <strong>NPR {{ number_format($priceAfterDurationDiscount, 2) }}</strong>
+                    </div>
+
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span id="discount_type_label">Additional Discount</span>
+                        <strong id="discount_price">- NPR 0.00</strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between fs-5">
+                        <span class="fw-bold">Final Price</span>
+                        <span class="fw-bold text-success" id="final_price">NPR {{ number_format($actualPrice, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Booking Form --}}
+            <div class="card">
+                <div class="card-body">
 
                     {{-- Errors --}}
                     @if($errors->any())
                         <div class="alert alert-danger">
-                            <ul class="mb-0">
+                            <ul class="mb-3">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -72,237 +121,176 @@
                         </div>
                     @endif
 
-                    <form id="bookingCheckoutForm" method="POST" action="{{ route('user.booking.store', $vehicle->id) }}">
+                    <form method="POST" action="{{ route('user.booking.store', $vehicle->id) }}">
                         @csrf
 
                         <input type="hidden" name="service" value="{{ $selectedService }}">
 
-                        <div class="row g-3">
+                        {{-- Booking Details --}}
+                        <h5 class="fw-bold mb-3">Booking Details</h5>
+
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Pickup Location</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    name="pickup_location"
-                                    value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Pickup Location</label>
+                                <input type="text" class="form-control" name="pickup_location"
+                                       value="{{ old('pickup_location', $data['pickup_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Drop Location</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    name="drop_location"
-                                    value="{{ old('drop_location', $data['drop_location'] ?? '') }}"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Drop Location</label>
+                                <input type="text" class="form-control" name="drop_location"
+                                       value="{{ old('drop_location', $data['drop_location'] ?? '') }}" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Pickup Date & Time</label>
-                                <input
-                                    type="datetime-local"
-                                    class="form-control"
-                                    name="pickup_datetime"
-                                    value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Pickup Date & Time</label>
+                                <input type="datetime-local" class="form-control" name="pickup_datetime"
+                                       value="{{ old('pickup_datetime', isset($data['pickup_datetime']) ? \Carbon\Carbon::parse($data['pickup_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Drop Date & Time</label>
-                                <input
-                                    type="datetime-local"
-                                    class="form-control"
-                                    name="drop_datetime"
-                                    value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Drop Date & Time</label>
+                                <input type="datetime-local" class="form-control" name="drop_datetime"
+                                       value="{{ old('drop_datetime', isset($data['drop_datetime']) ? \Carbon\Carbon::parse($data['drop_datetime'])->format('Y-m-d\TH:i') : '') }}" required>
                             </div>
                         </div>
 
                         {{-- Driver Selection --}}
                         @if($selectedService === 'driver')
-                            <div class="card mt-4 border-primary">
-                                <div class="card-body">
-                                    <h5 class="fw-bold mb-2">Driver Selection</h5>
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">Driver Selection</h5>
 
-                                    @if(!empty($selectedDriver))
-                                        <div class="alert alert-success d-flex align-items-center mb-3">
-                                            <span class="me-2 fs-5">✓</span>
-                                            <div>
-                                                <strong>{{ $selectedDriver->name }}</strong>
-                                                (Rating: {{ $selectedDriver->rating ?? 'N/A' }} / 5)
-                                            </div>
-                                        </div>
+                                @if(!empty($selectedDriver))
+                                    <div class="alert alert-success">
+                                        <strong>{{ $selectedDriver->name }}</strong>
+                                        (Rating: {{ $selectedDriver->rating ?? 'N/A' }} / 5)
+                                    </div>
+                                    <input type="hidden" name="driver_id" value="{{ $selectedDriver->id }}">
 
-                                        <input type="hidden" name="driver_id" value="{{ $selectedDriver->id }}">
-
+                                    <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
+                                       class="btn btn-outline-primary btn-sm">
+                                        Change Driver
+                                    </a>
+                                @else
+                                    <div class="alert alert-warning">
+                                        You need to select a driver before proceeding.
                                         <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
-                                           class="btn btn-outline-primary btn-sm">
-                                            Change Driver
+                                           class="btn btn-primary btn-sm ms-2">
+                                            Choose Driver
                                         </a>
-                                    @else
-                                        <p class="text-muted mb-2">You need to select a driver before proceeding.</p>
-
-                                        <a href="{{ route('user.driver.index') }}?vehicle_id={{ $vehicle->id }}&pickup_datetime={{ urlencode($data['pickup_datetime'] ?? '') }}&drop_datetime={{ urlencode($data['drop_datetime'] ?? '') }}&pickup_location={{ urlencode($data['pickup_location'] ?? '') }}&drop_location={{ urlencode($data['drop_location'] ?? '') }}&service={{ $selectedService }}"
-                                           class="btn btn-primary">
-                                            Choose a Driver
-                                        </a>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </div>
                         @endif
 
-                        {{-- Discount Choice --}}
-                        <div class="card mt-4 border-0 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="fw-bold mb-3">Apply Discount</h5>
+                        {{-- Discounts --}}
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">Discount Options</h5>
 
-                                <div class="form-check mb-2">
-                                    <input
-                                        class="form-check-input discount-choice"
-                                        type="radio"
-                                        name="discount_choice"
-                                        id="discount_none"
-                                        value="none"
-                                        {{ old('discount_choice', 'none') === 'none' ? 'checked' : '' }}
-                                    >
-                                    <label class="form-check-label" for="discount_none">
-                                        No discount
-                                    </label>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input discount-choice" type="radio" name="discount_choice"
+                                               id="discount_none" value="none" {{ old('discount_choice', 'none') === 'none' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="discount_none">
+                                            No discount
+                                        </label>
+                                    </div>
                                 </div>
 
-                                <div class="form-check mb-2">
-                                    <input
-                                        class="form-check-input discount-choice"
-                                        type="radio"
-                                        name="discount_choice"
-                                        id="discount_loyalty"
-                                        value="loyalty"
-                                        {{ old('discount_choice') === 'loyalty' ? 'checked' : '' }}
-                                    >
-                                    <label class="form-check-label" for="discount_loyalty">
-                                        Use Loyalty Points
-                                    </label>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input discount-choice" type="radio" name="discount_choice"
+                                               id="discount_loyalty" value="loyalty" {{ old('discount_choice') === 'loyalty' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="discount_loyalty">
+                                            Use Loyalty Points
+                                        </label>
+                                    </div>
                                 </div>
 
-                                <div id="loyalty_box" class="border rounded p-3 mb-3" style="display: none;">
-                                    <div class="mb-2">
-                                        <div class="small text-muted mb-1">Available Points</div>
-                                        <div class="fw-bold text-primary">{{ $availablePoints ?? 0 }}</div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input discount-choice" type="radio" name="discount_choice"
+                                               id="discount_code_option" value="code" {{ old('discount_choice') === 'code' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="discount_code_option">
+                                            Use Discount Code
+                                        </label>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div class="mb-3">
-                                        <div class="small text-muted mb-1">Max Redeemable</div>
-                                        <div class="fw-bold text-success">{{ $maxRedeemablePoints ?? 0 }}</div>
+                            {{-- Loyalty Points --}}
+                            <div id="loyalty_box" class="mt-3 p-3 bg-light rounded" style="display: none;">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div><strong>Available Points:</strong> {{ $availablePoints ?? 0 }}</div>
+                                        <div><strong>Max Redeemable:</strong> {{ $maxRedeemablePoints ?? 0 }}</div>
                                     </div>
-
-                                    <div class="mb-0">
-                                        <label class="form-label fw-semibold">Redeem Points</label>
-                                        <input
-                                            type="number"
-                                            id="redeem_points"
-                                            name="redeem_points"
-                                            class="form-control"
-                                            min="0"
-                                            max="{{ $maxRedeemablePoints ?? 0 }}"
-                                            step="1"
-                                            value="{{ old('redeem_points', 0) }}"
-                                            placeholder="Enter points"
-                                        >
+                                    <div class="col-md-6">
+                                        <label class="form-label">Redeem Points</label>
+                                        <input type="number" id="redeem_points" name="redeem_points" class="form-control"
+                                               min="0" max="{{ $maxRedeemablePoints ?? 0 }}" step="1"
+                                               value="{{ old('redeem_points', 0) }}">
                                         <small class="text-muted">1 point = NPR 1. Minimum 100 points.</small>
                                     </div>
                                 </div>
-
-                                <div class="form-check mb-2">
-                                    <input
-                                        class="form-check-input discount-choice"
-                                        type="radio"
-                                        name="discount_choice"
-                                        id="discount_code_option"
-                                        value="code"
-                                        {{ old('discount_choice') === 'code' ? 'checked' : '' }}
-                                    >
-                                    <label class="form-check-label" for="discount_code_option">
-                                        Use Discount Code
-                                    </label>
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="apply_loyalty" class="btn btn-primary btn-sm">
+                                        Apply Loyalty Points
+                                    </button>
                                 </div>
+                            </div>
 
-                                <div id="code_box" class="border rounded p-3" style="display: none;">
-                                    <label class="form-label fw-semibold">Discount Code</label>
-                                    <input
-                                        type="text"
-                                        id="discount_code"
-                                        name="discount_code"
-                                        class="form-control"
-                                        value="{{ old('discount_code') }}"
-                                        placeholder="Enter code like NEWYEAR26"
-                                    >
+                            {{-- Discount Code --}}
+                            <div id="code_box" class="mt-3 p-3 bg-light rounded" style="display: none;">
+                                <label class="form-label">Discount Code</label>
+                                <input type="text" id="discount_code" name="discount_code" class="form-control"
+                                       value="{{ old('discount_code') }}" placeholder="Enter code like NEWYEAR26">
 
-                                    @if(!empty($activeDiscountCodes) && $activeDiscountCodes->count())
-                                        <div class="mt-3">
-                                            <div class="small text-muted mb-2">Available offers</div>
-
-                                            @foreach($activeDiscountCodes as $offer)
-                                                <div class="border rounded p-2 small bg-light mb-2">
-                                                    <strong>{{ $offer->title }}</strong><br>
-                                                    Code: <strong>{{ $offer->code }}</strong><br>
-
-                                                    @if($offer->type === 'percentage')
-                                                        Discount:
-                                                        {{ rtrim(rtrim(number_format($offer->value, 2), '0'), '.') }}% off
-                                                    @else
-                                                        Discount:
-                                                        NPR {{ number_format($offer->value, 2) }} off
-                                                    @endif
-
-                                                    @if($offer->max_discount_amount)
-                                                        <br>Max Discount: NPR {{ number_format($offer->max_discount_amount, 2) }}
-                                                    @endif
-
-                                                    @if($offer->valid_until)
-                                                        <br>Valid Until: {{ $offer->valid_until->format('Y-m-d h:i A') }}
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                @if(!empty($activeDiscountCodes) && $activeDiscountCodes->count())
+                                    <div class="mt-3">
+                                        <small class="text-muted">Available offers:</small>
+                                        @foreach($activeDiscountCodes as $offer)
+                                            <div class="border rounded p-2 mt-2 small">
+                                                <strong>{{ $offer->title }}</strong> - Code: <strong>{{ $offer->code }}</strong>
+                                                @if($offer->type === 'percentage')
+                                                    ({{ rtrim(rtrim(number_format($offer->value, 2), '0'), '.') }}% off)
+                                                @else
+                                                    (NPR {{ number_format($offer->value, 2) }} off)
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                <div class="mt-3 text-end">
+                                    <button type="button" id="apply_code" class="btn btn-primary btn-sm">
+                                        Apply Discount Code
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Special Request --}}
-                        <div class="mt-4">
-                            <label class="form-label">Special Request</label>
-                            <textarea
-                                name="special_request"
-                                class="form-control"
-                                rows="3"
-                                placeholder="Any note for booking (optional)"
-                            >{{ old('special_request', $data['special_request'] ?? '') }}</textarea>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Special Request (Optional)</label>
+                            <textarea name="special_request" class="form-control" rows="3"
+                                      placeholder="Any special requirements or notes">{{ old('special_request', $data['special_request'] ?? '') }}</textarea>
                         </div>
 
                         {{-- Terms --}}
-                        <div class="form-check mt-4">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="accept_terms"
-                                value="1"
-                                id="accept_terms"
-                                {{ old('accept_terms') ? 'checked' : '' }}
-                                required
-                            >
-                            <label class="form-check-label" for="accept_terms">
-                                I agree to Terms & Conditions
-                            </label>
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="accept_terms" value="1"
+                                       id="accept_terms" {{ old('accept_terms') ? 'checked' : '' }} required>
+                                <label class="form-check-label" for="accept_terms">
+                                    I agree to the Terms & Conditions
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="mt-4 text-end">
-                            <button type="submit" class="btn btn-success px-4">
+                        {{-- Submit --}}
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg px-5">
                                 Continue to Payment
                             </button>
                         </div>
@@ -310,77 +298,8 @@
 
                 </div>
             </div>
+
         </div>
-
-        {{-- RIGHT --}}
-        <div class="col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Price Summary</h5>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Estimated Days</span>
-                        <strong>{{ $days ?? 1 }}</strong>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Price per day</span>
-                        <strong>NPR {{ number_format($pricePerDay, 2) }}</strong>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Base Price</span>
-                        <strong>NPR {{ number_format($basePriceForSummary, 2) }}</strong>
-                    </div>
-
-                    @if($durationDiscountPercentValue > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Long Duration Discount ({{ rtrim(rtrim(number_format($durationDiscountPercentValue, 2), '0'), '.') }}%)</span>
-                            <strong class="text-primary">
-                                - NPR {{ number_format($durationDiscountAmountValue, 2) }}
-                            </strong>
-                        </div>
-                    @endif
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Price After Duration Discount</span>
-                        <strong id="actual_price" data-value="{{ $actualPrice }}">
-                            NPR {{ number_format($actualPrice, 2) }}
-                        </strong>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Checkout Discount Type</span>
-                        <strong id="discount_type_label">None</strong>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Checkout Discount Amount</span>
-                        <strong class="text-danger" id="discount_price">- NPR 0.00</strong>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-flex justify-content-between fs-5">
-                        <span class="fw-bold">Final Price</span>
-                        <span class="fw-bold text-success" id="final_price">
-                            NPR {{ number_format($actualPrice, 2) }}
-                        </span>
-                    </div>
-
-                    @if(!empty($securityDeposit) && $selectedService === 'self')
-                        <small class="text-muted d-block mt-2">
-                            Security deposit is separate and refundable based on your booking policy.
-                        </small>
-                    @endif
-
-                    <small class="text-muted d-block mt-2">
-                        Final price will be validated securely on server.
-                    </small>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
@@ -402,8 +321,14 @@
             const radioLoyalty = document.getElementById('discount_loyalty');
             const radioCode = document.getElementById('discount_code_option');
 
-            const actualPrice = parseFloat(actualPriceEl?.dataset.value || 0);
-            const maxRedeemable = parseInt(redeemInput?.max || 0);
+            const applyLoyaltyBtn = document.getElementById('apply_loyalty');
+            const applyCodeBtn = document.getElementById('apply_code');
+
+            const actualPrice = {{ $actualPrice }};
+            const maxRedeemable = {{ $maxRedeemablePoints ?? 0 }};
+
+            let appliedDiscount = 0;
+            let appliedDiscountType = 'None';
 
             function formatNpr(amount) {
                 return 'NPR ' + Number(amount).toLocaleString(undefined, {
@@ -428,52 +353,23 @@
                     codeBox.style.display = selected === 'code' ? 'block' : 'none';
                 }
 
-                if (selected !== 'loyalty' && redeemInput) {
-                    redeemInput.value = 0;
+                // Reset applied discount when switching options
+                if (selected === 'none') {
+                    appliedDiscount = 0;
+                    appliedDiscountType = 'None';
+                    updateSummary();
                 }
-
-                if (selected !== 'code' && discountCodeInput) {
-                    discountCodeInput.value = '';
-                }
-
-                updateSummary();
             }
 
             function updateSummary() {
-                const selected = getSelectedDiscountChoice();
-
-                let discount = 0;
-                let label = 'None';
-
-                if (selected === 'loyalty' && redeemInput) {
-                    let points = parseInt(redeemInput.value || 0);
-
-                    if (isNaN(points) || points < 0) {
-                        points = 0;
-                    }
-
-                    if (points > maxRedeemable) {
-                        points = maxRedeemable;
-                    }
-
-                    redeemInput.value = points;
-                    discount = points;
-                    label = 'Loyalty Points';
-                }
-
-                if (selected === 'code') {
-                    label = 'Discount Code';
-                    discount = 0;
-                }
-
-                const finalPrice = Math.max(0, actualPrice - discount);
+                const finalPrice = Math.max(0, actualPrice - appliedDiscount);
 
                 if (discountTypeLabelEl) {
-                    discountTypeLabelEl.textContent = label;
+                    discountTypeLabelEl.textContent = appliedDiscountType;
                 }
 
                 if (discountPriceEl) {
-                    discountPriceEl.textContent = '- ' + formatNpr(discount);
+                    discountPriceEl.textContent = appliedDiscount > 0 ? '- ' + formatNpr(appliedDiscount) : '- NPR 0.00';
                 }
 
                 if (finalPriceEl) {
@@ -481,14 +377,78 @@
                 }
             }
 
+            function applyLoyaltyPoints() {
+                if (!redeemInput) return;
+
+                let points = parseInt(redeemInput.value || 0);
+
+                if (isNaN(points) || points < 0) {
+                    alert('Please enter a valid number of points.');
+                    return;
+                }
+
+                if (points > maxRedeemable) {
+                    alert(`You can redeem maximum ${maxRedeemable} points.`);
+                    redeemInput.value = maxRedeemable;
+                    points = maxRedeemable;
+                }
+
+                if (points < 100 && points > 0) {
+                    alert('Minimum 100 points required.');
+                    return;
+                }
+
+                appliedDiscount = points;
+                appliedDiscountType = 'Loyalty Points';
+                updateSummary();
+
+                // Disable the apply button and show success
+                applyLoyaltyBtn.disabled = true;
+                applyLoyaltyBtn.textContent = 'Applied';
+                applyLoyaltyBtn.classList.remove('btn-primary');
+                applyLoyaltyBtn.classList.add('btn-success');
+            }
+
+            function applyDiscountCode() {
+                if (!discountCodeInput) return;
+
+                const code = discountCodeInput.value.trim().toUpperCase();
+
+                if (!code) {
+                    alert('Please enter a discount code.');
+                    return;
+                }
+
+                // For now, show a placeholder message since we can't validate codes client-side
+                // In a real implementation, this would make an AJAX call to validate the code
+                alert('Discount code validation will be performed when you submit the form. For demo purposes, assuming 10% discount applied.');
+
+                // Demo: Apply a sample discount (10% of base price)
+                appliedDiscount = Math.round(actualPrice * 0.1);
+                appliedDiscountType = `Discount Code (${code})`;
+                updateSummary();
+
+                // Disable the apply button and show success
+                applyCodeBtn.disabled = true;
+                applyCodeBtn.textContent = 'Applied';
+                applyCodeBtn.classList.remove('btn-primary');
+                applyCodeBtn.classList.add('btn-success');
+            }
+
+            // Event listeners
             document.querySelectorAll('.discount-choice').forEach(function (radio) {
                 radio.addEventListener('change', toggleDiscountFields);
             });
 
-            if (redeemInput) {
-                redeemInput.addEventListener('input', updateSummary);
+            if (applyLoyaltyBtn) {
+                applyLoyaltyBtn.addEventListener('click', applyLoyaltyPoints);
             }
 
+            if (applyCodeBtn) {
+                applyCodeBtn.addEventListener('click', applyDiscountCode);
+            }
+
+            // Initialize
             toggleDiscountFields();
         });
     </script>

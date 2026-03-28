@@ -14,75 +14,40 @@
                 </h1>
 
                 <p class="lead mb-4">
-                    Choose 4-wheel or 2-wheel rentals in just a few easy steps.
+                    Choose self-drive or with-driver service in just a few easy steps.
                 </p>
 
                 <div class="bg-white text-dark rounded shadow p-4 p-md-5"
                      x-data="{
-                        wheelType: '4_wheeler',
-                        service: 'self',
-                        setWheelType(type) {
-                            this.wheelType = type;
-                            if (type === '2_wheeler') {
-                                this.service = 'self';
-                            }
-                        }
+                        service: 'self'
                      }">
                     <form method="GET" action="{{ route('user.search.vehicles') }}">
                         <input type="hidden" name="service" :value="service">
-                        <input type="hidden" name="wheel_type" :value="wheelType">
 
                         <div class="row g-4 align-items-start">
 
                             <div class="col-lg-4">
-                                <div class="fw-bold mb-3 fs-5">Choose vehicle category</div>
+                                <div>
+                                    <div class="fw-bold mb-3 fs-5">Choose a service</div>
 
-                                <div class="d-flex gap-3 mb-4">
-                                    <button type="button"
-                                            class="service-square"
-                                            :class="wheelType === '4_wheeler' ? 'active' : ''"
-                                            @click="setWheelType('4_wheeler')">
-                                        <i class="fa-solid fa-car mb-2"></i>
-                                        <span>4 Wheeler</span>
-                                    </button>
+                                    <div class="d-flex gap-3">
+                                        <button type="button"
+                                                class="service-square"
+                                                :class="service === 'self' ? 'active' : ''"
+                                                @click="service='self'">
+                                            <i class="fa-solid fa-car-side mb-2"></i>
+                                            <span>Self Drive</span>
+                                        </button>
 
-                                    <button type="button"
-                                            class="service-square"
-                                            :class="wheelType === '2_wheeler' ? 'active' : ''"
-                                            @click="setWheelType('2_wheeler')">
-                                        <i class="fa-solid fa-motorcycle mb-2"></i>
-                                        <span>2 Wheeler</span>
-                                    </button>
+                                        <button type="button"
+                                                class="service-square"
+                                                :class="service === 'driver' ? 'active' : ''"
+                                                @click="service='driver'">
+                                            <i class="fa-solid fa-user-tie mb-2"></i>
+                                            <span>With Driver</span>
+                                        </button>
+                                    </div>
                                 </div>
-
-                                <template x-if="wheelType === '4_wheeler'">
-                                    <div>
-                                        <div class="fw-bold mb-3 fs-6">Choose a service</div>
-                                        <div class="d-flex gap-3">
-                                            <button type="button"
-                                                    class="service-square"
-                                                    :class="service === 'self' ? 'active' : ''"
-                                                    @click="service='self'">
-                                                <i class="fa-solid fa-car-side mb-2"></i>
-                                                <span>Self Drive</span>
-                                            </button>
-
-                                            <button type="button"
-                                                    class="service-square"
-                                                    :class="service === 'driver' ? 'active' : ''"
-                                                    @click="service='driver'">
-                                                <i class="fa-solid fa-user-tie mb-2"></i>
-                                                <span>With Driver</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <template x-if="wheelType === '2_wheeler'">
-                                    <div class="alert alert-light border rounded-3 mb-0">
-                                        <strong>2 Wheeler:</strong> Self-drive only
-                                    </div>
-                                </template>
                             </div>
 
                             <div class="col-lg-8">
@@ -120,7 +85,7 @@
 
                                 <div class="d-flex justify-content-end mt-4">
                                     <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
-                                        <span x-text="wheelType === '2_wheeler' ? 'Find Bikes & Scooters' : (service === 'driver' ? 'Find Driver Vehicles' : 'Find Vehicle')"></span>
+                                        <span x-text="service === 'driver' ? 'Find Driver Vehicles' : 'Find Vehicles'"></span>
                                     </button>
                                 </div>
                             </div>
@@ -135,41 +100,65 @@
 </section>
 
 @if($activeOffers->isNotEmpty())
-    <section class="py-4 bg-white border-top">
+    <section class="py-5 bg-light border-top">
         <div class="container">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h4 class="fw-bold mb-0">Active Offers & Discounts</h4>
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-dark mb-2">Active Offers & Discounts</h3>
+                <p class="text-muted">Limited time offers on vehicle rentals</p>
             </div>
 
-            <div class="position-relative">
-                <div class="d-flex overflow-auto gap-3 pb-2 offers-scroller">
-                    @foreach($activeOffers as $offer)
-                        <div class="card border-0 shadow-sm rounded-4 flex-shrink-0" style="min-width: 280px; max-width: 320px;">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="fw-bold mb-0">{{ $offer->title }}</h6>
-                                    <span class="badge bg-dark px-3 py-1">{{ $offer->code }}</span>
+            <div class="row g-4">
+                @foreach($activeOffers as $offer)
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 border shadow-sm rounded-3">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        @if($offer->type === 'percentage')
+                                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                <i class="fa-solid fa-percent"></i>
+                                            </div>
+                                        @else
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                <i class="fa-solid fa-rupee-sign"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="fw-bold mb-1">{{ $offer->title }}</h5>
+                                        <span class="badge bg-secondary">{{ $offer->code }}</span>
+                                    </div>
                                 </div>
 
-                                <p class="fs-5 fw-bold text-success mb-1">
-                                    @if($offer->type === 'percentage')
-                                        {{ $offer->value }}% OFF
-                                    @else
-                                        NPR {{ number_format($offer->value) }} OFF
-                                    @endif
-                                </p>
+                                <div class="text-center mb-3">
+                                    <div class="fs-4 fw-bold text-success mb-0">
+                                        @if($offer->type === 'percentage')
+                                            {{ $offer->value }}% OFF
+                                        @else
+                                            NPR {{ number_format($offer->value) }} OFF
+                                        @endif
+                                    </div>
+                                </div>
 
-                                <div class="small text-muted mt-2">
+                                <div class="small text-muted">
                                     @if($offer->max_discount_amount)
-                                        Max NPR {{ number_format($offer->max_discount_amount) }} •
+                                        <div class="mb-1">Max discount: NPR {{ number_format($offer->max_discount_amount) }}</div>
                                     @endif
-                                    Valid until {{ $offer->valid_until->format('d M Y') }}
+                                    <div>Valid until: {{ $offer->valid_until->format('d M Y') }}</div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endforeach
             </div>
+
+            @if($activeOffers->count() > 6)
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-success">
+                        View All Offers
+                    </button>
+                </div>
+            @endif
         </div>
     </section>
 @endif

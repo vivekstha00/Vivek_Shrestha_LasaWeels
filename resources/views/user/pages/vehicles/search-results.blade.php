@@ -6,7 +6,7 @@
 @section('user-content')
 @php
     $service = $search['service'] ?? request('service', 'self');
-    $wheelType = $search['wheel_type'] ?? request('wheel_type', '4_wheeler');
+    $wheelType = $search['wheel_type'] ?? request('wheel_type', '');
 @endphp
 
 <div class="container pb-5" style="padding-top: 2px;"
@@ -79,13 +79,20 @@
 
                     <form method="GET" action="{{ route('user.search.vehicles') }}" class="vstack gap-3">
                         <input type="hidden" name="service" :value="wheelType === '2_wheeler' ? 'self' : service">
-                        <input type="hidden" name="wheel_type" :value="wheelType">
                         <input type="hidden" name="pickup_location" :value="pickup_location">
                         <input type="hidden" name="drop_location" :value="drop_location">
                         <input type="hidden" name="pickup_datetime" :value="pickup_datetime">
                         <input type="hidden" name="drop_datetime" :value="drop_datetime">
 
                         <div>
+                            <div>
+                                <label class="form-label fw-semibold mb-1">Wheel Type</label>
+                                <select name="wheel_type" class="form-select" x-model="wheelType" @change="setWheelType($event.target.value)">
+                                    <option value="">All</option>
+                                    <option value="4_wheeler" @selected(request('wheel_type')==='4_wheeler')>4 Wheeler</option>
+                                    <option value="2_wheeler" @selected(request('wheel_type')==='2_wheeler')>2 Wheeler</option>
+                                </select>
+                            </div>
                             <label class="form-label fw-semibold mb-1">Vehicle Type</label>
                             <select name="vehicle_type" class="form-select">
                                 <option value="">All</option>
@@ -110,7 +117,7 @@
                             </select>
                         </div>
 
-                        <div>
+                        <div x-show="wheelType !== '2_wheeler'" x-cloak>
                             <label class="form-label fw-semibold mb-1">Transmission</label>
                             <select name="transmission" class="form-select">
                                 <option value="">All</option>
@@ -119,14 +126,6 @@
                             </select>
                         </div>
 
-                        <div>
-                            <label class="form-label fw-semibold mb-1">Wheel Type</label>
-                            <select name="wheel_type" class="form-select">
-                                <option value="">All</option>
-                                <option value="4_wheeler" @selected(request('wheel_type')==='4_wheeler')>4 Wheeler</option>
-                                <option value="2_wheeler" @selected(request('wheel_type')==='2_wheeler')>2 Wheeler</option>
-                            </select>
-                        </div>
 
                         <div>
                             <label class="form-label fw-semibold mb-1">Price / Day</label>
@@ -319,36 +318,19 @@
                         <div class="d-flex gap-2 mb-3">
                             <button type="button"
                                     class="btn"
-                                    :class="wheelType==='4_wheeler' ? 'btn-success' : 'btn-outline-success'"
-                                    @click="setWheelType('4_wheeler')">
-                                <i class="fa-solid fa-car me-2"></i> 4 Wheeler
+                                    :class="service==='self' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="setService('self')">
+                                <i class="fa-solid fa-car me-2"></i> Self Drive
                             </button>
 
                             <button type="button"
                                     class="btn"
-                                    :class="wheelType==='2_wheeler' ? 'btn-success' : 'btn-outline-success'"
-                                    @click="setWheelType('2_wheeler')">
-                                <i class="fa-solid fa-motorcycle me-2"></i> 2 Wheeler
+                                    :class="service==='driver' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="setService('driver')"
+                                    :disabled="wheelType === '2_wheeler'">
+                                <i class="fa-solid fa-user-tie me-2"></i> With Driver
                             </button>
                         </div>
-
-                        <template x-if="wheelType === '4_wheeler'">
-                            <div class="d-flex gap-2 mb-3">
-                                <button type="button"
-                                        class="btn"
-                                        :class="service==='self' ? 'btn-success' : 'btn-outline-success'"
-                                        @click="setService('self')">
-                                    <i class="fa-solid fa-car me-2"></i> Self Drive
-                                </button>
-
-                                <button type="button"
-                                        class="btn"
-                                        :class="service==='driver' ? 'btn-success' : 'btn-outline-success'"
-                                        @click="setService('driver')">
-                                    <i class="fa-solid fa-user-tie me-2"></i> With Driver
-                                </button>
-                            </div>
-                        </template>
 
                         <template x-if="wheelType === '2_wheeler'">
                             <div class="alert alert-light border rounded-3 mb-3">
@@ -357,7 +339,6 @@
                         </template>
 
                         <input type="hidden" name="service" :value="wheelType === '2_wheeler' ? 'self' : service">
-                        <input type="hidden" name="wheel_type" :value="wheelType">
 
                         <div class="row g-3">
                             <div class="col-md-6">
