@@ -151,8 +151,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/discount-codes', [AdminDiscountCodeController::class, 'index'])->name('discount-codes.index');
     Route::get('/discount-codes/create', [AdminDiscountCodeController::class, 'create'])->name('discount-codes.create');
     Route::post('/discount-codes', [AdminDiscountCodeController::class, 'store'])->name('discount-codes.store');
+    Route::get('/discount-codes/{discountCode}', [AdminDiscountCodeController::class, 'show'])->name('discount-codes.show');
     Route::get('/discount-codes/{discountCode}/edit', [AdminDiscountCodeController::class, 'edit'])->name('discount-codes.edit');
     Route::put('/discount-codes/{discountCode}', [AdminDiscountCodeController::class, 'update'])->name('discount-codes.update');
+    Route::delete('/discount-codes/{discountCode}', [AdminDiscountCodeController::class, 'destroy'])->name('discount-codes.destroy');
 
     Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
     Route::get('/subscription-plans/create', [AdminSubscriptionPlanController::class, 'create'])->name('subscription-plans.create');

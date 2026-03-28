@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\DiscountCode;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,36 @@ class AdminDiscountCodeController extends Controller
     public function create()
     {
         return view('admin.discount-codes.create');
+    }
+
+    public function show(DiscountCode $discountCode)
+    {
+        $normalizedCode = strtoupper($discountCode->code);
+
+        $usageBookings = Booking::query()
+            ->with(['user', 'vehicle', 'payment'])
+            ->where('discount_type', 'code')
+            ->whereRaw('UPPER(discount_code) = ?', [$normalizedCode])
+            ->latest()
+            ->paginate(10, ['*'], 'usage_page');
+
+        $totalUsageBookings = Booking::query()
+            ->where('discount_type', 'code')
+            ->whereRaw('UPPER(discount_code) = ?', [$normalizedCode])
+            ->count();
+
+        $completedUsageBookings = Booking::query()
+            ->where('discount_type', 'code')
+            ->whereRaw('UPPER(discount_code) = ?', [$normalizedCode])
+            ->whereIn('payment_status', ['paid', 'partial'])
+            ->count();
+
+        return view('admin.discount-codes.show', compact(
+            'discountCode',
+            'usageBookings',
+            'totalUsageBookings',
+            'completedUsageBookings'
+        ));
     }
 
     public function store(Request $request)
@@ -46,6 +77,15 @@ class AdminDiscountCodeController extends Controller
         return redirect()
             ->route('admin.discount-codes.index')
             ->with('success', 'Discount code updated successfully.');
+    }
+
+    public function destroy(DiscountCode $discountCode)
+    {
+        $discountCode->delete();
+
+        return redirect()
+            ->route('admin.discount-codes.index')
+            ->with('success', 'Discount code deleted successfully.');
     }
 
     private function validateData(Request $request, ?int $ignoreId = null): array
