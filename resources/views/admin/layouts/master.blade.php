@@ -2,22 +2,23 @@
 <html lang="en">
 @include('admin.layouts.header.index')
 
-<body class="bg-light">
-
-    {{-- Sidebar --}}
+<body>
     @include('admin.layouts.header.sidebar')
 
-    {{-- Main content --}}
     <div class="main-content">
-        {{-- Navbar --}}
         @include('admin.layouts.header.navbar')
 
-        {{-- Page Content --}}
-        <main class="container-fluid py-4">
+        <main>
             @yield('admin-content')
         </main>
     </div>
 
-    @include('admin.layouts.footer.index')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('adminSidebar');
+            sidebar.classList.toggle('show');
+        });
+    </script>
 </body>
 </html>

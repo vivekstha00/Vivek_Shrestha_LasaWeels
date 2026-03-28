@@ -1,0 +1,173 @@
+/* ====================== ADMIN PANEL - CLEAN & PROFESSIONAL ====================== */
+
+:root {
+    --primary: #2563eb;
+    --sidebar-bg: #f8f1e9;
+    --border-color: #e5d9c8;
+    --text-muted: #6b7280;
+    --bg-light: #f7f5f3;
+}
+
+body {
+    background-color: #f7f5f3;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #1f2937;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding: 1.5rem 1rem;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+    z-index: 1040;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* Clickable table rows */
+.table-clickable tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.table-clickable tbody tr:hover {
+    background-color: rgba(0,0,0,0.03);
+}
+
+.sidebar.show {
+    display: block !important;
+}
+
+.sidebar h5 {
+    color: #1f2937;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 1.5rem;
+}
+
+.sidebar .nav-link {
+    color: #374151;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin: 0.25rem 0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar .nav-link i {
+    width: 22px;
+    font-size: 1.2rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #f1e9dd;
+}
+
+.sidebar .nav-link.active {
+    background-color: #e5d9c8;
+    color: #1f2937;
+    font-weight: 600;
+}
+/* Logout button */
+.sidebar .logout-btn {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Navbar */
+.navbar {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 0;
+    z-index: 1030;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 260px;
+    min-height: 100vh;
+    background-color: #f7f5f3;
+    padding: 0 2rem 2rem;
+}
+
+.main-content main {
+    margin-top: 88px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 767.98px) {
+    .sidebar {
+        display: none;
+    }
+
+    .sidebar.show {
+        display: block !important;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 0 1rem 1rem;
+    }
+
+    .navbar {
+        left: 0;
+    }
+
+    .navbar h5 {
+        font-size: 1.1rem;
+    }
+
+    .main-content main {
+        margin-top: 78px;
+    }
+}
+
+/* Cards */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.card-body {
+    padding: 1.75rem;
+}
+
+/* Tables */
+.table th {
+    background-color: #f1e9dd;
+    font-weight: 600;
+    color: #374151;
+    padding: 1rem 1.25rem;
+}
+
+.table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+}
+
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    border: none;
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}

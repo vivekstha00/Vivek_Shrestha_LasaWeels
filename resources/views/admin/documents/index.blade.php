@@ -1,23 +1,27 @@
 @extends('admin.layouts.master')
 
 @section('admin-content')
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">User Documents</h3>
-            <p class="text-muted mb-0">Review and verify uploaded user documents</p>
-        </div>
-    </div>
+<div class="mb-5">
+    <h2 class="fw-bold mb-1">User Documents</h2>
+    <p class="text-muted">Review and verify uploaded user documents</p>
+</div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body">
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.documents.index') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search by user name or email"
+                           value="{{ request('search') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="type" class="form-select">
             <form method="GET" action="{{ route('admin.documents.index') }}">
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -51,16 +55,16 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
+    <div class="card">
+        <div class="card-body p-0">
             @if($documents->isEmpty())
                 <div class="text-center py-5">
-                    <h5 class="fw-bold mb-2">No documents found</h5>
-                    <p class="text-muted mb-0">Uploaded documents will appear here.</p>
+                    <h5 class="fw-bold">No documents found</h5>
+                    <p class="text-muted">Uploaded documents will appear here.</p>
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table align-middle">
+                    <table class="table align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
@@ -105,12 +109,10 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="mt-3">
+                <div class="p-3 border-top">
                     {{ $documents->links() }}
                 </div>
             @endif
         </div>
     </div>
-</div>
 @endsection
