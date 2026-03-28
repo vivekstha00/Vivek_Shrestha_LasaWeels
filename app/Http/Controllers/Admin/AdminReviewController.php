@@ -29,7 +29,13 @@ class AdminReviewController extends Controller
 
     public function show(Review $review)
     {
-        $review->load(['booking', 'user', 'vehicle.vendor', 'driver']);
+        $review->load([
+            'booking.payment',
+            'booking.vehicle.images',
+            'user',
+            'vehicle.vendor',
+            'driver',
+        ]);
 
         return view('admin.reviews.show', compact('review'));
     }
