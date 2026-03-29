@@ -14,8 +14,9 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
 
-            <p><strong>User:</strong> {{ $contact->user->name }}</p>
-            <p><strong>Email:</strong> {{ $contact->user->email }}</p>
+            <p><strong>User:</strong> {{ $contact->user->name ?? 'Guest User' }}</p>
+            <p><strong>Email:</strong> {{ $contact->user->email ?? $contact->email ?? 'N/A' }}</p>
+            <p><strong>Phone:</strong> {{ $contact->phone ?? ($contact->user->phone ?? 'N/A') }}</p>
             <p><strong>Subject:</strong> {{ $contact->subject }}</p>
             <p><strong>Message:</strong></p>
             <div class="border rounded p-3 bg-light">

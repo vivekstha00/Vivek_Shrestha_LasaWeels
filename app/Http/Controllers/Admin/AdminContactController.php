@@ -36,10 +36,16 @@ class AdminContactController extends Controller
             'replied_at' => now(),
         ]);
 
-        Mail::to($contact->user->email)
-            ->send(new \App\Mail\ContactReplyMail($contact));
+        $replyToEmail = $contact->user->email ?? $contact->email;
 
-        return back()->with('success', 'Reply sent successfully.');
+        if ($replyToEmail) {
+            Mail::raw($request->reply_message, function ($message) use ($replyToEmail, $contact) {
+                $message->to($replyToEmail)
+                    ->subject('Reply: ' . $contact->subject);
+            });
+        }
+
+        return back()->with('success', 'Reply saved successfully.');
     }
     public function destroy($id)
     {

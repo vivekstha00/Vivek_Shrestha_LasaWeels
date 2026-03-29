@@ -11,6 +11,8 @@ class ContactRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'email',
+        'phone',
         'vendor_id',
         'booking_id',
         'subject',

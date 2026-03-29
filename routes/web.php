@@ -56,6 +56,9 @@ Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browse
 
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
 
+Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
+Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
+
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
@@ -87,9 +90,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/my-bookings/{booking}/cancel-request', [UserBookingController::class, 'requestCancellation'])->name('user.booking.cancel-request');
 
     Route::post('/profile/bookings/{booking}/review', [UserReviewController::class, 'store'])->name('user.bookings.review.store');
-
-    Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
-    Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
 
     Route::get('/user/drivers', [UserDriverController::class, 'availableDrivers'])->name('user.driver.index');
 

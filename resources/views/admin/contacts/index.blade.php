@@ -17,6 +17,8 @@
                         <tr>
                             <th>#</th>
                             <th>User</th>
+                            <th>Email</th>
+                            <th>Phone</th>
                             <th>Subject</th>
                             <th>Status</th>
                             <th>Date</th>
@@ -31,6 +33,8 @@
                                 onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); window.location='{{ route('admin.contacts.show', $contact) }}'; }">
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $contact->user->name ?? 'Guest' }}</td>
+                                <td>{{ $contact->user->email ?? $contact->email ?? 'N/A' }}</td>
+                                <td>{{ $contact->phone ?? ($contact->user->phone ?? 'N/A') }}</td>
                                 <td>{{ $contact->subject }}</td>
                                 <td>
                                     <span class="badge {{ $contact->status === 'replied' ? 'bg-success' : 'bg-warning' }}">

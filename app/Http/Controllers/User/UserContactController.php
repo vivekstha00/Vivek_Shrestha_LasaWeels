@@ -26,12 +26,16 @@ class UserContactController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:30',
             'subject' => 'required|max:255',
             'message' => 'required'
         ]);
 
         ContactRequest::create([
             'user_id' => Auth::id(),
+            'email' => $request->email,
+            'phone' => $request->phone,
             'subject' => $request->subject,
             'message' => $request->message,
         ]);
