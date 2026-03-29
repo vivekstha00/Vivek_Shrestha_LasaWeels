@@ -22,7 +22,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('vendor.register.*') ? 'active' : '' }}" href="{{ route('vendor.register.step1') }}">
+                    <a class="nav-link {{ request()->routeIs('vendor.register.*') ? 'active' : '' }}" href="{{ route('vendor.register.landing') }}">
                         Become a Vendor
                     </a>
                 </li>

@@ -176,6 +176,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/refunds/{payment}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 });
 
+Route::get('/become-a-vendor', [VendorRegisterController::class, 'landing'])->name('vendor.register.landing');
+
 Route::prefix('vendor/register')->name('vendor.register.')->group(function () {
     Route::get('/step-1', [VendorRegisterController::class, 'showStep1'])->name('step1');
     Route::post('/step-1', [VendorRegisterController::class, 'storeStep1'])->name('step1.store');

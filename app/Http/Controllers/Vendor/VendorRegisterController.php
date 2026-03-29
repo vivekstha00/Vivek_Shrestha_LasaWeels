@@ -33,10 +33,10 @@ class VendorRegisterController extends Controller
     public function showStep1()
     {
         if (session()->has(self::SESSION_KEY)) {
-            return redirect()->route('vendor.register.step2');
+            return redirect($this->resolveRegistrationRoute());
         }
 
-    return view('user.pages.vendor-register.step1');
+        return view('user.pages.vendor-register.step1');
     }
 
     public function storeStep1(Request $request)
@@ -392,5 +392,37 @@ class VendorRegisterController extends Controller
                 'remarks' => null,
             ]
         );
+    }
+    public function landing()
+    {
+        return view('user.pages.vendor-register.index', [
+            'startRoute' => $this->resolveRegistrationRoute(),
+            'ctaLabel' => session()->has(self::SESSION_KEY) ? 'Continue Application' : 'Become a Partner',
+        ]);
+    }
+
+    private function resolveRegistrationRoute(): string
+    {
+        $userId = session(self::SESSION_KEY);
+
+        if (!$userId) {
+            return route('vendor.register.step1');
+        }
+
+        $user = User::with('vendorProfile')->find($userId);
+
+        if (!$user || !$user->vendorProfile) {
+            return route('vendor.register.step1');
+        }
+
+        $step = (int) $user->vendorProfile->current_step;
+
+        return match ($step) {
+            1 => route('vendor.register.step2'),
+            2 => route('vendor.register.step3'),
+            3 => route('vendor.register.step4'),
+            4 => route('vendor.register.review'),
+            default => route('vendor.register.step1'),
+        };
     }
 }
