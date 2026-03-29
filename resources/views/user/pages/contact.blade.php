@@ -1,22 +1,44 @@
 @extends('user.layouts.master')
 
 @section('user-content')
-<div class="container py-5 mt-5">
-
-    <div class="text-center mb-4">
-        <h2 class="fw-bold mb-1">Contact Us</h2>
-        <p class="text-muted mb-0">Send your query or connect directly with verified vendors</p>
+<div class="container py-0 mt-0">
+    <div class="contact-hero mb-4 d-flex align-items-center justify-content-center">
+        <h2 class="fw-bold mb-0 text-white">Contact Us</h2>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <h4 class="mb-3 fw-semibold">Contact Support</h4>
+    @if(session('success'))
+        <div class="alert alert-success rounded-3 border-0 shadow-sm">
+            {{ session('success') }}
+        </div>
+    @endif
 
-            @if(session('success'))
-                <div class="alert alert-success rounded-3 border-0 shadow-sm">
-                    {{ session('success') }}
+    <div class="row g-4 align-items-stretch">
+        <div class="col-lg-7">
+            <h4 class="mb-3 fw-semibold">Get in Touch</h4>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-3">Main Office</h6>
+                    <p class="mb-2"><strong>Phone:</strong> {{ $office['phone'] ?? 'N/A' }}</p>
+                    <p class="mb-2"><strong>Email:</strong> {{ $office['email'] ?? 'N/A' }}</p>
+                    <p class="mb-3"><strong>Location:</strong> {{ $office['address'] ?? 'N/A' }}</p>
+
+                    @if(!empty($office['latitude']) && !empty($office['longitude']))
+                        <div class="ratio ratio-16x9 rounded-3 overflow-hidden border">
+                            <iframe
+                                src="https://maps.google.com/maps?q={{ $office['latitude'] }},{{ $office['longitude'] }}&z=14&output=embed"
+                                style="border:0;"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    @endif
                 </div>
-            @endif
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <h4 class="mb-3 fw-semibold">Contact Support Form</h4>
 
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-header bg-light border-0 rounded-top-4 py-3">
@@ -50,68 +72,73 @@
                             @error('message') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
-                        <button class="btn btn-dark px-4">
-                            Submit Query
-                        </button>
+                        <button class="btn btn-dark px-4">Submit Query</button>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-5">
-            <h4 class="mb-3 fw-semibold">Verified Vendors</h4>
-
-            @forelse($vendors as $vendor)
-                <div class="card shadow-sm border-0 rounded-4 mb-3 vendor-card">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <h5 class="fw-bold mb-0">
-                                {{ $vendor->vendorProfile->business_name ?? $vendor->name }}
-                            </h5>
-                            <span class="badge bg-success-subtle text-success border">Verified</span>
-                        </div>
-
-                        <p class="text-muted mb-2 small">
-                            {{ ucfirst($vendor->vendorProfile->business_type ?? 'vendor') }}
-                        </p>
-
-                        <p class="mb-2 small">
-                            <strong>Phone:</strong>
-                            {{ $vendor->vendorProfile->phone ?? $vendor->phone ?? 'N/A' }}
-                        </p>
-
-                        <p class="mb-3 small">
-                            <strong>Address:</strong>
-                            {{ $vendor->vendorProfile->business_address ?? 'N/A' }}
-                        </p>
-
-                        <div class="d-flex flex-wrap gap-2">
-                            @if(!empty($vendor->vendorProfile->latitude) && !empty($vendor->vendorProfile->longitude))
-                                <a href="https://www.google.com/maps?q={{ $vendor->vendorProfile->latitude }},{{ $vendor->vendorProfile->longitude }}"
-                                   target="_blank"
-                                   class="btn btn-outline-dark btn-sm">
-                                    View Map
-                                </a>
-
-                                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $vendor->vendorProfile->latitude }},{{ $vendor->vendorProfile->longitude }}"
-                                   target="_blank"
-                                   class="btn btn-dark btn-sm">
-                                    Get Directions
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="alert alert-light border rounded-4">
-                    No approved vendors available right now.
-                </div>
-            @endforelse
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0 fw-semibold">Verified Vendors</h4>
         </div>
+
+        @if($vendors->isNotEmpty())
+            <div class="vendor-scroll d-flex gap-3 overflow-auto pb-2">
+                @foreach($vendors as $vendor)
+                    <a href="{{ route('contact.vendor.show', $vendor) }}" class="text-decoration-none text-dark flex-shrink-0" style="width: 290px;">
+                        <div class="card shadow-sm border-0 rounded-4 vendor-card h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h5 class="fw-bold mb-0 text-truncate" style="max-width: 180px;">
+                                        {{ $vendor->vendorProfile->business_name ?? $vendor->name }}
+                                    </h5>
+                                    <span class="badge bg-success-subtle text-success border">Verified</span>
+                                </div>
+
+                                <p class="text-muted mb-2 small">
+                                    {{ ucfirst($vendor->vendorProfile->business_type ?? 'vendor') }}
+                                </p>
+
+                                <p class="mb-2 small"><strong>Phone:</strong>
+                                    {{ $vendor->vendorProfile->phone ?? $vendor->phone ?? 'N/A' }}
+                                </p>
+
+                                <p class="mb-0 small"><strong>Address:</strong>
+                                    {{ $vendor->vendorProfile->business_address ?? 'N/A' }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <div class="alert alert-light border rounded-4 mb-0">
+                No approved vendors available right now.
+            </div>
+        @endif
     </div>
 </div>
 
 <style>
+    .contact-hero {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        min-height: 320px;
+        border-radius: 0;
+        padding: 2rem;
+        background-image: url('{{ asset('images/contact-us.png') }}');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .contact-hero h2 {
+        font-size: 2.4rem;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+
     .vendor-card {
         transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
@@ -121,9 +148,35 @@
         box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
     }
 
+    .vendor-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f8fafc;
+    }
+
+    .vendor-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .vendor-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 99px;
+    }
+
     .form-control:focus {
         box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.1);
         border-color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+        .contact-hero {
+            min-height: 220px;
+            padding: 1.25rem;
+            background-position: center;
+        }
+
+        .contact-hero h2 {
+            font-size: 1.9rem;
+        }
     }
 </style>
 @endsection

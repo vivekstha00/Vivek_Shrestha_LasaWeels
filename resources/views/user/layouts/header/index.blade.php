@@ -38,6 +38,10 @@
             z-index: 1000;
         }
 
+        .site-main {
+            margin-top: 90px;
+        }
+
         .site-navbar.solid {
             background: white !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;

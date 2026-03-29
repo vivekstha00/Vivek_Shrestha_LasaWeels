@@ -5,13 +5,14 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ContactRequest;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class UserContactController extends Controller
 {
     public function create()
     {
-        $vendors = \App\Models\User::with('vendorProfile')
+        $vendors = User::with('vendorProfile')
             ->where('role', 'vendor')
             ->where('vendor_status', 'approved')
             ->whereHas('vendorProfile', function ($query) {
@@ -20,7 +21,29 @@ class UserContactController extends Controller
             ->latest()
             ->get();
 
-        return view('user.pages.contact', compact('vendors'));
+        $office = [
+            'name' => 'LasaWheels Head Office',
+            'phone' => '+977-9800000000',
+            'email' => 'support@lasawheels.com',
+            'address' => 'Pokhara-8, Kaski, Nepal',
+            'latitude' => 28.2096,
+            'longitude' => 83.9856,
+        ];
+
+        return view('user.pages.contact', compact('vendors', 'office'));
+    }
+
+    public function showVendor(User $vendor)
+    {
+        $vendor->load('vendorProfile');
+
+        $isApprovedVendor = $vendor->role === 'vendor'
+            && $vendor->vendor_status === 'approved'
+            && optional($vendor->vendorProfile)->status === 'approved';
+
+        abort_unless($isApprovedVendor, 404);
+
+        return view('user.pages.contact-vendor-show', compact('vendor'));
     }
 
     public function store(Request $request)

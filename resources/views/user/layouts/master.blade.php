@@ -5,7 +5,7 @@
 <body class="d-flex flex-column min-vh-100">
     @include('user.layouts.header.navbar')
 
-    <main class="pt-4 flex-grow-1" style="margin-top: 90px;">
+    <main class="flex-grow-1 site-main">
         @yield('user-content')
     </main>
 

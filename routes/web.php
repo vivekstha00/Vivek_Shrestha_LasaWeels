@@ -58,6 +58,7 @@ Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name(
 
 Route::get('/contact', [UserContactController::class, 'create'])->name('contact.create');
 Route::post('/contact', [UserContactController::class, 'store'])->name('contact.store');
+Route::get('/contact/vendors/{vendor}', [UserContactController::class, 'showVendor'])->name('contact.vendor.show');
 
 Route::middleware('auth')->group(function () {
 
