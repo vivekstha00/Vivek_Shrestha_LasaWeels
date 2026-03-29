@@ -47,6 +47,19 @@
         $canCancel = in_array($booking->status, ['pending', 'confirmed'], true)
             && now()->lt($booking->pickup_datetime->copy()->subDay())
             && (! $payment || ($payment->refund_status ?? 'none') === 'none');
+
+        $vehicleImage = null;
+        if ($booking->vehicle?->primaryImage?->path) {
+            $vehicleImage = asset('storage/' . ltrim($booking->vehicle->primaryImage->path, '/'));
+        } elseif ($booking->vehicle?->images?->first()?->path) {
+            $vehicleImage = asset('storage/' . ltrim($booking->vehicle->images->first()->path, '/'));
+        } elseif (!empty($booking->vehicle?->image_url)) {
+            $vehicleImage = asset('storage/' . ltrim($booking->vehicle->image_url, '/'));
+        }
+
+        $driverImage = !empty($booking->driver?->image)
+            ? asset('storage/' . ltrim($booking->driver->image, '/'))
+            : null;
     @endphp
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -95,46 +108,90 @@
         </div>
     @endif
 
-    <div class="row g-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Payment Summary</h5>
 
-        {{-- LEFT: booking + trip --}}
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
+            <p class="mb-1"><strong>Original Price:</strong> Rs. {{ number_format($booking->original_price ?? $booking->total_price, 2) }}</p>
+            <p class="mb-1"><strong>Discount:</strong> Rs. {{ number_format($booking->discount_amount ?? 0, 2) }}</p>
+            <p class="mb-1"><strong>Total Price:</strong> Rs. {{ number_format($booking->total_price, 2) }}</p>
 
-                    <h5 class="mb-3">Booking Information</h5>
+            @if(!is_null($booking->security_deposit))
+                <p class="mb-1"><strong>Security Deposit:</strong> Rs. {{ number_format($booking->security_deposit, 2) }}</p>
+            @endif
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Vehicle:</strong> {{ $vehicleName }}</p>
-                            <p class="mb-1"><strong>Service:</strong> {{ ucfirst($booking->service) }}</p>
-                            <p class="mb-1">
-                                <strong>Booking Status:</strong>
-                                <span class="badge {{ $statusBadge }}">
-                                    {{ ucfirst(str_replace('_', ' ', $booking->status)) }}
-                                </span>
-                            </p>
-                            <p class="mb-1">
-                                <strong>Payment Status:</strong>
-                                <span class="badge {{ $isPaid ? 'bg-success' : 'bg-danger' }}">
-                                    {{ ucfirst($booking->payment_status ?? 'unpaid') }}
-                                </span>
-                            </p>
-                        </div>
+            <hr>
 
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Pickup:</strong> {{ $booking->pickup_location }}</p>
-                            <p class="mb-1"><strong>Drop:</strong> {{ $booking->drop_location }}</p>
-                            <p class="mb-1">
-                                <strong>Pickup Date:</strong>
-                                {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d M Y h:i A') }}
-                            </p>
-                            <p class="mb-1">
-                                <strong>Drop Date:</strong>
-                                {{ \Carbon\Carbon::parse($booking->drop_datetime)->format('d M Y h:i A') }}
-                            </p>
-                        </div>
-                    </div>
+            @if($payment)
+                <p class="mb-1"><strong>Method:</strong> {{ strtoupper($payment->method) }}</p>
+                <p class="mb-1">
+                    <strong>Payment Record:</strong>
+                    <span class="badge {{ $payment->status === 'completed' ? 'bg-success' : ($payment->status === 'failed' ? 'bg-danger' : 'bg-warning text-dark') }}">
+                        {{ ucfirst($payment->status) }}
+                    </span>
+                </p>
+
+                <p class="mb-1"><strong>Paid Amount:</strong> Rs. {{ number_format($payment->paid_amount ?? 0, 2) }}</p>
+
+                @if(($payment->refund_status ?? 'none') !== 'none')
+                    <p class="mb-1">
+                        <strong>Refund Status:</strong>
+                        <span class="badge {{ $payment->refund_status === 'refunded' ? 'bg-success' : ($payment->refund_status === 'pending' ? 'bg-warning text-dark' : 'bg-danger') }}">
+                            {{ ucfirst($payment->refund_status) }}
+                        </span>
+                    </p>
+                    <p class="mb-1"><strong>Refund Amount:</strong> Rs. {{ number_format($payment->refund_amount ?? 0, 2) }}</p>
+                @endif
+
+                @if(!empty($payment->refund_note))
+                    <p class="mb-1"><strong>Refund Note:</strong> {{ $payment->refund_note }}</p>
+                @endif
+
+                @if(!empty($payment->gateway_reference))
+                    <p class="mb-0 small text-muted">Gateway Ref: {{ $payment->gateway_reference }}</p>
+                @endif
+            @else
+                <p class="text-muted mb-0">No payment record yet.</p>
+            @endif
+
+            @if(!$isPaid && !in_array($booking->status, ['cancel_requested', 'cancelled'], true))
+                <div class="mt-3">
+                    <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-success">Proceed to Payment</a>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Booking Information</h5>
+
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-7">
+                    <p class="mb-1"><strong>Vehicle:</strong> {{ $vehicleName }}</p>
+                    <p class="mb-1"><strong>Service:</strong> {{ ucfirst($booking->service) }}</p>
+                    <p class="mb-1">
+                        <strong>Booking Status:</strong>
+                        <span class="badge {{ $statusBadge }}">
+                            {{ ucfirst(str_replace('_', ' ', $booking->status)) }}
+                        </span>
+                    </p>
+                    <p class="mb-1">
+                        <strong>Payment Status:</strong>
+                        <span class="badge {{ $isPaid ? 'bg-success' : 'bg-danger' }}">
+                            {{ ucfirst($booking->payment_status ?? 'unpaid') }}
+                        </span>
+                    </p>
+                    <p class="mb-1"><strong>Pickup:</strong> {{ $booking->pickup_location }}</p>
+                    <p class="mb-1"><strong>Drop:</strong> {{ $booking->drop_location }}</p>
+                    <p class="mb-1">
+                        <strong>Pickup Date:</strong>
+                        {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d M Y h:i A') }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Drop Date:</strong>
+                        {{ \Carbon\Carbon::parse($booking->drop_datetime)->format('d M Y h:i A') }}
+                    </p>
 
                     @if(!empty($booking->special_request))
                         <hr>
@@ -147,10 +204,100 @@
                         <h6 class="mb-2">Cancellation Reason</h6>
                         <p class="mb-0 text-muted">{{ $booking->cancellation_reason }}</p>
                     @endif
+                </div>
 
-                    @if($booking->service === 'driver')
-                        <hr>
-                        <h6 class="mb-2">Driver</h6>
+                <div class="col-lg-5">
+                    <h6 class="mb-2">Vehicle Image</h6>
+                    @if($vehicleImage)
+                        <img src="{{ $vehicleImage }}" alt="Vehicle Image" class="img-fluid rounded" style="height: 220px; width: 100%; object-fit: cover;">
+                    @else
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 220px; width: 100%;">
+                            <i class="fa-solid fa-car fs-1 text-muted"></i>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if($booking->status === 'completed')
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">Review</h5>
+
+                @if($booking->review)
+                    <div class="alert alert-success mb-0">
+                        You already submitted a review for this booking.
+                    </div>
+                @else
+                    <form action="{{ route('user.bookings.review.store', $booking) }}" method="POST">
+                        @csrf
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Overall Rating</label>
+                                <select name="overall_rating" class="form-control" required>
+                                    <option value="">Select Rating</option>
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Vehicle Rating</label>
+                                <select name="vehicle_rating" class="form-control" required>
+                                    <option value="">Select Rating</option>
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Overall Review</label>
+                                <textarea name="overall_review" rows="2" class="form-control" placeholder="Write your overall trip experience"></textarea>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Vehicle Review</label>
+                                <textarea name="vehicle_review" rows="2" class="form-control" placeholder="Write your vehicle experience"></textarea>
+                            </div>
+
+                            @if($booking->service === 'driver')
+                                <div class="col-md-6">
+                                    <label class="form-label">Driver Rating</label>
+                                    <select name="driver_rating" class="form-control" required>
+                                        <option value="">Select Rating</option>
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label">Driver Review</label>
+                                    <textarea name="driver_review" rows="2" class="form-control" placeholder="Write your driver experience"></textarea>
+                                </div>
+                            @endif
+
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </div>
+                        </div>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if($booking->service === 'driver')
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">Driver</h5>
+
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-7">
                         @if($booking->driver)
                             <p class="mb-1"><strong>Name:</strong> {{ $booking->driver->name ?? 'N/A' }}</p>
                             <p class="mb-1"><strong>Phone:</strong> {{ $booking->driver->phone ?? 'N/A' }}</p>
@@ -158,109 +305,54 @@
                         @else
                             <p class="mb-0 text-muted">Driver info not available.</p>
                         @endif
-                    @endif
+                    </div>
 
-                </div>
-            </div>
-
-            {{-- Cancel request card --}}
-            @if($canCancel)
-                <div class="card shadow-sm border-0 mt-4">
-                    <div class="card-body">
-                        <h5 class="mb-3">Request Cancellation</h5>
-                        <p class="text-muted mb-3">
-                            You can cancel this booking only if more than 24 hours remain before pickup.
-                        </p>
-
-                        <form action="{{ route('user.booking.cancel-request', $booking->id) }}" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Cancellation Reason</label>
-                                <textarea
-                                    name="cancellation_reason"
-                                    class="form-control"
-                                    rows="3"
-                                    required
-                                >{{ old('cancellation_reason') }}</textarea>
+                    <div class="col-lg-5">
+                        <h6 class="mb-2">Driver Image</h6>
+                        @if($driverImage)
+                            <img src="{{ $driverImage }}" alt="Driver Image" class="img-fluid rounded" style="height: 220px; width: 100%; object-fit: cover;">
+                        @else
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 220px; width: 100%;">
+                                <i class="fa-solid fa-user fs-1 text-muted"></i>
                             </div>
-
-                            <button type="submit" class="btn btn-outline-danger">
-                                Request Cancellation
-                            </button>
-                        </form>
+                        @endif
                     </div>
                 </div>
-            @elseif(in_array($booking->status, ['pending', 'confirmed'], true) && now()->gte($booking->pickup_datetime->copy()->subDay()))
-                <div class="alert alert-secondary mt-4">
-                    Booking cannot be cancelled within 24 hours of pickup.
-                </div>
-            @endif
-        </div>
-
-        {{-- RIGHT: payment summary --}}
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-
-                    <h5 class="mb-3">Payment Summary</h5>
-
-                    <p class="mb-1"><strong>Original Price:</strong> Rs. {{ number_format($booking->original_price ?? $booking->total_price, 2) }}</p>
-                    <p class="mb-1"><strong>Discount:</strong> Rs. {{ number_format($booking->discount_amount ?? 0, 2) }}</p>
-                    <p class="mb-1"><strong>Total Price:</strong> Rs. {{ number_format($booking->total_price, 2) }}</p>
-
-                    @if(!is_null($booking->security_deposit))
-                        <p class="mb-1"><strong>Security Deposit:</strong> Rs. {{ number_format($booking->security_deposit, 2) }}</p>
-                    @endif
-
-                    <hr>
-
-                    @if($payment)
-                        <p class="mb-1"><strong>Method:</strong> {{ strtoupper($payment->method) }}</p>
-                        <p class="mb-1">
-                            <strong>Payment Record:</strong>
-                            <span class="badge {{ $payment->status === 'completed' ? 'bg-success' : ($payment->status === 'failed' ? 'bg-danger' : 'bg-warning text-dark') }}">
-                                {{ ucfirst($payment->status) }}
-                            </span>
-                        </p>
-
-                        <p class="mb-1"><strong>Paid Amount:</strong> Rs. {{ number_format($payment->paid_amount ?? 0, 2) }}</p>
-
-                        @if(($payment->refund_status ?? 'none') !== 'none')
-                            <p class="mb-1">
-                                <strong>Refund Status:</strong>
-                                <span class="badge
-                                    {{ $payment->refund_status === 'refunded' ? 'bg-success' : ($payment->refund_status === 'pending' ? 'bg-warning text-dark' : 'bg-danger') }}">
-                                    {{ ucfirst($payment->refund_status) }}
-                                </span>
-                            </p>
-                            <p class="mb-1"><strong>Refund Amount:</strong> Rs. {{ number_format($payment->refund_amount ?? 0, 2) }}</p>
-                        @endif
-
-                        @if(!empty($payment->refund_note))
-                            <p class="mb-1"><strong>Refund Note:</strong> {{ $payment->refund_note }}</p>
-                        @endif
-
-                        @if(!empty($payment->gateway_reference))
-                            <p class="mb-0 small text-muted">
-                                Gateway Ref: {{ $payment->gateway_reference }}
-                            </p>
-                        @endif
-                    @else
-                        <p class="text-muted mb-0">No payment record yet.</p>
-                    @endif
-
-                    @if(!$isPaid && !in_array($booking->status, ['cancel_requested', 'cancelled'], true))
-                        <div class="mt-3">
-                            <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-success w-100">
-                                Proceed to Payment
-                            </a>
-                        </div>
-                    @endif
-
-                </div>
             </div>
         </div>
+    @endif
 
-    </div>
+    {{-- Cancel request card --}}
+    @if($canCancel)
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <h5 class="mb-3">Request Cancellation</h5>
+                <p class="text-muted mb-3">
+                    You can cancel this booking only if more than 24 hours remain before pickup.
+                </p>
+
+                <form action="{{ route('user.booking.cancel-request', $booking->id) }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cancellation Reason</label>
+                        <textarea
+                            name="cancellation_reason"
+                            class="form-control"
+                            rows="3"
+                            required
+                        >{{ old('cancellation_reason') }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-danger">
+                        Request Cancellation
+                    </button>
+                </form>
+            </div>
+        </div>
+    @elseif(in_array($booking->status, ['pending', 'confirmed'], true) && now()->gte($booking->pickup_datetime->copy()->subDay()))
+        <div class="alert alert-secondary mt-4">
+            Booking cannot be cancelled within 24 hours of pickup.
+        </div>
+    @endif
 </div>
 @endsection

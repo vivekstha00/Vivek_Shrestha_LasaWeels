@@ -4,109 +4,143 @@
 
 @section('user-content')
 <div class="container py-5">
-    <div class="card shadow border-0">
-        <div class="card-body text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
 
             @php
                 $payment = $booking->payment ?? null; // booking hasOne payment
                 $isPaid  = ($booking->payment_status ?? 'unpaid') === 'paid';
             @endphp
 
-            {{-- Top Message --}}
-            @if($isPaid)
-                <h2 class="text-success mb-3">Payment Successful!</h2>
-                <p class="mb-4">Your booking is confirmed and payment has been received.</p>
-            @else
-                <h2 class="text-warning mb-3">Booking Created (Payment Pending)</h2>
-                <p class="mb-4">Your booking is placed. Please complete payment to confirm online payments.</p>
-            @endif
+            {{-- Success Header --}}
+            <div class="text-center mb-4">
+                @if($isPaid)
+                    <div class="mb-3">
+                        <i class="fa-solid fa-circle-check fa-4x text-success"></i>
+                    </div>
+                    <h2 class="fw-bold text-success mb-2">Payment Successful!</h2>
+                    <p class="text-muted">Your booking is confirmed and payment has been received.</p>
+                @else
+                    <div class="mb-3">
+                        <i class="fa-solid fa-clock fa-4x text-warning"></i>
+                    </div>
+                    <h2 class="fw-bold text-warning mb-2">Booking Created</h2>
+                    <p class="text-muted">Your booking is placed. Please complete payment to confirm.</p>
+                @endif
+            </div>
 
-            {{-- Flash messages --}}
-            @if(session('success'))
-                <div class="alert alert-success text-start">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-                <div class="alert alert-danger text-start">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-                    </ul>
-                </div>
-            @endif
+            {{-- Booking Details Card --}}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
 
-            <hr>
-
-            <div class="row text-start mt-4">
-                <div class="col-md-6">
-                    <p><strong>Booking ID:</strong> #{{ $booking->id }}</p>
-
-                    <p><strong>Vehicle:</strong>
-                        {{ $booking->vehicle->name
-                            ?? (($booking->vehicle->brand ?? '').' '.($booking->vehicle->model ?? ''))
-                            ?? 'N/A' }}
-                    </p>
-
-                    <p><strong>Service:</strong> {{ ucfirst($booking->service) }}</p>
-
-                    <p><strong>Booking Status:</strong>
-                        <span class="badge {{ $booking->status === 'confirmed' ? 'bg-success' : 'bg-warning' }}">
-                            {{ ucfirst($booking->status) }}
-                        </span>
-                    </p>
-
-                    <p><strong>Payment Status:</strong>
-                        <span class="badge {{ $isPaid ? 'bg-success' : 'bg-danger' }}">
-                            {{ ucfirst($booking->payment_status ?? 'unpaid') }}
-                        </span>
-                    </p>
-
-                    @if($payment)
-                        <p><strong>Payment Method:</strong> {{ strtoupper($payment->method) }}</p>
-                        <p><strong>Payment Record Status:</strong> {{ ucfirst($payment->status) }}</p>
+                    {{-- Flash messages --}}
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
-                </div>
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-                <div class="col-md-6">
-                    <p><strong>Pickup:</strong> {{ $booking->pickup_location }}</p>
-                    <p><strong>Drop:</strong> {{ $booking->drop_location }}</p>
+                    {{-- Booking Info --}}
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="border-start border-primary border-4 ps-3">
+                                <h5 class="fw-bold mb-3 text-primary">Booking Details</h5>
+                                <div class="mb-2">
+                                    <strong>Booking ID:</strong> #{{ $booking->id }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Vehicle:</strong>
+                                    {{ $booking->vehicle->name
+                                        ?? (($booking->vehicle->brand ?? '').' '.($booking->vehicle->model ?? ''))
+                                        ?? 'N/A' }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Service:</strong> {{ ucfirst($booking->service) }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Status:</strong>
+                                    <span class="badge {{ $booking->status === 'confirmed' ? 'bg-success' : 'bg-warning' }} ms-1">
+                                        {{ ucfirst($booking->status) }}
+                                    </span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Payment:</strong>
+                                    <span class="badge {{ $isPaid ? 'bg-success' : 'bg-danger' }} ms-1">
+                                        {{ ucfirst($booking->payment_status ?? 'unpaid') }}
+                                    </span>
+                                </div>
+                                @if($payment)
+                                    <div class="mb-2">
+                                        <strong>Method:</strong> {{ strtoupper($payment->method) }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
 
-                    <p><strong>Pickup Date:</strong>
-                        {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d M Y h:i A') }}
-                    </p>
+                        <div class="col-md-6">
+                            <div class="border-start border-info border-4 ps-3">
+                                <h5 class="fw-bold mb-3 text-info">Trip Details</h5>
+                                <div class="mb-2">
+                                    <strong>Pickup:</strong> {{ $booking->pickup_location }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Drop:</strong> {{ $booking->drop_location }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Pickup Date:</strong>
+                                    {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d M Y h:i A') }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Drop Date:</strong>
+                                    {{ \Carbon\Carbon::parse($booking->drop_datetime)->format('d M Y h:i A') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <p><strong>Drop Date:</strong>
-                        {{ \Carbon\Carbon::parse($booking->drop_datetime)->format('d M Y h:i A') }}
-                    </p>
+                    {{-- Price Summary --}}
+                    <div class="text-center mt-4 p-3 bg-light rounded">
+                        <h4 class="fw-bold text-primary mb-0">
+                            Total Price: Rs. {{ number_format($booking->total_price, 2) }}
+                        </h4>
+                    </div>
+
                 </div>
             </div>
 
-            <hr>
-
-            <h4 class="mt-3">
-                Total Price: Rs. {{ number_format($booking->total_price, 2) }}
-            </h4>
-
             {{-- Action Buttons --}}
-            <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
-
-                <a href="{{ route('home') }}" class="btn btn-primary">
-                    Back to Home
-                </a>
-
-                <a href="{{ route('user.booking.index') }}" class="btn btn-outline-secondary">
-                    My Bookings
-                </a>
-
-                @if($payment && in_array($payment->status, ['completed', 'refunded']))
-                    <a href="{{ route('user.booking.invoice', $booking->id) }}" class="btn btn-outline-dark">
-                        Download Invoice
-                    </a>
-                @endif
-
-                @if(!$isPaid)
-                    <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-success">
-                        Pay Now
-                    </a>
-                @endif
+            <div class="text-center mt-4">
+                <div class="row g-2 justify-content-center">
+                    <div class="col-auto">
+                        <a href="{{ route('home') }}" class="btn btn-primary px-4">
+                            <i class="fa-solid fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ route('user.booking.index') }}" class="btn btn-outline-secondary px-4">
+                            <i class="fa-solid fa-list me-2"></i>My Bookings
+                        </a>
+                    </div>
+                    @if($payment && in_array($payment->status, ['completed', 'refunded']))
+                        <div class="col-auto">
+                            <a href="{{ route('user.booking.invoice', $booking->id) }}" class="btn btn-outline-dark px-4">
+                                <i class="fa-solid fa-download me-2"></i>Download Invoice
+                            </a>
+                        </div>
+                    @endif
+                    @if(!$isPaid)
+                        <div class="col-auto">
+                            <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-success px-4">
+                                <i class="fa-solid fa-credit-card me-2"></i>Pay Now
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
 
         </div>

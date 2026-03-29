@@ -6,18 +6,20 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 13px;
+            font-size: 12px; /* Reduced from 13px */
             color: #222;
-            line-height: 1.5;
+            line-height: 1.4; /* Reduced from 1.5 */
         }
 
         .container {
             width: 100%;
+            page-break-inside: avoid;
         }
 
         .header {
             width: 100%;
-            margin-bottom: 25px;
+            margin-bottom: 20px; /* Reduced from 25px */
+            page-break-inside: avoid;
         }
 
         .header-table,
@@ -26,6 +28,7 @@
         .details-table {
             width: 100%;
             border-collapse: collapse;
+            page-break-inside: avoid;
         }
 
         .header-table td {
@@ -52,15 +55,17 @@
         .section-title {
             font-size: 15px;
             font-weight: bold;
-            margin: 20px 0 10px;
+            margin: 15px 0 8px; /* Reduced margins */
             color: #198754;
+            page-break-after: avoid;
         }
 
         .info-box {
             border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 14px;
+            padding: 10px; /* Reduced from 12px */
+            margin-bottom: 12px; /* Reduced from 14px */
+            page-break-inside: avoid;
         }
 
         .details-table th,
@@ -68,7 +73,8 @@
         .summary-table th,
         .summary-table td {
             border: 1px solid #ddd;
-            padding: 8px 10px;
+            padding: 6px 8px; /* Reduced from 8px 10px */
+            page-break-inside: avoid;
         }
 
         .details-table th,
@@ -91,10 +97,11 @@
         }
 
         .footer {
-            margin-top: 30px;
+            margin-top: 20px; /* Reduced from 30px */
             font-size: 12px;
             color: #666;
             text-align: center;
+            page-break-inside: avoid;
         }
 
         .highlight {
@@ -113,6 +120,20 @@
             border-radius: 10px;
             background: #e9f7ef;
             color: #198754;
+        }
+
+        /* Prevent page breaks within tables and sections */
+        table {
+            page-break-inside: avoid;
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        .summary-table {
+            margin-bottom: 20px;
         }
     </style>
 </head>
