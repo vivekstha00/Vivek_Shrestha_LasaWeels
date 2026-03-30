@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\VendorApprovedNotification;
 use App\Notifications\VendorRejectedNotification;
+use App\Notifications\VendorReSubmissionNotification;
 
 class AdminVendorController extends Controller
 {
@@ -90,19 +91,28 @@ class AdminVendorController extends Controller
 
     public function resubmit(Request $request, $id)
     {
+        $request->validate([
+            'remarks' => ['required', 'string', 'max:500'],
+        ]);
+
         $profile = VendorProfile::findOrFail($id);
 
         $profile->update([
             'status'      => 'resubmit',
             'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
-            'remarks'     => $request->input('remarks'),
+            'remarks'     => $request->remarks,
         ]);
 
         User::where('id', $profile->user_id)->update([
             'vendor_status' => 'resubmit',
-            'verification_note' => $request->input('remarks'),
+            'verification_note' => $request->remarks,
         ]);
+
+        $vendorUser = User::find($profile->user_id);
+        if ($vendorUser) {
+            $vendorUser->notify(new VendorReSubmissionNotification($request->remarks));
+        }
 
         return back()->with('success', 'Marked as resubmit requested.');
     }

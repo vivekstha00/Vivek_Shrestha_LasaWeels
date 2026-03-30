@@ -133,6 +133,7 @@
 
 @section('user-content')
 
+{{-- Hero Section --}}
 <section class="hero-home d-flex align-items-center">
     <div class="container hero-content">
         <div class="row justify-content-center">
@@ -222,13 +223,13 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'From Date' : 'Pick Up Date & Time'"></label>
-                                        <input type="datetime-local" name="pickup_datetime" class="form-control" required>
+                                        <input type="datetime-local" id="pickup_datetime" name="pickup_datetime" class="form-control" required>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To Date' : 'Drop Date & Time'"></label>
-                                        <input type="datetime-local" name="drop_datetime" class="form-control" required>
+                                        <input type="datetime-local" id="drop_datetime" name="drop_datetime" class="form-control" required>
                                     </div>
 
                                 </div>
@@ -249,6 +250,7 @@
     </div>
 </section>
 
+{{-- How It Works Section --}}
 <section class="py-5 bg-light border-top">
     <div class="container">
         <div class="text-center mb-5">
@@ -284,6 +286,7 @@
     </div>
 </section>
 
+{{-- Why Choose Us Section --}}
 <section class="py-5">
     <div class="container">
         <div class="text-center mb-5">
@@ -343,6 +346,7 @@
     </div>
 </section>
 
+{{-- Latest Blogs Section --}}
 <section class="py-5 bg-light">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -381,6 +385,7 @@
     </div>
 </section>
 
+{{-- Active Offers & Discounts Section --}}
 @if($activeOffers->isNotEmpty())
     <section class="py-5 border-top">
         <div class="container">
@@ -470,6 +475,7 @@
     </section>
 @endif
 
+{{-- FAQ Section --}}
 <section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
@@ -588,115 +594,149 @@
 @endsection
 
 @push('scripts')
-<script>
-    function setupPhotonAutocomplete(inputId, dropdownId, latId, lngId) {
-        const input = document.getElementById(inputId);
-        const dropdown = document.getElementById(dropdownId);
-        const latInput = document.getElementById(latId);
-        const lngInput = document.getElementById(lngId);
+    <script>
+        function setupPhotonAutocomplete(inputId, dropdownId, latId, lngId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            const latInput = document.getElementById(latId);
+            const lngInput = document.getElementById(lngId);
 
-        if (!input || !dropdown || !latInput || !lngInput) {
-            return;
-        }
-
-        let debounceTimer = null;
-
-        input.addEventListener('input', function () {
-            const query = this.value.trim();
-
-            latInput.value = '';
-            lngInput.value = '';
-
-            clearTimeout(debounceTimer);
-
-            if (query.length < 2) {
-                hideDropdown(dropdown);
+            if (!input || !dropdown || !latInput || !lngInput) {
                 return;
             }
 
-            debounceTimer = setTimeout(async () => {
-                try {
-                    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=8&lang=en&lat=28.3949&lon=84.1240`;
-                    const response = await fetch(url);
-                    const data = await response.json();
+            let debounceTimer = null;
 
-                    const nepalOnly = (data.features || []).filter(feature => {
-                        const props = feature.properties || {};
-                        const country = (props.country || '').toLowerCase().trim();
-                        return country === 'nepal';
-                    });
+            input.addEventListener('input', function () {
+                const query = this.value.trim();
 
-                    renderPhotonSuggestions(nepalOnly, dropdown, input, latInput, lngInput);
-                } catch (error) {
-                    console.error('Photon autocomplete error:', error);
+                latInput.value = '';
+                lngInput.value = '';
+
+                clearTimeout(debounceTimer);
+
+                if (query.length < 2) {
                     hideDropdown(dropdown);
+                    return;
                 }
-            }, 300);
-        });
 
-        document.addEventListener('click', function (e) {
-            if (!dropdown.contains(e.target) && e.target !== input) {
-                hideDropdown(dropdown);
-            }
-        });
-    }
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=8&lang=en&lat=28.3949&lon=84.1240`;
+                        const response = await fetch(url);
+                        const data = await response.json();
 
-    function renderPhotonSuggestions(features, dropdown, input, latInput, lngInput) {
-        if (!features.length) {
-            dropdown.innerHTML = `<div class="autocomplete-item">No Nepal locations found</div>`;
-            dropdown.classList.remove('d-none');
-            return;
-        }
+                        const nepalOnly = (data.features || []).filter(feature => {
+                            const props = feature.properties || {};
+                            const country = (props.country || '').toLowerCase().trim();
+                            return country === 'nepal';
+                        });
 
-        dropdown.innerHTML = '';
-
-        features.forEach(feature => {
-            const props = feature.properties || {};
-            const coords = feature.geometry?.coordinates || [];
-
-            const name = props.name || 'Unknown place';
-            const city = props.city || props.state || props.county || '';
-            const country = props.country || '';
-            const fullText = [name, city, country].filter(Boolean).join(', ');
-
-            const item = document.createElement('div');
-            item.className = 'autocomplete-item';
-            item.innerHTML = `
-                <div class="autocomplete-main">${escapeHtml(name)}</div>
-                <div class="autocomplete-secondary">${escapeHtml(fullText || name)}</div>
-            `;
-
-            item.addEventListener('click', () => {
-                const lng = coords[0] || '';
-                const lat = coords[1] || '';
-
-                input.value = fullText || name;
-                lngInput.value = lng;
-                latInput.value = lat;
-
-                hideDropdown(dropdown);
+                        renderPhotonSuggestions(nepalOnly, dropdown, input, latInput, lngInput);
+                    } catch (error) {
+                        console.error('Photon autocomplete error:', error);
+                        hideDropdown(dropdown);
+                    }
+                }, 300);
             });
 
-            dropdown.appendChild(item);
+            document.addEventListener('click', function (e) {
+                if (!dropdown.contains(e.target) && e.target !== input) {
+                    hideDropdown(dropdown);
+                }
+            });
+        }
+
+        function renderPhotonSuggestions(features, dropdown, input, latInput, lngInput) {
+            if (!features.length) {
+                dropdown.innerHTML = `<div class="autocomplete-item">No Nepal locations found</div>`;
+                dropdown.classList.remove('d-none');
+                return;
+            }
+
+            dropdown.innerHTML = '';
+
+            features.forEach(feature => {
+                const props = feature.properties || {};
+                const coords = feature.geometry?.coordinates || [];
+
+                const name = props.name || 'Unknown place';
+                const city = props.city || props.state || props.county || '';
+                const country = props.country || '';
+                const fullText = [name, city, country].filter(Boolean).join(', ');
+
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `
+                    <div class="autocomplete-main">${escapeHtml(name)}</div>
+                    <div class="autocomplete-secondary">${escapeHtml(fullText || name)}</div>
+                `;
+
+                item.addEventListener('click', () => {
+                    const lng = coords[0] || '';
+                    const lat = coords[1] || '';
+
+                    input.value = fullText || name;
+                    lngInput.value = lng;
+                    latInput.value = lat;
+
+                    hideDropdown(dropdown);
+                });
+
+                dropdown.appendChild(item);
+            });
+
+            dropdown.classList.remove('d-none');
+        }
+
+        function hideDropdown(dropdown) {
+            dropdown.innerHTML = '';
+            dropdown.classList.add('d-none');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function toLocalDateTimeValue(date) {
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function setupBookingDateValidation() {
+            const pickupInput = document.getElementById('pickup_datetime');
+            const dropInput = document.getElementById('drop_datetime');
+
+            if (!pickupInput || !dropInput) {
+                return;
+            }
+
+            const now = new Date();
+            const pickupMin = new Date(now.getTime() + 30 * 60 * 1000);
+
+            pickupInput.min = toLocalDateTimeValue(pickupMin);
+
+            const syncDropLimits = () => {
+                const source = pickupInput.value ? new Date(pickupInput.value) : pickupMin;
+                const dropMin = new Date(source.getTime() + 60 * 60 * 1000);
+
+                dropInput.min = toLocalDateTimeValue(dropMin);
+
+                if (dropInput.value && new Date(dropInput.value) < dropMin) {
+                    dropInput.value = '';
+                }
+            };
+
+            syncDropLimits();
+            pickupInput.addEventListener('change', syncDropLimits);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setupPhotonAutocomplete('pickup_location', 'pickup_suggestions', 'pickup_lat', 'pickup_lng');
+            setupPhotonAutocomplete('drop_location', 'drop_suggestions', 'drop_lat', 'drop_lng');
+            setupBookingDateValidation();
         });
-
-        dropdown.classList.remove('d-none');
-    }
-
-    function hideDropdown(dropdown) {
-        dropdown.innerHTML = '';
-        dropdown.classList.add('d-none');
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        setupPhotonAutocomplete('pickup_location', 'pickup_suggestions', 'pickup_lat', 'pickup_lng');
-        setupPhotonAutocomplete('drop_location', 'drop_suggestions', 'drop_lat', 'drop_lng');
-    });
-</script>
+    </script>
 @endpush

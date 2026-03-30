@@ -17,6 +17,7 @@ use App\Notifications\BookingRequestToAdminNotification;
 use App\Notifications\BookingRequestToVendorNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Services\LoyaltyService;
+use Illuminate\Validation\ValidationException;
 
 class UserBookingController extends Controller
 {
@@ -88,6 +89,8 @@ class UserBookingController extends Controller
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
+
+        $this->validateBookingTimeWindow($pickup, $drop);
 
         $hours = $pickup->diffInHours($drop);
         $days  = max(1, ceil($hours / 24));
@@ -168,6 +171,8 @@ class UserBookingController extends Controller
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
+
+        $this->validateBookingTimeWindow($pickup, $drop);
 
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
@@ -263,6 +268,8 @@ class UserBookingController extends Controller
 
         $pickup = Carbon::parse($data['pickup_datetime']);
         $drop   = Carbon::parse($data['drop_datetime']);
+
+        $this->validateBookingTimeWindow($pickup, $drop);
 
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
@@ -532,6 +539,25 @@ class UserBookingController extends Controller
             'duration_discount_amount' => $durationDiscountAmount,
             'price_after_duration_discount' => $priceAfterDurationDiscount,
         ];
+    }
+
+    private function validateBookingTimeWindow(Carbon $pickup, Carbon $drop): void
+    {
+        $now = now();
+        $minLeadMinutes = 30;
+        $minDurationMinutes = 60;
+
+        if ($pickup->lt($now->copy()->addMinutes($minLeadMinutes))) {
+            throw ValidationException::withMessages([
+                'pickup_datetime' => "Pickup time must be at least {$minLeadMinutes} minutes from now.",
+            ]);
+        }
+
+        if ($drop->lt($pickup->copy()->addMinutes($minDurationMinutes))) {
+            throw ValidationException::withMessages([
+                'drop_datetime' => "Drop time must be at least {$minDurationMinutes} minutes after pickup.",
+            ]);
+        }
     }
 
 }
