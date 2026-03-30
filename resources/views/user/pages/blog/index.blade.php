@@ -1,14 +1,10 @@
 @extends('user.layouts.master')
 
 @section('user-content')
-<div class="bg-light py-5 mt-5">
+<div class="bg-light py-4">   
     <div class="container">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold">LasaWheels Blog</h2>
-                <p class="text-muted">Latest travel and rental updates.</p>
-            </div>
 
             <form method="GET" action="{{ route('blog.index') }}">
                 <input type="text"

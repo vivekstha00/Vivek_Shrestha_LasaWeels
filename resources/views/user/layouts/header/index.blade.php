@@ -18,7 +18,7 @@
 
     <style>
         :root {
-            --nav-h: 90px;
+            --nav-h: 100px;
             --dark-bg: #0f172a;
             --green-accent: #22c55e;
             --green-dark: #16a34a;
@@ -33,17 +33,19 @@
         }
 
         .site-navbar {
+            /* background: #ffffff; */
             background: transparent;
             transition: all 0.4s ease;
             z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         }
 
         .site-main {
-            margin-top: 90px;
+            padding-top: var(--nav-h);
         }
 
         .site-navbar.solid {
-            background: white !important;
+            background: #ffffff !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
         }
 

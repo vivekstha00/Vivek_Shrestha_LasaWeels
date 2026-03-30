@@ -1,7 +1,7 @@
 @extends('user.layouts.master')
 
 @section('user-content')
-<div class="bg-light py-5 mt-5">
+<div class="bg-light py-4">
     <div class="container">
 
         <a href="{{ route('blog.index') }}"

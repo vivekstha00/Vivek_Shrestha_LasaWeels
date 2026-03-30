@@ -2,6 +2,50 @@
 
 @section('title', 'LasaWheels - Rent Your Ride')
 
+@push('styles')
+<style>
+    .autocomplete-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.10);
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+    .autocomplete-item {
+        padding: 12px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+        background: #f8fafc;
+    }
+
+    .autocomplete-main {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 15px;
+    }
+
+    .autocomplete-secondary {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 2px;
+    }
+</style>
+@endpush
+
 @section('user-content')
 
 <section class="hero-home d-flex align-items-center">
@@ -55,19 +99,39 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'From' : 'Pick Up Location'"></label>
-                                        <input type="text" name="pickup_location" class="form-control"
-                                               :readonly="service==='self'"
-                                               :value="service==='self' ? 'Pokhara Matepani' : ''"
-                                               :placeholder="service==='self' ? 'Pokhara Matepani' : 'Please enter pickup location'"
-                                               required>
+                                        <div class="position-relative">
+                                            <input
+                                                type="text"
+                                                id="pickup_location"
+                                                name="pickup_location"
+                                                class="form-control"
+                                                placeholder="Search pickup location"
+                                                autocomplete="off"
+                                                required
+                                            >
+                                            <div id="pickup_suggestions" class="autocomplete-dropdown d-none"></div>
+                                            <input type="hidden" name="pickup_lat" id="pickup_lat">
+                                            <input type="hidden" name="pickup_lng" id="pickup_lng">
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To' : 'Drop Off Location'"></label>
-                                        <input type="text" name="drop_location" class="form-control"
-                                               :placeholder="service==='self' ? 'Please enter destination' : 'Please enter drop location'"
-                                               required>
+                                        <div class="position-relative">
+                                            <input
+                                                type="text"
+                                                id="drop_location"
+                                                name="drop_location"
+                                                class="form-control"
+                                                placeholder="Search drop location"
+                                                autocomplete="off"
+                                                required
+                                            >
+                                            <div id="drop_suggestions" class="autocomplete-dropdown d-none"></div>
+                                            <input type="hidden" name="drop_lat" id="drop_lat">
+                                            <input type="hidden" name="drop_lng" id="drop_lng">
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6">
@@ -81,6 +145,7 @@
                                                x-text="service === 'self' ? 'To Date' : 'Drop Date & Time'"></label>
                                         <input type="datetime-local" name="drop_datetime" class="form-control" required>
                                     </div>
+
                                 </div>
 
                                 <div class="d-flex justify-content-end mt-4">
@@ -196,3 +261,117 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+    function setupPhotonAutocomplete(inputId, dropdownId, latId, lngId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        const latInput = document.getElementById(latId);
+        const lngInput = document.getElementById(lngId);
+
+        if (!input || !dropdown || !latInput || !lngInput) {
+            return;
+        }
+
+        let debounceTimer = null;
+
+        input.addEventListener('input', function () {
+            const query = this.value.trim();
+
+            latInput.value = '';
+            lngInput.value = '';
+
+            clearTimeout(debounceTimer);
+
+            if (query.length < 2) {
+                hideDropdown(dropdown);
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=8&lang=en&lat=28.3949&lon=84.1240`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    const nepalOnly = (data.features || []).filter(feature => {
+                        const props = feature.properties || {};
+                        const country = (props.country || '').toLowerCase().trim();
+                        return country === 'nepal';
+                    });
+
+                    renderPhotonSuggestions(nepalOnly, dropdown, input, latInput, lngInput);
+                } catch (error) {
+                    console.error('Photon autocomplete error:', error);
+                    hideDropdown(dropdown);
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && e.target !== input) {
+                hideDropdown(dropdown);
+            }
+        });
+    }
+
+    function renderPhotonSuggestions(features, dropdown, input, latInput, lngInput) {
+        if (!features.length) {
+            dropdown.innerHTML = `<div class="autocomplete-item">No Nepal locations found</div>`;
+            dropdown.classList.remove('d-none');
+            return;
+        }
+
+        dropdown.innerHTML = '';
+
+        features.forEach(feature => {
+            const props = feature.properties || {};
+            const coords = feature.geometry?.coordinates || [];
+
+            const name = props.name || 'Unknown place';
+            const city = props.city || props.state || props.county || '';
+            const country = props.country || '';
+            const fullText = [name, city, country].filter(Boolean).join(', ');
+
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.innerHTML = `
+                <div class="autocomplete-main">${escapeHtml(name)}</div>
+                <div class="autocomplete-secondary">${escapeHtml(fullText || name)}</div>
+            `;
+
+            item.addEventListener('click', () => {
+                const lng = coords[0] || '';
+                const lat = coords[1] || '';
+
+                input.value = fullText || name;
+                lngInput.value = lng;
+                latInput.value = lat;
+
+                hideDropdown(dropdown);
+            });
+
+            dropdown.appendChild(item);
+        });
+
+        dropdown.classList.remove('d-none');
+    }
+
+    function hideDropdown(dropdown) {
+        dropdown.innerHTML = '';
+        dropdown.classList.add('d-none');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setupPhotonAutocomplete('pickup_location', 'pickup_suggestions', 'pickup_lat', 'pickup_lng');
+        setupPhotonAutocomplete('drop_location', 'drop_suggestions', 'drop_lat', 'drop_lng');
+    });
+</script>
+@endpush

@@ -2,8 +2,8 @@
 
 @section('user-content')
 <div class="container py-0 mt-0">
-    <div class="contact-hero mb-4 d-flex align-items-center justify-content-center">
-        <h2 class="fw-bold mb-0 text-white">Contact Us</h2>
+    <div class="text-center mb-4 pt-4">
+        <h2 class="fw-bold mb-0">Contact Us</h2>
     </div>
 
     @if(session('success'))
@@ -122,23 +122,6 @@
 </div>
 
 <style>
-    .contact-hero {
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        min-height: 320px;
-        border-radius: 0;
-        padding: 2rem;
-        background-image: url('{{ asset('images/contact-us.png') }}');
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-
-    .contact-hero h2 {
-        font-size: 2.4rem;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-    }
-
     .vendor-card {
         transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
@@ -167,16 +150,5 @@
         border-color: #6c757d;
     }
 
-    @media (max-width: 768px) {
-        .contact-hero {
-            min-height: 220px;
-            padding: 1.25rem;
-            background-position: center;
-        }
-
-        .contact-hero h2 {
-            font-size: 1.9rem;
-        }
-    }
 </style>
 @endsection

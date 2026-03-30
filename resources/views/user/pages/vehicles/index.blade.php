@@ -3,7 +3,7 @@
 @section('title', 'All Vehicles')
 
 @section('user-content')
-<div class="container py-5">
+<div class="container pt-4 pb-5">
     <div class="text-center mb-4">
         <h1 class="fw-bold">All Vehicles</h1>
         <p class="text-muted">Browse all available vehicles</p>
