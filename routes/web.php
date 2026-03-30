@@ -40,6 +40,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Vendor\VendorRegisterController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::view('/about', 'user.pages.about')->name('about');
 // User Auth
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
