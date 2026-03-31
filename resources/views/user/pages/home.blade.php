@@ -152,6 +152,18 @@
                         service: 'self'
                      }">
                     <form method="GET" action="{{ route('user.search.vehicles') }}">
+                        @if ($errors->has('pickup_datetime') || $errors->has('drop_datetime') || $errors->has('pickup_location') || $errors->has('drop_location'))
+                            <div class="alert alert-danger mb-4">
+                                <ul class="mb-0 ps-3">
+                                    @foreach (['pickup_location', 'drop_location', 'pickup_datetime', 'drop_datetime'] as $field)
+                                        @error($field)
+                                            <li>{{ $message }}</li>
+                                        @enderror
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <input type="hidden" name="service" :value="service">
 
                         <div class="row g-4 align-items-start">
@@ -192,6 +204,7 @@
                                                 name="pickup_location"
                                                 class="form-control"
                                                 placeholder="Search pickup location"
+                                                value="{{ old('pickup_location') }}"
                                                 autocomplete="off"
                                                 required
                                             >
@@ -211,6 +224,7 @@
                                                 name="drop_location"
                                                 class="form-control"
                                                 placeholder="Search drop location"
+                                                value="{{ old('drop_location') }}"
                                                 autocomplete="off"
                                                 required
                                             >
@@ -223,13 +237,13 @@
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'From Date' : 'Pick Up Date & Time'"></label>
-                                        <input type="datetime-local" id="pickup_datetime" name="pickup_datetime" class="form-control" required>
+                         <input type="datetime-local" id="pickup_datetime" name="pickup_datetime" value="{{ old('pickup_datetime') }}" class="form-control" required>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold"
                                                x-text="service === 'self' ? 'To Date' : 'Drop Date & Time'"></label>
-                                        <input type="datetime-local" id="drop_datetime" name="drop_datetime" class="form-control" required>
+                         <input type="datetime-local" id="drop_datetime" name="drop_datetime" value="{{ old('drop_datetime') }}" class="form-control" required>
                                     </div>
 
                                 </div>
@@ -713,13 +727,16 @@
                 return;
             }
 
-            const now = new Date();
-            const pickupMin = new Date(now.getTime() + 30 * 60 * 1000);
+            const getPickupMin = () => new Date(Date.now() + 30 * 60 * 1000);
 
-            pickupInput.min = toLocalDateTimeValue(pickupMin);
+            const refreshPickupMin = () => {
+                pickupInput.min = toLocalDateTimeValue(getPickupMin());
+            };
+
+            refreshPickupMin();
 
             const syncDropLimits = () => {
-                const source = pickupInput.value ? new Date(pickupInput.value) : pickupMin;
+                const source = pickupInput.value ? new Date(pickupInput.value) : getPickupMin();
                 const dropMin = new Date(source.getTime() + 60 * 60 * 1000);
 
                 dropInput.min = toLocalDateTimeValue(dropMin);
@@ -730,6 +747,8 @@
             };
 
             syncDropLimits();
+            pickupInput.addEventListener('focus', refreshPickupMin);
+            pickupInput.addEventListener('click', refreshPickupMin);
             pickupInput.addEventListener('change', syncDropLimits);
         }
 
