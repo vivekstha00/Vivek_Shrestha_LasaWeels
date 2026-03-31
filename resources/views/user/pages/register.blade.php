@@ -4,7 +4,7 @@
     <style>
         .auth-split-page {
             min-height: 100vh;
-            background: #f3f4f6;
+            background: #85867F;
         }
 
         .auth-image-pane {
@@ -45,6 +45,8 @@
 @section('user-content')
 <div class="container-fluid px-0 auth-split-page">
     <div class="row g-0">
+        <div class="col-lg-6 auth-image-pane" style="background-image: url('{{ asset('images/defender.jpg') }}');"></div>
+
         <div class="col-lg-6 auth-form-pane">
             <div class="auth-card-wrap">
                 <div class="card card-soft">
@@ -107,9 +109,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-6 auth-image-pane" style="background-image: url('{{ asset('images/defender.jpg') }}');"></div>
-
     </div>
 </div>
 @endsection

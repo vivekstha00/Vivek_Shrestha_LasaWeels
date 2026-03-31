@@ -19,7 +19,7 @@
     </div>
 
     @php
-        $serviceItems = [
+        $normalServiceItems = [
             'oil_change' => 'Oil Change',
             'tyre_change' => 'Tyre Change',
             'brake_service' => 'Brake Service',
@@ -28,6 +28,23 @@
             'battery_change' => 'Battery Change',
             'general_checkup' => 'General Checkup',
         ];
+
+        $evServiceItems = [
+            'battery_health_check' => 'Battery Health Check',
+            'battery_cooling_service' => 'Battery Cooling System Service',
+            'motor_inspection' => 'Motor Inspection / Service',
+            'controller_diagnostics' => 'Controller / Software Diagnostics',
+            'charging_port_check' => 'Charging Port Check / Repair',
+            'regenerative_braking_check' => 'Regenerative Braking System Check',
+            'electrical_wiring_inspection' => 'Electrical Wiring Inspection',
+            'brake_service' => 'Brake Service',
+            'tyre_change' => 'Tyre Change',
+            'suspension_check' => 'Suspension Check',
+            'general_checkup' => 'General Checkup',
+        ];
+
+        $isElectricVehicle = ($vehicle->fuel_type ?? null) === 'electric';
+        $serviceItems = $isElectricVehicle ? $evServiceItems : $normalServiceItems;
     @endphp
 
     <div class="card shadow-sm">
@@ -45,6 +62,9 @@
 
                     <div class="col-12">
                         <label class="form-label">Service Items *</label>
+                        <div class="small text-muted mb-2">
+                            {{ $isElectricVehicle ? 'Showing EV-specific maintenance checklist.' : 'Showing standard fuel vehicle maintenance checklist.' }}
+                        </div>
                         <div class="row">
                             @foreach($serviceItems as $value => $label)
                                 <div class="col-md-4">
@@ -70,7 +90,7 @@
                         <label class="form-label">Other Work Done (optional)</label>
                         <input type="text" name="custom_items" class="form-control"
                                value="{{ old('custom_items') }}"
-                               placeholder="e.g. Air filter change, AC repair">
+                               placeholder="Air filter change, AC repair">
                         <small class="text-muted">Separate multiple custom items with commas.</small>
                         @error('custom_items') <small class="text-danger d-block">{{ $message }}</small> @enderror
                     </div>

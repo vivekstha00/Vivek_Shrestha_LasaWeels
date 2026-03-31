@@ -265,6 +265,25 @@
         }
     }
 
+    function toggleFuelTypeOptions() {
+        const wheelType = document.getElementById('wheel_type').value;
+        const fuelTypeSelect = document.getElementById('fuel_type');
+        const dieselOption = fuelTypeSelect.querySelector('option[value="diesel"]');
+
+        if (!dieselOption) {
+            return;
+        }
+
+        const shouldHideDiesel = wheelType === '2_wheeler';
+
+        dieselOption.hidden = shouldHideDiesel;
+        dieselOption.disabled = shouldHideDiesel;
+
+        if (shouldHideDiesel && fuelTypeSelect.value === 'diesel') {
+            fuelTypeSelect.value = '';
+        }
+    }
+
     function toggleWheelTypeFields() {
         const wheelType = document.getElementById('wheel_type').value;
         const driverPriceGroup = document.getElementById('driverPriceGroup');
@@ -274,6 +293,7 @@
         const fuelType = document.getElementById('fuel_type').value;
 
         populateVehicleTypes(document.getElementById('vehicle_type').dataset.selected || '');
+    toggleFuelTypeOptions();
 
         if (wheelType === '2_wheeler') {
             driverPriceGroup.style.display = 'none';
@@ -298,6 +318,7 @@
         const vehicleTypeSelect = document.getElementById('vehicle_type');
         vehicleTypeSelect.dataset.selected = @json(old('vehicle_type', $vehicle->vehicle_type));
 
+        toggleFuelTypeOptions();
         populateVehicleTypes(vehicleTypeSelect.dataset.selected);
         toggleWheelTypeFields();
         toggleFuelFields();

@@ -4,7 +4,7 @@
     <style>
         .auth-split-page {
             min-height: 100vh;
-            background: #f3f4f6;
+            background: #848283;
         }
 
         .auth-image-pane {

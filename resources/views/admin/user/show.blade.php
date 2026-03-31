@@ -47,10 +47,24 @@
                                     'rejected' => 'bg-danger',
                                     default => 'bg-secondary'
                                 };
+
+                                $docStatus = $user->selfDriveVerificationStatus();
+                                $docStatusClass = match($docStatus) {
+                                    'approved' => 'bg-success',
+                                    'pending' => 'bg-warning text-dark',
+                                    'rejected', 'expired' => 'bg-danger',
+                                    'missing' => 'bg-secondary',
+                                    default => 'bg-secondary'
+                                };
                             @endphp
-                            <span class="badge {{ $statusClass }} px-3 py-2">
-                                {{ ucfirst($user->status ?? 'pending') }}
-                            </span>
+                            <div class="d-flex flex-column align-items-end gap-2">
+                                <span class="badge {{ $statusClass }} px-3 py-2">
+                                    Account: {{ ucfirst($user->status ?? 'pending') }}
+                                </span>
+                                <span class="badge {{ $docStatusClass }} px-3 py-2">
+                                    Documents: {{ ucfirst($docStatus) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

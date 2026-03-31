@@ -81,6 +81,7 @@
                     <th>Contact</th>
                     <th>Join Date</th>
                     <th>Status</th>
+                    <th>Documents</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
@@ -107,9 +108,23 @@
                                     'rejected' => 'bg-danger',
                                     default => 'bg-secondary'
                                 };
+
+                                $docStatus = $u->selfDriveVerificationStatus();
+                                $docStatusClass = match($docStatus) {
+                                    'approved' => 'bg-success',
+                                    'pending' => 'bg-warning text-dark',
+                                    'rejected', 'expired' => 'bg-danger',
+                                    'missing' => 'bg-secondary',
+                                    default => 'bg-secondary'
+                                };
                             @endphp
                             <span class="badge {{ $statusClass }}">
                                 {{ ucfirst($u->status ?? 'pending') }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {{ $docStatusClass }}">
+                                {{ ucfirst($docStatus) }}
                             </span>
                         </td>
                         <td class="text-end">
@@ -123,19 +138,17 @@
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-danger ms-1">Reject</button>
                                     </form>
-                                @elseif($u->status === 'approved')
-                                    <span class="text-success small">Approved</span>
-                                @elseif($u->status === 'rejected')
-                                    <span class="text-danger small">Rejected</span>
-                                @elseif($u->status === 'suspended')
-                                    <span class="text-muted small">Suspended</span>
+                                @else
+                                    <a href="{{ route('admin.users.show', $u->id) }}" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();">
+                                        View
+                                    </a>
                                 @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             No users found.
                         </td>
                     </tr>

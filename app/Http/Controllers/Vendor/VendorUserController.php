@@ -13,7 +13,7 @@ class VendorUserController extends Controller
         $q = $request->query('q');
 
         $users = User::query()
-            ->where('role', 'user') // customers
+            ->where('role', 'user')
             ->when($q, function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('name', 'like', "%{$q}%")
@@ -37,7 +37,7 @@ class VendorUserController extends Controller
         $totalBookings = 0;
 
         // If you have Document model for users too, we can compute real status later.
-        $docStatus = 'Not Verified'; // or Verified/Pending
+        $docStatus = 'Not Verified'; 
 
         return view('vendor.pages.users.show', compact('user', 'totalBookings', 'docStatus'));
     }
