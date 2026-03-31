@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
 use App\Services\LoyaltyService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class UserPaymentController extends Controller
 {
@@ -236,12 +237,9 @@ class UserPaymentController extends Controller
 
         $payment = $booking->payment;
 
-        $days = max(
-            1,
-            ceil(
-                \Carbon\Carbon::parse($booking->pickup_datetime)
-                    ->diffInHours(\Carbon\Carbon::parse($booking->drop_datetime)) / 24
-            )
+        $days = $this->calculateBillableDays(
+            Carbon::parse($booking->pickup_datetime),
+            Carbon::parse($booking->drop_datetime)
         );
 
         $pricePerDay = $booking->service === 'driver'
@@ -270,5 +268,25 @@ class UserPaymentController extends Controller
         ])->setPaper('a4');
 
         return $pdf->download($invoiceNumber . '.pdf');
+    }
+
+    private function calculateBillableDays(Carbon $pickup, Carbon $drop): int
+    {
+        $totalMinutes = max(0, $pickup->diffInMinutes($drop));
+        $minutesPerDay = 24 * 60;
+
+        $fullDays = intdiv($totalMinutes, $minutesPerDay);
+        $remainingMinutes = $totalMinutes % $minutesPerDay;
+        $graceMinutes = (int) config('vehicle.billing_grace_hours', 2) * 60;
+
+        if ($remainingMinutes === 0) {
+            return max(1, $fullDays);
+        }
+
+        if ($remainingMinutes <= $graceMinutes) {
+            return max(1, $fullDays);
+        }
+
+        return max(1, $fullDays + 1);
     }
 };

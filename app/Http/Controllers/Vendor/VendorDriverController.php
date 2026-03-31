@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Services\VendorSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class VendorDriverController extends Controller
 {
@@ -30,18 +31,28 @@ class VendorDriverController extends Controller
 
     public function store(Request $request)
     {
+        $vendorId = Auth::id();
         $subscriptionService = app(VendorSubscriptionService::class);
 
-        if (! $subscriptionService->canAddDriver(Auth::id())) {
+        if (! $subscriptionService->canAddDriver($vendorId)) {
             return redirect()
                 ->route('vendor.drivers.index')
-                ->with('error', 'Your current plan allows only ' . $subscriptionService->getDriverLimit(Auth::id()) . ' active drivers. Upgrade your subscription to add more drivers.');
+                ->with('error', 'Your current plan allows only ' . $subscriptionService->getDriverLimit($vendorId) . ' active drivers. Upgrade your subscription to add more drivers.');
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:15|unique:drivers',
-            'license_number' => 'required|string|unique:drivers',
+            'phone' => [
+                'nullable',
+                'string',
+                'max:15',
+                Rule::unique('drivers', 'phone')->where(fn ($query) => $query->where('vendor_id', $vendorId)),
+            ],
+            'license_number' => [
+                'required',
+                'string',
+                Rule::unique('drivers', 'license_number')->where(fn ($query) => $query->where('vendor_id', $vendorId)),
+            ],
             'availability_status' => 'required|in:available,unavailable',
             'rating' => 'nullable|numeric|min:0|max:5',
             'image' => 'nullable|image|max:1024'
@@ -50,7 +61,7 @@ class VendorDriverController extends Controller
         $imagePath = $request->image ? $request->image->store('drivers', 'public') : null;
 
         Driver::create([
-            'vendor_id' => Auth::id(),
+            'vendor_id' => $vendorId,
             'name' => $request->name,
             'phone' => $request->phone,
             'license_number' => $request->license_number,
@@ -76,10 +87,25 @@ class VendorDriverController extends Controller
 
     public function update(Request $request, $driverId)
     {
+        $vendorId = Auth::id();
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:15|unique:drivers,phone,' . $driverId,
-            'license_number' => 'required|string|unique:drivers,license_number,' . $driverId,
+            'phone' => [
+                'nullable',
+                'string',
+                'max:15',
+                Rule::unique('drivers', 'phone')
+                    ->where(fn ($query) => $query->where('vendor_id', $vendorId))
+                    ->ignore($driverId),
+            ],
+            'license_number' => [
+                'required',
+                'string',
+                Rule::unique('drivers', 'license_number')
+                    ->where(fn ($query) => $query->where('vendor_id', $vendorId))
+                    ->ignore($driverId),
+            ],
             'availability_status' => 'required|in:available,unavailable',
             'rating' => 'nullable|numeric|min:0|max:5',
             'image' => 'nullable|image|max:1024'

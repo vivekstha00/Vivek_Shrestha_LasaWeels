@@ -15,7 +15,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <small class="text-muted">Original Booking Value</small>
-                <h4 class="fw-bold mt-2">Rs. {{ number_format($totalOriginalValue ?? 0, 2) }}</h4>
+                <h4 class="fw-bold mt-2">Rs. {{ number_format($totalOriginalVehicleValue ?? $totalOriginalValue ?? 0, 2) }}</h4>
             </div>
         </div>
     </div>
@@ -75,7 +75,7 @@
                     @forelse($payments as $payment)
                         @php
                             $discount = (float) ($payment->booking->loyalty_discount_amount ?? 0);
-                            $original = (float) $payment->amount + $discount;
+                            $original = (float) ($payment->original_vehicle_value ?? (($payment->amount ?? 0) + $discount));
                             $isRefunded = $payment->refund_status === 'refunded' || ($payment->booking && $payment->booking->status === 'cancelled');
                         @endphp
 

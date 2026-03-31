@@ -15,6 +15,14 @@
     </a>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success mb-4">{{ session('success') }}</div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger mb-4">{{ session('error') }}</div>
+@endif
+
 @if(isset($subscriptionSummary))
     <div class="card subscription-box mb-4">
         <div class="card-body p-4">

@@ -198,7 +198,19 @@
 
                     $days = 1;
                     if ($pickup && $drop) {
-                        $days = max(1, (int) ceil($pickup->diffInHours($drop) / 24));
+                        $totalMinutes = max(0, $pickup->diffInMinutes($drop));
+                        $minutesPerDay = 24 * 60;
+                        $fullDays = intdiv($totalMinutes, $minutesPerDay);
+                        $remainingMinutes = $totalMinutes % $minutesPerDay;
+                        $graceMinutes = (int) config('vehicle.billing_grace_hours', 2) * 60;
+
+                        if ($remainingMinutes === 0) {
+                            $days = max(1, $fullDays);
+                        } elseif ($remainingMinutes <= $graceMinutes) {
+                            $days = max(1, $fullDays);
+                        } else {
+                            $days = max(1, $fullDays + 1);
+                        }
                     }
 
                     $pricePerDay = ($vehicle->wheel_type !== '2_wheeler' && $service === 'driver')

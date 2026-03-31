@@ -10,6 +10,20 @@
     <p class="text-muted">Fill in the driver information below</p>
 </div>
 
+@if(session('error'))
+    <div class="alert alert-danger mb-4">{{ session('error') }}</div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger mb-4">
+        <ul class="mb-0 ps-3">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @if(isset($subscriptionSummary))
     <div class="alert {{ ($canAddDriver ?? false) ? 'alert-info' : 'alert-warning' }} mb-4">
         <strong>Current Plan:</strong> {{ $subscriptionSummary['plan_name'] ?? 'Free Plan' }}<br>
@@ -29,29 +43,29 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <label class="form-label fw-medium">Driver Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="name" required>
+                    <input type="text" class="form-control" name="name" value="{{ old('name') }}" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="phone" required>
+                    <input type="text" class="form-control" name="phone" value="{{ old('phone') }}" required>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label fw-medium">License Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="license_number" required>
+                    <input type="text" class="form-control" name="license_number" value="{{ old('license_number') }}" required>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-medium">Availability Status</label>
                     <select class="form-select" name="availability_status" required>
-                        <option value="available">Available</option>
-                        <option value="unavailable">Unavailable</option>
+                        <option value="available" {{ old('availability_status', 'available') === 'available' ? 'selected' : '' }}>Available</option>
+                        <option value="unavailable" {{ old('availability_status') === 'unavailable' ? 'selected' : '' }}>Unavailable</option>
                     </select>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-medium">Rating (Optional)</label>
-                    <input type="number" class="form-control" name="rating" min="0" max="5" step="0.1">
+                    <input type="number" class="form-control" name="rating" min="0" max="5" step="0.1" value="{{ old('rating') }}">
                 </div>
 
                 <div class="col-12">

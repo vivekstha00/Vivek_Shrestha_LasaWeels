@@ -92,8 +92,7 @@ class UserBookingController extends Controller
 
         $this->validateBookingTimeWindow($pickup, $drop);
 
-        $hours = $pickup->diffInHours($drop);
-        $days  = max(1, ceil($hours / 24));
+    $days = $this->calculateBillableDays($pickup, $drop);
 
         $sortColumn = $data['service'] === 'driver'
             ? 'with_driver_price_per_day'
@@ -186,8 +185,7 @@ class UserBookingController extends Controller
             ])->withInput();
         }
 
-        $hours = $pickup->diffInHours($drop);
-        $days  = max(1, ceil($hours / 24));
+    $days = $this->calculateBillableDays($pickup, $drop);
 
         $pricePerDay = $data['service'] === 'driver'
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
@@ -299,8 +297,7 @@ class UserBookingController extends Controller
             }
         }
 
-        $hours = $pickup->diffInHours($drop);
-        $days  = max(1, ceil($hours / 24));
+    $days = $this->calculateBillableDays($pickup, $drop);
 
         $pricePerDay = $data['service'] === 'driver'
             ? ($vehicle->with_driver_price_per_day ?? $vehicle->price_per_day)
@@ -539,6 +536,26 @@ class UserBookingController extends Controller
             'duration_discount_amount' => $durationDiscountAmount,
             'price_after_duration_discount' => $priceAfterDurationDiscount,
         ];
+    }
+
+    private function calculateBillableDays(Carbon $pickup, Carbon $drop): int
+    {
+        $totalMinutes = max(0, $pickup->diffInMinutes($drop));
+        $minutesPerDay = 24 * 60;
+
+        $fullDays = intdiv($totalMinutes, $minutesPerDay);
+        $remainingMinutes = $totalMinutes % $minutesPerDay;
+        $graceMinutes = (int) config('vehicle.billing_grace_hours', 2) * 60;
+
+        if ($remainingMinutes === 0) {
+            return max(1, $fullDays);
+        }
+
+        if ($remainingMinutes <= $graceMinutes) {
+            return max(1, $fullDays);
+        }
+
+        return max(1, $fullDays + 1);
     }
 
     private function validateBookingTimeWindow(Carbon $pickup, Carbon $drop): void
