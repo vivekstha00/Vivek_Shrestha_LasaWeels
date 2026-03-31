@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\SubscriptionPayment;
 use Illuminate\Http\Request;
 
 class AdminPaymentController extends Controller
@@ -44,9 +45,42 @@ class AdminPaymentController extends Controller
             });
         }
 
+        $commissionRevenue = Payment::query()
+            ->where('status', 'completed')
+            ->where(function ($sub) {
+                $sub->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
+            ->sum('platform_commission');
+
+        $subscriptionRevenue = SubscriptionPayment::query()
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        $totalPlatformRevenue = $commissionRevenue + $subscriptionRevenue;
+
+        $successfulCommissionPayments = Payment::query()
+            ->where('status', 'completed')
+            ->where(function ($sub) {
+                $sub->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
+            ->count();
+
+        $successfulSubscriptionPayments = SubscriptionPayment::query()
+            ->where('status', 'completed')
+            ->count();
+
         $payments = $query->latest()->paginate(10)->withQueryString();
 
-        return view('admin.payments.index', compact('payments'));
+        return view('admin.payments.index', compact(
+            'payments',
+            'commissionRevenue',
+            'subscriptionRevenue',
+            'totalPlatformRevenue',
+            'successfulCommissionPayments',
+            'successfulSubscriptionPayments'
+        ));
     }
 
     public function show(Payment $payment)
@@ -59,6 +93,88 @@ class AdminPaymentController extends Controller
         ]);
 
         return view('admin.payments.show', compact('payment'));
+    }
+
+    public function commissions(Request $request)
+    {
+        $query = Payment::query()
+            ->with(['user', 'vendor', 'booking'])
+            ->where('platform_commission', '>', 0)
+            ->where('status', 'completed');
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('id', $q)
+                    ->orWhere('booking_id', $q)
+                    ->orWhereHas('user', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%");
+                    })
+                    ->orWhereHas('vendor', function ($v) use ($q) {
+                        $v->where('name', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        $commissionPayments = $query->latest()->paginate(12)->withQueryString();
+
+        $totalCommission = Payment::query()
+            ->where('platform_commission', '>', 0)
+            ->where('status', 'completed')
+            ->where(function ($sub) {
+                $sub->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
+            ->sum('platform_commission');
+
+        $commissionTransactionsCount = Payment::query()
+            ->where('platform_commission', '>', 0)
+            ->where('status', 'completed')
+            ->count();
+
+        return view('admin.payments.commissions', compact(
+            'commissionPayments',
+            'totalCommission',
+            'commissionTransactionsCount'
+        ));
+    }
+
+    public function subscriptions(Request $request)
+    {
+        $query = SubscriptionPayment::query()
+            ->with(['vendor', 'plan'])
+            ->where('status', 'completed');
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('id', $q)
+                    ->orWhere('purchase_order_id', 'like', "%{$q}%")
+                    ->orWhere('gateway_reference', 'like', "%{$q}%")
+                    ->orWhereHas('vendor', function ($vendor) use ($q) {
+                        $vendor->where('name', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        $subscriptionPayments = $query->latest()->paginate(12)->withQueryString();
+
+        $totalSubscriptionRevenue = SubscriptionPayment::query()
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        $subscriptionTransactionsCount = SubscriptionPayment::query()
+            ->where('status', 'completed')
+            ->count();
+
+        return view('admin.payments.subscriptions', compact(
+            'subscriptionPayments',
+            'totalSubscriptionRevenue',
+            'subscriptionTransactionsCount'
+        ));
     }
 
     public function update(Request $request, Payment $payment)

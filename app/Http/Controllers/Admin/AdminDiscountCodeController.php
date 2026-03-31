@@ -102,10 +102,14 @@ class AdminDiscountCodeController extends Controller
             'value' => ['required', 'numeric', 'min:1'],
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'usage_limit' => ['nullable', 'integer', 'min:1'],
-            'valid_from' => ['nullable', 'date'],
-            'valid_until' => ['nullable', 'date', 'after_or_equal:valid_from'],
+            'valid_from' => ['nullable', 'date', 'required_with:valid_until', 'after_or_equal:today'],
+            'valid_until' => ['nullable', 'date', 'after_or_equal:today', 'after_or_equal:valid_from'],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
+        ], [
+            'valid_from.required_with' => 'Please select a valid start date when end date is provided.',
+            'valid_from.after_or_equal' => 'The start date must be today or a future date.',
+            'valid_until.after_or_equal' => 'The end date must be today or later, and after the start date.',
         ]);
     }
 

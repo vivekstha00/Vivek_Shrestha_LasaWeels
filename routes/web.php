@@ -137,6 +137,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 
     Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/commissions', [AdminPaymentController::class, 'commissions'])->name('payments.commissions');
+    Route::get('/payments/subscriptions', [AdminPaymentController::class, 'subscriptions'])->name('payments.subscriptions');
     Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
     Route::put('/payments/{payment}', [AdminPaymentController::class, 'update'])->name('payments.update');
 

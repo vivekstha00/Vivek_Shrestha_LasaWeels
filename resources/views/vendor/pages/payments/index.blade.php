@@ -59,7 +59,6 @@
             <table class="table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>Booking</th>
                         <th>Customer</th>
                         <th>Payment Type</th>
@@ -69,6 +68,7 @@
                         <th>Commission</th>
                         <th>Net Amount</th>
                         <th>Payout</th>
+                        <th>Payment Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,7 +84,6 @@
                             style="cursor:pointer;"
                             class="vendor-payment-row {{ $isRefunded ? 'table-danger' : '' }}"
                         >
-                            <td class="px-4 fw-semibold">#{{ $payment->id }}</td>
                             <td>
                                 <div>#{{ $payment->booking_id }}</div>
                                 <small class="text-muted text-capitalize">{{ $payment->booking->status ?? 'N/A' }}</small>

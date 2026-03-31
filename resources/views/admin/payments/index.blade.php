@@ -8,6 +8,42 @@
     <p class="text-muted">Manage customer payments and vendor settlements</p>
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Commission Revenue (Bookings)</div>
+                <div class="fw-bold fs-4 text-primary">Rs. {{ number_format($commissionRevenue ?? 0, 2) }}</div>
+                <div class="small text-muted mt-1">{{ $successfulCommissionPayments ?? 0 }} successful booking payments</div>
+                <a href="{{ route('admin.payments.commissions') }}" class="btn btn-sm btn-outline-primary mt-3">
+                    View Commission Records
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Subscription Revenue (Vendors)</div>
+                <div class="fw-bold fs-4 text-success">Rs. {{ number_format($subscriptionRevenue ?? 0, 2) }}</div>
+                <div class="small text-muted mt-1">{{ $successfulSubscriptionPayments ?? 0 }} completed subscription payments</div>
+                <a href="{{ route('admin.payments.subscriptions') }}" class="btn btn-sm btn-outline-success mt-3">
+                    View Subscription Records
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body">
+                <div class="small text-muted">Total Platform Revenue</div>
+                <div class="fw-bold fs-4 text-dark">Rs. {{ number_format($totalPlatformRevenue ?? 0, 2) }}</div>
+                <div class="small text-muted mt-1">Commission + Subscription</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('admin.payments.index') }}" class="row g-3">

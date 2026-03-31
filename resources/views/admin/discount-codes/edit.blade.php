@@ -63,14 +63,16 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Valid From</label>
-                    <input type="datetime-local" name="valid_from" class="form-control"
-                           value="{{ old('valid_from', optional($discountCode->valid_from)->format('Y-m-d\TH:i')) }}">
+                    <input type="datetime-local" id="valid_from" name="valid_from" class="form-control"
+                           value="{{ old('valid_from', optional($discountCode->valid_from)->format('Y-m-d\TH:i')) }}"
+                           min="{{ now()->format('Y-m-d\TH:i') }}">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Valid Until</label>
-                    <input type="datetime-local" name="valid_until" class="form-control"
-                           value="{{ old('valid_until', optional($discountCode->valid_until)->format('Y-m-d\TH:i')) }}">
+                    <input type="datetime-local" id="valid_until" name="valid_until" class="form-control"
+                           value="{{ old('valid_until', optional($discountCode->valid_until)->format('Y-m-d\TH:i')) }}"
+                           min="{{ now()->format('Y-m-d\TH:i') }}">
                 </div>
 
                 <div class="col-12">
@@ -106,3 +108,50 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const validFromInput = document.getElementById('valid_from');
+            const validUntilInput = document.getElementById('valid_until');
+
+            const formatLocalDateTime = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+
+            const now = new Date();
+            now.setSeconds(0, 0);
+            const minNow = formatLocalDateTime(now);
+
+            if (!validFromInput || !validUntilInput) return;
+
+            const syncDateValidation = () => {
+                const validFromValue = validFromInput.value;
+
+                validFromInput.min = minNow;
+
+                if (validFromValue) {
+                    validUntilInput.min = validFromValue > minNow ? validFromValue : minNow;
+
+                    if (validUntilInput.value && validUntilInput.value < validUntilInput.min) {
+                        validUntilInput.value = '';
+                    }
+                } else {
+                    validUntilInput.min = minNow;
+                }
+
+                if (validFromInput.value && validFromInput.value < minNow) {
+                    validFromInput.value = '';
+                }
+            };
+
+            validFromInput.addEventListener('change', syncDateValidation);
+            syncDateValidation();
+        });
+    </script>
+@endpush
