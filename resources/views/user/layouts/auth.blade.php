@@ -34,10 +34,15 @@
             }
 
             const successMessage = @json(session('success'));
+            const errorMessage = @json(session('error'));
             const errorMessages = @json($errors->all());
 
             if (successMessage) {
                 window.showNotification('success', successMessage);
+            }
+
+            if (errorMessage) {
+                window.showNotification('error', errorMessage);
             }
 
             [...new Set(errorMessages || [])].forEach((message) => {

@@ -37,7 +37,7 @@ class AuthController extends Controller
         if ($user->role === 'admin') {
             if ($user->status !== 'approved') {
                 Auth::logout();
-                return back()->withErrors(['email' => 'Your account is pending approval.']);
+                return back()->with('error', 'Your account is pending approval.');
             }
             return redirect()->route('admin.dashboard');
         }
@@ -47,7 +47,7 @@ class AuthController extends Controller
             // Check if user is active (not suspended)
             if (!in_array($user->status, ['active', 'approved'])) {
                 Auth::logout();
-                return back()->withErrors(['email' => 'Your account is pending approval or suspended.']);
+                return back()->with('error', 'Your account is pending approval or suspended.');
             }
 
             // if vendor not verified, send to verification page
@@ -61,7 +61,7 @@ class AuthController extends Controller
         // Normal User
         if ($user->status !== 'approved') {
             Auth::logout();
-            return back()->withErrors(['email' => 'Your account is pending approval.']);
+            return back()->with('error', 'Your account is pending approval.');
         }
 
        return redirect()->intended(route('home'))->with('success', 'Login successful');
