@@ -561,18 +561,35 @@ class UserBookingController extends Controller
     private function validateBookingTimeWindow(Carbon $pickup, Carbon $drop): void
     {
         $now = now();
-        $minLeadMinutes = 30;
         $minDurationMinutes = 60;
+        $maxAdvanceMonths = 3;
+        $maxAdvanceDateTime = $now->copy()->addMonthsNoOverflow($maxAdvanceMonths);
 
-        if ($pickup->lt($now->copy()->addMinutes($minLeadMinutes))) {
+        $currentDateTime = $now->format('d M Y, h:i A');
+        $latestBookingDate = $maxAdvanceDateTime->format('d M Y, h:i A');
+        $minDropFromPickup = $pickup->copy()->addMinutes($minDurationMinutes);
+
+        if ($pickup->lt($now)) {
             throw ValidationException::withMessages([
-                'pickup_datetime' => "Pickup time must be at least {$minLeadMinutes} minutes from now.",
+                'pickup_datetime' => "Pickup date/time cannot be in the past. Please select current or future time (now: {$currentDateTime}).",
             ]);
         }
 
-        if ($drop->lt($pickup->copy()->addMinutes($minDurationMinutes))) {
+        if ($pickup->gt($maxAdvanceDateTime)) {
             throw ValidationException::withMessages([
-                'drop_datetime' => "Drop time must be at least {$minDurationMinutes} minutes after pickup.",
+                'pickup_datetime' => "Pickup date is outside the allowed booking window. You can book up to {$maxAdvanceMonths} months ahead (latest: {$latestBookingDate}).",
+            ]);
+        }
+
+        if ($drop->lt($minDropFromPickup)) {
+            throw ValidationException::withMessages([
+                'drop_datetime' => "Drop time must be at least {$minDurationMinutes} minutes after pickup. Earliest allowed drop is " . $minDropFromPickup->format('d M Y, h:i A') . '.',
+            ]);
+        }
+
+        if ($drop->gt($maxAdvanceDateTime)) {
+            throw ValidationException::withMessages([
+                'drop_datetime' => "Drop date is outside the allowed booking window. You can book up to {$maxAdvanceMonths} months ahead (latest: {$latestBookingDate}).",
             ]);
         }
     }

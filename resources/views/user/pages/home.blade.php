@@ -3,6 +3,7 @@
 @section('title', 'LasaWheels - Rent Your Ride')
 
 @push('styles')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <style>
         .autocomplete-dropdown {
             position: absolute;
@@ -151,19 +152,7 @@
                      x-data="{
                         service: 'self'
                      }">
-                    <form method="GET" action="{{ route('user.search.vehicles') }}">
-                        @if ($errors->has('pickup_datetime') || $errors->has('drop_datetime') || $errors->has('pickup_location') || $errors->has('drop_location'))
-                            <div class="alert alert-danger mb-4">
-                                <ul class="mb-0 ps-3">
-                                    @foreach (['pickup_location', 'drop_location', 'pickup_datetime', 'drop_datetime'] as $field)
-                                        @error($field)
-                                            <li>{{ $message }}</li>
-                                        @enderror
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
+                    <form id="bookingSearchForm" method="GET" action="{{ route('user.search.vehicles') }}" novalidate>
                         <input type="hidden" name="service" :value="service">
 
                         <div class="row g-4 align-items-start">
@@ -608,7 +597,19 @@
 @endsection
 
 @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
+        function showErrorNotification(message) {
+            if (typeof toastr !== 'undefined') {
+                toastr.error(message);
+                return;
+            }
+
+            // Fallback for environments where toastr failed to load.
+            alert(message);
+        }
+
         function setupPhotonAutocomplete(inputId, dropdownId, latId, lngId) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById(dropdownId);
@@ -727,35 +728,103 @@
                 return;
             }
 
-            const getPickupMin = () => new Date(Date.now() + 30 * 60 * 1000);
+            // For QA/testing: allow selecting any date/time in UI.
+            // Server-side validation in UserBookingController handles all constraints.
+            pickupInput.removeAttribute('min');
+            dropInput.removeAttribute('min');
+            pickupInput.removeAttribute('max');
+            dropInput.removeAttribute('max');
+        }
 
-            const refreshPickupMin = () => {
-                pickupInput.min = toLocalDateTimeValue(getPickupMin());
+        function showBookingValidationToasts() {
+            if (typeof toastr === 'undefined') {
+                return;
+            }
+
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                newestOnTop: true,
+                preventDuplicates: true,
+                positionClass: 'toast-top-right',
+                timeOut: 5000,
             };
 
-            refreshPickupMin();
+            const allErrors = @json($errors->messages());
+            const fields = ['pickup_location', 'drop_location', 'pickup_datetime', 'drop_datetime'];
 
-            const syncDropLimits = () => {
-                const source = pickupInput.value ? new Date(pickupInput.value) : getPickupMin();
-                const dropMin = new Date(source.getTime() + 60 * 60 * 1000);
+            fields.forEach((field) => {
+                (allErrors[field] || []).forEach((message) => showErrorNotification(message));
+            });
+        }
 
-                dropInput.min = toLocalDateTimeValue(dropMin);
+        function setupBookingFormToastrValidation() {
+            const form = document.getElementById('bookingSearchForm');
+            if (!form || typeof toastr === 'undefined') {
+                return;
+            }
 
-                if (dropInput.value && new Date(dropInput.value) < dropMin) {
-                    dropInput.value = '';
+            form.addEventListener('submit', function (event) {
+                const pickupLocation = document.getElementById('pickup_location')?.value?.trim() || '';
+                const dropLocation = document.getElementById('drop_location')?.value?.trim() || '';
+                const pickupDateTime = document.getElementById('pickup_datetime')?.value || '';
+                const dropDateTime = document.getElementById('drop_datetime')?.value || '';
+
+                const localErrors = [];
+                const now = new Date();
+                const bookingMax = new Date();
+                bookingMax.setMonth(bookingMax.getMonth() + 3);
+
+                if (!pickupLocation) localErrors.push('Please enter From / Pickup location.');
+                if (!dropLocation) localErrors.push('Please enter To / Drop location.');
+                if (!pickupDateTime) localErrors.push('Please select From / Pickup date and time.');
+                if (!dropDateTime) localErrors.push('Please select To / Drop date and time.');
+
+                if (pickupDateTime) {
+                    const pickup = new Date(pickupDateTime);
+
+                    if (pickup < now) {
+                        localErrors.push('Pickup date/time cannot be in the past.');
+                    }
+
+                    if (pickup > bookingMax) {
+                        localErrors.push('Pickup date is outside the allowed booking window (maximum 3 months ahead).');
+                    }
                 }
-            };
 
-            syncDropLimits();
-            pickupInput.addEventListener('focus', refreshPickupMin);
-            pickupInput.addEventListener('click', refreshPickupMin);
-            pickupInput.addEventListener('change', syncDropLimits);
+                if (dropDateTime) {
+                    const drop = new Date(dropDateTime);
+
+                    if (drop > bookingMax) {
+                        localErrors.push('Drop date is outside the allowed booking window (maximum 3 months ahead).');
+                    }
+                }
+
+                if (pickupDateTime && dropDateTime) {
+                    const pickup = new Date(pickupDateTime);
+                    const drop = new Date(dropDateTime);
+                    const diffMinutes = (drop - pickup) / (1000 * 60);
+
+                    if (drop <= pickup) {
+                        localErrors.push('Drop date/time must be after pickup date/time.');
+                    } else if (diffMinutes < 60) {
+                        localErrors.push('Drop time must be at least 60 minutes after pickup time.');
+                    }
+                }
+
+                if (localErrors.length > 0) {
+                    event.preventDefault();
+                    [...new Set(localErrors)].forEach((message) => showErrorNotification(message));
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function () {
             setupPhotonAutocomplete('pickup_location', 'pickup_suggestions', 'pickup_lat', 'pickup_lng');
             setupPhotonAutocomplete('drop_location', 'drop_suggestions', 'drop_lat', 'drop_lng');
             setupBookingDateValidation();
+            setupBookingFormToastrValidation();
+            showBookingValidationToasts();
         });
     </script>
 @endpush
