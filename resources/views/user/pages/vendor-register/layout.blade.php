@@ -101,22 +101,6 @@
 
         @include('user.pages.vendor-register.partials.progress', ['currentStep' => $currentStep ?? 1])
 
-        @if(session('success'))
-            <div class="alert alert-success rounded-4 mt-4">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger rounded-4 mt-4">
-                <ul class="mb-0 ps-3">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="card register-card mt-4">
             <div class="card-body p-4 p-md-5">
                 @yield('register-content')
@@ -126,3 +110,66 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const registerForms = document.querySelectorAll('.register-card form');
+
+        registerForms.forEach((form) => {
+            form.setAttribute('novalidate', 'novalidate');
+
+            form.addEventListener('submit', function (event) {
+                const localErrors = [];
+                const controls = form.querySelectorAll('input, select, textarea');
+
+                controls.forEach((control) => {
+                    if (control.disabled || control.type === 'hidden') {
+                        return;
+                    }
+
+                    const labelText = form.querySelector(`label[for="${control.id}"]`)?.textContent?.trim()
+                        || control.closest('.mb-3, .mb-4, .col-md-6, .col-md-12')?.querySelector('label')?.textContent?.trim()
+                        || control.name?.replace(/_/g, ' ')
+                        || 'This field';
+
+                    const isRequired = control.hasAttribute('required');
+                    const value = (control.value || '').trim();
+
+                    if (isRequired && !value) {
+                        localErrors.push(`${labelText} is required.`);
+                    }
+
+                    if (control.type === 'email' && value && !control.checkValidity()) {
+                        localErrors.push('Please enter a valid email address.');
+                    }
+
+                    if (control.name === 'phone' && value) {
+                        if (!/^\d+$/.test(value)) {
+                            localErrors.push('Phone number must contain digits only.');
+                        } else if (value.length < 10) {
+                            localErrors.push('Phone number must be at least 10 digits.');
+                        } else if (value.length > 10) {
+                            localErrors.push('Phone number cannot be more than 10 digits.');
+                        }
+                    }
+                });
+
+                const password = form.querySelector('input[name="password"]')?.value || '';
+                const passwordConfirmation = form.querySelector('input[name="password_confirmation"]')?.value || '';
+
+                if (password && passwordConfirmation && password !== passwordConfirmation) {
+                    localErrors.push('Password confirmation does not match.');
+                }
+
+                if (localErrors.length > 0) {
+                    event.preventDefault();
+                    [...new Set(localErrors)].forEach((message) => {
+                        window.showNotification('error', message);
+                    });
+                }
+            });
+        });
+    });
+</script>
+@endpush
