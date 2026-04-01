@@ -9,7 +9,7 @@
 
         <div class="mb-4 upload-box">
             <label class="form-label fw-semibold">National ID Document *</label>
-            <input type="file" name="national_id" class="form-control rounded-3">
+            <input type="file" name="national_id" class="form-control rounded-3" accept=".pdf,.jpg,.jpeg,.png" {{ !isset($documents['national_id']) ? 'required' : '' }}>
             @if(isset($documents['national_id']))
                 <small class="text-success d-block mt-2">Uploaded: {{ basename($documents['national_id']->file_path) }}</small>
             @endif
@@ -17,7 +17,7 @@
 
         <div class="mb-4 upload-box">
             <label class="form-label fw-semibold">Business License *</label>
-            <input type="file" name="business_license" class="form-control rounded-3">
+            <input type="file" name="business_license" class="form-control rounded-3" accept=".pdf,.jpg,.jpeg,.png" {{ !isset($documents['business_license']) ? 'required' : '' }}>
             @if(isset($documents['business_license']))
                 <small class="text-success d-block mt-2">Uploaded: {{ basename($documents['business_license']->file_path) }}</small>
             @endif
@@ -25,7 +25,7 @@
 
         <div class="mb-4 upload-box">
             <label class="form-label fw-semibold">Tax Certificate</label>
-            <input type="file" name="tax_certificate" class="form-control rounded-3">
+            <input type="file" name="tax_certificate" class="form-control rounded-3" accept=".pdf,.jpg,.jpeg,.png">
             @if(isset($documents['tax_certificate']))
                 <small class="text-success d-block mt-2">Uploaded: {{ basename($documents['tax_certificate']->file_path) }}</small>
             @endif
@@ -33,7 +33,7 @@
 
         <div class="mb-4 upload-box">
             <label class="form-label fw-semibold">Proof of Address *</label>
-            <input type="file" name="proof_of_address" class="form-control rounded-3">
+            <input type="file" name="proof_of_address" class="form-control rounded-3" accept=".pdf,.jpg,.jpeg,.png" {{ !isset($documents['proof_of_address']) ? 'required' : '' }}>
             @if(isset($documents['proof_of_address']))
                 <small class="text-success d-block mt-2">Uploaded: {{ basename($documents['proof_of_address']->file_path) }}</small>
             @endif

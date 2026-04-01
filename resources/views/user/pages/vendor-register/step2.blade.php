@@ -16,8 +16,9 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">Phone Number</label>
-                <input type="text" name="phone" class="form-control form-control-lg rounded-3"
-                       value="{{ old('phone', $vendorProfile->phone) }}" required>
+          <input type="text" name="phone" class="form-control form-control-lg rounded-3"
+              value="{{ old('phone', $vendorProfile->phone) }}" required placeholder="Enter 10-digit phone number">
+          <div id="phone_error" class="invalid-feedback d-block" style="display:none !important;"></div>
             </div>
 
             <div class="col-md-6 mb-3">
@@ -33,8 +34,67 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <a href="{{ route('vendor.register.step1') }}" class="btn btn-outline-secondary btn-lg rounded-3 px-4">Previous</a>
+            <a href="{{ route('vendor.register.step1', ['edit' => 1]) }}" class="btn btn-outline-secondary btn-lg rounded-3 px-4">Previous</a>
             <button class="btn btn-dark btn-lg rounded-3 px-4">Next Step</button>
         </div>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form[action="{{ route('vendor.register.step2.store') }}"]');
+            const phoneInput = form?.querySelector('input[name="phone"]');
+            const phoneError = document.getElementById('phone_error');
+
+            if (!form || !phoneInput || !phoneError) {
+                return;
+            }
+
+            function validatePhoneInline() {
+                const value = phoneInput.value.trim();
+
+                if (!value) {
+                    phoneInput.classList.remove('is-invalid');
+                    phoneError.style.display = 'none';
+                    phoneError.textContent = '';
+                    return true;
+                }
+
+                const onlyDigits = /^\d+$/.test(value);
+
+                if (!onlyDigits) {
+                    phoneInput.classList.add('is-invalid');
+                    phoneError.style.display = 'block';
+                    phoneError.textContent = 'Phone number must contain digits only.';
+                    return false;
+                }
+
+                if (value.length < 10) {
+                    phoneInput.classList.add('is-invalid');
+                    phoneError.style.display = 'block';
+                    phoneError.textContent = 'Phone number must be at least 10 digits.';
+                    return false;
+                }
+
+                if (value.length > 10) {
+                    phoneInput.classList.add('is-invalid');
+                    phoneError.style.display = 'block';
+                    phoneError.textContent = 'Phone number cannot be more than 10 digits.';
+                    return false;
+                }
+
+                phoneInput.classList.remove('is-invalid');
+                phoneError.style.display = 'none';
+                phoneError.textContent = '';
+                return true;
+            }
+
+            phoneInput.addEventListener('input', validatePhoneInline);
+
+            form.addEventListener('submit', function (event) {
+                if (!validatePhoneInline()) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
 @endsection

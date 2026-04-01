@@ -30,50 +30,76 @@ class VendorRegisterController extends Controller
         'proof_of_address',
     ];
 
-    public function showStep1()
+    public function showStep1(Request $request)
     {
-        if (session()->has(self::SESSION_KEY)) {
+        if (session()->has(self::SESSION_KEY) && !$request->boolean('edit')) {
             return redirect($this->resolveRegistrationRoute());
         }
 
-        return view('user.pages.vendor-register.step1');
+        $registrationUser = session()->has(self::SESSION_KEY)
+            ? User::find(session(self::SESSION_KEY))
+            : null;
+
+        return view('user.pages.vendor-register.step1', [
+            'registrationUser' => $registrationUser,
+            'hasDraft' => (bool) $registrationUser,
+        ]);
     }
 
     public function storeStep1(Request $request)
     {
+        $existingUser = session()->has(self::SESSION_KEY)
+            ? User::with('vendorProfile')->find(session(self::SESSION_KEY))
+            : null;
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . ($existingUser?->id ?? 'NULL')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         DB::beginTransaction();
 
         try {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => 'vendor',
-                'status' => 'active',
-                'vendor_status' => 'draft',
-            ]);
+            if ($existingUser) {
+                $existingUser->update([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
 
-            VendorProfile::create([
-                'user_id' => $user->id,
-                'full_name' => $validated['name'],
-                'phone' => '',
-                'national_id_number' => '',
-                'residential_address' => '',
-                'business_name' => '',
-                'business_type' => '',
-                'business_registration_number' => null,
-                'tax_id_number' => null,
-                'business_address' => '',
-                'current_step' => 1,
-                'is_submitted' => false,
-                'status' => 'draft',
-            ]);
+                $existingUser->vendorProfile()->update([
+                    'full_name' => $validated['name'],
+                    'current_step' => 1,
+                ]);
+
+                $user = $existingUser;
+            } else {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'role' => 'vendor',
+                    'status' => 'active',
+                    'vendor_status' => 'draft',
+                ]);
+
+                VendorProfile::create([
+                    'user_id' => $user->id,
+                    'full_name' => $validated['name'],
+                    'phone' => '',
+                    'national_id_number' => '',
+                    'residential_address' => '',
+                    'business_name' => '',
+                    'business_type' => '',
+                    'business_registration_number' => null,
+                    'tax_id_number' => null,
+                    'business_address' => '',
+                    'current_step' => 1,
+                    'is_submitted' => false,
+                    'status' => 'draft',
+                ]);
+            }
 
             session([self::SESSION_KEY => $user->id]);
 
@@ -87,6 +113,53 @@ class VendorRegisterController extends Controller
             return back()
                 ->withErrors(['error' => 'Unable to save account information. Please try again.'])
                 ->withInput();
+        }
+    }
+
+    public function exitDraft()
+    {
+        $userId = session(self::SESSION_KEY);
+
+        if (!$userId) {
+            return redirect()->route('vendor.register.landing');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $user = User::with(['vendorProfile', 'vendorDocuments'])->find($userId);
+
+            if ($user && $user->role === 'vendor' && $user->vendor_status === 'draft') {
+                $documents = Document::where('user_id', $user->id)
+                    ->where('purpose', self::DOCUMENT_PURPOSE)
+                    ->get();
+
+                foreach ($documents as $document) {
+                    if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
+                        Storage::disk('public')->delete($document->file_path);
+                    }
+                }
+
+                Document::where('user_id', $user->id)
+                    ->where('purpose', self::DOCUMENT_PURPOSE)
+                    ->delete();
+
+                $user->vendorProfile()->delete();
+                $user->delete();
+            }
+
+            session()->forget(self::SESSION_KEY);
+
+            DB::commit();
+
+            return redirect()->route('vendor.register.landing')
+                ->with('success', 'Vendor registration draft deleted successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->withErrors([
+                'error' => 'Unable to exit registration right now. Please try again.',
+            ]);
         }
     }
 
@@ -104,9 +177,11 @@ class VendorRegisterController extends Controller
 
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:20'],
+            'phone' => ['required', 'regex:/^\d{10}$/'],
             'national_id_number' => ['required', 'string', 'max:100'],
             'residential_address' => ['required', 'string', 'max:1000'],
+        ], [
+            'phone.regex' => 'Phone number must be exactly 10 digits.',
         ]);
 
         DB::beginTransaction();
@@ -153,8 +228,8 @@ class VendorRegisterController extends Controller
         $validated = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
             'business_type' => ['required', 'string', 'max:100'],
-            'business_registration_number' => ['nullable', 'string', 'max:100'],
-            'tax_id_number' => ['nullable', 'string', 'max:100'],
+            'business_registration_number' => ['required', 'string', 'max:100'],
+            'tax_id_number' => ['required', 'string', 'max:100'],
             'business_address' => ['required', 'string', 'max:1000'],
             'latitude' => ['required', 'numeric'],
             'longitude' => ['required', 'numeric'],
@@ -166,8 +241,8 @@ class VendorRegisterController extends Controller
             $user->vendorProfile()->update([
                 'business_name' => $validated['business_name'],
                 'business_type' => $validated['business_type'],
-                'business_registration_number' => $validated['business_registration_number'] ?? null,
-                'tax_id_number' => $validated['tax_id_number'] ?? null,
+                'business_registration_number' => $validated['business_registration_number'],
+                'tax_id_number' => $validated['tax_id_number'],
                 'business_address' => $validated['business_address'],
                 'latitude' => $validated['latitude'],
                 'longitude' => $validated['longitude'],

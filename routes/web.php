@@ -186,6 +186,7 @@ Route::get('/become-a-vendor', [VendorRegisterController::class, 'landing'])->na
 Route::prefix('vendor/register')->name('vendor.register.')->group(function () {
     Route::get('/step-1', [VendorRegisterController::class, 'showStep1'])->name('step1');
     Route::post('/step-1', [VendorRegisterController::class, 'storeStep1'])->name('step1.store');
+    Route::post('/exit', [VendorRegisterController::class, 'exitDraft'])->name('exit');
 
     Route::get('/step-2', [VendorRegisterController::class, 'showStep2'])->name('step2');
     Route::post('/step-2', [VendorRegisterController::class, 'storeStep2'])->name('step2.store');

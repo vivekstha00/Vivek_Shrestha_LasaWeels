@@ -29,13 +29,13 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">Business Registration Number</label>
                 <input type="text" name="business_registration_number" class="form-control form-control-lg rounded-3"
-                       value="{{ old('business_registration_number', $vendorProfile->business_registration_number) }}">
+                       value="{{ old('business_registration_number', $vendorProfile->business_registration_number) }}" required>
             </div>
 
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">Tax / VAT Number</label>
                 <input type="text" name="tax_id_number" class="form-control form-control-lg rounded-3"
-                       value="{{ old('tax_id_number', $vendorProfile->tax_id_number) }}">
+                       value="{{ old('tax_id_number', $vendorProfile->tax_id_number) }}" required>
             </div>
         </div>
 
@@ -141,11 +141,19 @@
                             businessAddress.value = results[0].display_name;
                         }
                     } else {
-                        alert('Location not found. Please try another search.');
+                        if (typeof window.showNotification === 'function') {
+                            window.showNotification('error', 'Location not found. Please try another search.');
+                        } else {
+                            alert('Location not found. Please try another search.');
+                        }
                     }
                 } catch (error) {
                     console.error('Search failed:', error);
-                    alert('Unable to search location right now.');
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification('error', 'Unable to search location right now.');
+                    } else {
+                        alert('Unable to search location right now.');
+                    }
                 }
             }
 
