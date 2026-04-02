@@ -96,19 +96,6 @@
             padding: 18px;
         }
 
-        .offer-indicator-btn {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            border: 0;
-            background: #cbd5e1;
-            padding: 0;
-        }
-
-        .offer-indicator-btn.active {
-            background: #16a34a;
-        }
-
         @media (max-width: 768px) {
             .offer-banner,
             .offer-banner-img {
@@ -461,19 +448,6 @@
                     </button>
                 @endif
             </div>
-
-            @if($activeOffers->count() > 1)
-                <div class="d-flex justify-content-center gap-2 mt-3">
-                    @foreach($activeOffers as $index => $offer)
-                        <button type="button"
-                                class="offer-indicator-btn {{ $index === 0 ? 'active' : '' }}"
-                                data-bs-target="#offerCarousel"
-                                data-bs-slide-to="{{ $index }}"
-                                aria-label="Slide {{ $index + 1 }}">
-                        </button>
-                    @endforeach
-                </div>
-            @endif
         </div>
     </section>
 @endif
