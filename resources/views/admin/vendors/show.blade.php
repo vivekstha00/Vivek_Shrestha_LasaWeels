@@ -16,9 +16,7 @@
     </div>
 @endif
 
-<div class="row g-4">
-    <!-- Left Column -->
-    <div class="col-lg-8">
+<div class="d-grid gap-4">
 
         <!-- Profile Header -->
         <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -67,12 +65,59 @@
                         <div class="text-muted small"><i class="fa-solid fa-calendar me-1"></i> Joined</div>
                         <div class="fw-semibold">{{ $profile->created_at?->format('d M Y') }}</div>
                     </div>
+                    <div class="col-12">
+                        <div class="text-muted small"><i class="fa-solid fa-location-dot me-1"></i> Business Address</div>
+                        <div class="fw-semibold">{{ $profile->business_address ?: '—' }}</div>
+                    </div>
                 </div>
 
                 @if($profile->remarks)
                     <div class="alert alert-warning mt-3 mb-0">
                         <div class="fw-semibold small mb-1"><i class="fa-solid fa-note-sticky me-1"></i> Remarks</div>
                         {{ $profile->remarks }}
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Vendor Location -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fa-solid fa-map-location-dot me-2 text-primary"></i> Vendor Location
+                </h5>
+
+                @if($profile->latitude && $profile->longitude)
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Latitude</div>
+                            <div class="fw-semibold">{{ number_format((float) $profile->latitude, 7) }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Longitude</div>
+                            <div class="fw-semibold">{{ number_format((float) $profile->longitude, 7) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="ratio ratio-16x9 rounded-3 overflow-hidden border mb-3">
+                        <iframe
+                            src="https://maps.google.com/maps?q={{ $profile->latitude }},{{ $profile->longitude }}&z=15&output=embed"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            style="border:0;"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+
+                    <a href="https://maps.google.com/?q={{ $profile->latitude }},{{ $profile->longitude }}"
+                       target="_blank"
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i> Open in Google Maps
+                    </a>
+                @else
+                    <div class="alert alert-light border mb-0">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        Location coordinates were not provided by this vendor.
                     </div>
                 @endif
             </div>
@@ -118,52 +163,48 @@
                 @endforelse
             </div>
         </div>
-    </div>
+    <!-- Actions -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="fa-solid fa-bolt me-2 text-primary"></i> Actions
+            </h5>
 
-    <!-- Right Column: Actions -->
-    <div class="col-lg-4">
-
-        <!-- Quick Actions -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">
-                    <i class="fa-solid fa-bolt me-2 text-primary"></i> Actions
-                </h5>
-
+            <div class="row g-3">
                 @if($profile->status === 'pending')
-                    <form action="{{ route('admin.vendors.approve', $profile->id) }}"
-                          method="POST" class="mb-3">
-                        @csrf
-                        <button class="btn btn-success w-100">
-                            <i class="fa-solid fa-check me-1"></i> Approve Vendor
-                        </button>
-                    </form>
+                    <div class="col-lg-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <h6 class="fw-semibold mb-3">Approve Vendor</h6>
+                            <form action="{{ route('admin.vendors.approve', $profile->id) }}" method="POST">
+                                @csrf
+                                <button class="btn btn-success w-100">Approve</button>
+                            </form>
+                        </div>
+                    </div>
                 @endif
 
-                <!-- Request Resubmit -->
-                <div class="border rounded-3 p-3 mb-3" style="background: #fffbeb;">
-                    <h6 class="fw-bold mb-2 text-warning">
-                        <i class="fa-solid fa-rotate me-1"></i> Request Resubmission
-                    </h6>
-                    <form action="{{ route('admin.vendors.resubmit', $profile->id) }}" method="POST">
-                        @csrf
-                        <textarea name="remarks" class="form-control mb-2" rows="2"
-                                  placeholder="Reason for resubmission..." required></textarea>
-                        <button class="btn btn-warning btn-sm w-100">Request Resubmit</button>
-                    </form>
+                <div class="col-lg-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <h6 class="fw-semibold mb-2">Request Resubmission</h6>
+                        <form action="{{ route('admin.vendors.resubmit', $profile->id) }}" method="POST">
+                            @csrf
+                            <textarea name="remarks" class="form-control mb-2" rows="2"
+                                      placeholder="Reason for resubmission..." required></textarea>
+                            <button class="btn btn-warning w-100">Request Resubmit</button>
+                        </form>
+                    </div>
                 </div>
 
-                <!-- Reject -->
-                <div class="border rounded-3 p-3" style="background: #fef2f2;">
-                    <h6 class="fw-bold mb-2 text-danger">
-                        <i class="fa-solid fa-ban me-1"></i> Reject Vendor
-                    </h6>
-                    <form action="{{ route('admin.vendors.reject', $profile->id) }}" method="POST">
-                        @csrf
-                        <textarea name="remarks" class="form-control mb-2" rows="2"
-                                  placeholder="Reason for rejection..." required></textarea>
-                        <button class="btn btn-danger btn-sm w-100">Reject Vendor</button>
-                    </form>
+                <div class="col-lg-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <h6 class="fw-semibold mb-2">Reject Vendor</h6>
+                        <form action="{{ route('admin.vendors.reject', $profile->id) }}" method="POST">
+                            @csrf
+                            <textarea name="remarks" class="form-control mb-2" rows="2"
+                                      placeholder="Reason for rejection..." required></textarea>
+                            <button class="btn btn-danger w-100">Reject</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
