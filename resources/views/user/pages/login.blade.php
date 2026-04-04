@@ -39,9 +39,10 @@
                                     name="password"
                                     id="password"
                                     class="form-control password-input @error('password') is-invalid @enderror"
-                                    value="{{ old('password') }}">
-                                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
-                                    <i class="bi password-toggle bi-eye"></i>
+                                    required
+                                >
+                                <span class="input-group-text" style="cursor: pointer;">
+                                    <i class="bi bi-eye password-toggle"></i>
                                 </span>
                             </div>
                             @error('password')
@@ -114,19 +115,6 @@
                 event.preventDefault();
                 showErrors(errors);
             }
-        });
-        $(document).ready(function() {
-            $('body').on('click', '.password-toggle', function() {
-                if ($(this).hasClass('bi-eye')) {
-                    $(this).removeClass('bi-eye');
-                    $(this).addClass('bi-eye-slash');
-                    $('.password-input').attr('type', 'text');
-                } else {
-                    $(this).removeClass('bi-eye-slash');
-                    $(this).addClass('bi-eye');
-                    $('.password-input').attr('type', 'password');
-                }
-            });
         });
     });
 </script>

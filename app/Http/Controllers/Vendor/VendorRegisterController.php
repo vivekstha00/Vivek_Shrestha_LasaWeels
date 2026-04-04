@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\User;
 use App\Models\VendorProfile;
+use App\Notifications\VendorRequestSubmittedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class VendorRegisterController extends Controller
@@ -361,6 +363,15 @@ class VendorRegisterController extends Controller
             session()->forget(self::SESSION_KEY);
 
             DB::commit();
+
+            $admins = User::query()
+                ->where('role', 'admin')
+                ->whereNotNull('email')
+                ->get();
+
+            if ($admins->isNotEmpty()) {
+                Notification::sendNow($admins, new VendorRequestSubmittedNotification($user));
+            }
 
             return redirect()->route('login')
                 ->with('success', 'Vendor application submitted successfully. Please wait for admin review.');
