@@ -39,15 +39,25 @@
                                     name="password"
                                     id="password"
                                     class="form-control password-input @error('password') is-invalid @enderror"
-                                    required
-                                >
-                                <span class="input-group-text">
-                                    <i class="bi bi-eye password-toggle"></i>
+                                    value="{{ old('password') }}">
+                                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                                    <i class="bi password-toggle bi-eye"></i>
                                 </span>
                             </div>
                             @error('password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="{{ route('password.forgot') }}" class="text-decoration-none">
+                                <small>Forgot Password?</small>
+                            </a>
                         </div>
 
                         <button type="submit" class="btn btn-main w-100 mb-3">
@@ -82,20 +92,6 @@
                 }
             });
         }
-
-        $('body').on('click', '.password-toggle', function () {
-            const $icon = $(this);
-            const $input = $icon.closest('.input-group').find('.password-input');
-
-            if ($input.attr('type') === 'password') {
-                $input.attr('type', 'text');
-                $icon.removeClass('bi-eye').addClass('bi-eye-slash');
-            } else {
-                $input.attr('type', 'password');
-                $icon.removeClass('bi-eye-slash').addClass('bi-eye');
-            }
-        });
-
         $('#loginForm').on('submit', function (event) {
             const email = $('#email').val()?.trim() || '';
             const password = $('#password').val() || '';
@@ -118,6 +114,19 @@
                 event.preventDefault();
                 showErrors(errors);
             }
+        });
+        $(document).ready(function() {
+            $('body').on('click', '.password-toggle', function() {
+                if ($(this).hasClass('bi-eye')) {
+                    $(this).removeClass('bi-eye');
+                    $(this).addClass('bi-eye-slash');
+                    $('.password-input').attr('type', 'text');
+                } else {
+                    $(this).removeClass('bi-eye-slash');
+                    $(this).addClass('bi-eye');
+                    $('.password-input').attr('type', 'password');
+                }
+            });
         });
     });
 </script>

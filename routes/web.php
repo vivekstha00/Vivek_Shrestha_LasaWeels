@@ -43,10 +43,18 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::view('/about', 'user.pages.about')->name('about');
 // User Auth
-Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.store');
-Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
-Route::post('/register', [AuthController::class, 'registerStore'])->name('register.store');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'registerStore'])->name('register.store');
+    Route::get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.forgot');
+    Route::post('/forgot-password/send-otp', [AuthController::class, 'sendPasswordResetOtp'])->name('password.otp.send');
+    Route::get('/forgot-password/verify-otp', [AuthController::class, 'otpVerificationForm'])->name('password.otp.form');
+    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp'])->name('password.otp.verify');
+    Route::get('/reset-password', [AuthController::class, 'resetPasswordForm'])->name('password.reset.form');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+});
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
@@ -65,8 +73,12 @@ Route::get('/contact/vendors/{vendor}', [UserContactController::class, 'showVend
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
+    Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('user.profile.edit');
 
     Route::post('/profile', [UserProfileController::class, 'update'])->name('user.profile.update');
+    Route::post('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.profile.password.update');
+    Route::post('/profile/change-password/send-otp', [AuthController::class, 'sendAuthenticatedPasswordResetOtp'])
+        ->name('user.profile.password.otp.send');
 
     Route::get('/user/profile/loyalty', [UserProfileController::class, 'loyaltyHistory'])->name('user.profile.loyalty');
 
