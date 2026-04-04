@@ -56,6 +56,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow rounded-3">
                             <li><a class="dropdown-item" href="{{ route('user.profile') }}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ route('user.profile.edit') }}">Edit Profile</a></li>
                             <li><a class="dropdown-item" href="{{ route('user.booking.index') }}">Bookings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>

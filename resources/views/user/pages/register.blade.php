@@ -89,13 +89,21 @@
                             <label for="password_confirmation" class="form-label">
                                 Confirm Password <span class="text-danger">*</span>
                             </label>
-                            <input
-                                type="password"
-                                name="password_confirmation"
-                                id="password_confirmation"
-                                class="form-control"
-                                required
-                            >
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    name="password_confirmation"
+                                    id="password_confirmation"
+                                    class="form-control password-input @error('password_confirmation') is-invalid @enderror"
+                                    required
+                                >
+                                <span class="input-group-text">
+                                    <i class="bi bi-eye password-toggle"></i>
+                                </span>
+                            </div>
+                            @error('password_confirmation')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <button type="submit" class="btn btn-main w-100">
@@ -128,19 +136,6 @@
                 }
             });
         }
-
-        $('body').on('click', '.password-toggle', function () {
-            const $icon = $(this);
-            const $input = $icon.closest('.input-group').find('.password-input');
-
-            if ($input.attr('type') === 'password') {
-                $input.attr('type', 'text');
-                $icon.removeClass('bi-eye').addClass('bi-eye-slash');
-            } else {
-                $input.attr('type', 'password');
-                $icon.removeClass('bi-eye-slash').addClass('bi-eye');
-            }
-        });
 
         $('#registerForm').on('submit', function (event) {
             const name = $('#name').val()?.trim() || '';

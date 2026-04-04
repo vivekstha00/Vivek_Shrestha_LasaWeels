@@ -13,6 +13,19 @@ use Carbon\Carbon;
 class UserProfileController extends Controller
 {
 
+    public function edit()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $documents = $user->documents()
+            ->latest()
+            ->get()
+            ->keyBy('type');
+
+        return view('user.pages.profile.edit', compact('user', 'documents'));
+    }
+
     public function index()
     {
         /** @var \App\Models\User $user */
@@ -117,5 +130,22 @@ class UserProfileController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Profile updated successfully.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:6', 'confirmed', 'different:current_password'],
+        ]);
+
+        $user->update([
+            'password' => $validated['password'],
+        ]);
+
+        return back()->with('success', 'Password changed successfully.');
     }
 }

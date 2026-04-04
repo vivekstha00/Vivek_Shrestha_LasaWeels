@@ -19,9 +19,14 @@
     @endif
 
     {{-- Header --}}
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">My Profile</h3>
-        <p class="text-muted mb-0">Manage your profile, documents, and booking activity</p>
+    <div class="mb-4 d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+            <h3 class="fw-bold mb-1">My Profile</h3>
+            <p class="text-muted mb-0">Manage your profile, documents, and booking activity</p>
+        </div>
+        <a href="{{ route('user.profile.edit') }}" class="btn btn-outline-dark rounded-3">
+            Edit Profile Settings
+        </a>
     </div>
 
     <div class="row g-4">
@@ -195,66 +200,43 @@
                 </div>
             @endif
 
-            {{-- 4. Update Profile – last in personal column --}}
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="mb-0 fw-bold">Update Profile</h5>
+                    <h5 class="mb-0 fw-bold">Account & Documents</h5>
                 </div>
-
                 <div class="card-body p-4">
-                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
+                    @php
+                        $license = $documents['license'] ?? null;
+                        $citizenship = $documents['citizenship'] ?? null;
+                    @endphp
 
-                        <div class="mb-3">
-                            <label class="form-label">Profile Image</label>
-                            <input type="file" name="profile_image" class="form-control">
+                    <p class="text-muted mb-3">
+                        Manage profile settings and keep your verification documents up to date.
+                    </p>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center small mb-2">
+                            <span>Driving License</span>
+                            <span class="badge {{ !$license ? 'bg-secondary' : ($license->status == 'approved' ? 'bg-success' : ($license->status == 'rejected' ? 'bg-danger' : 'bg-warning text-dark')) }}">
+                                {{ !$license ? 'Not Uploaded' : ucfirst($license->status) }}
+                            </span>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                class="form-control"
-                                value="{{ old('name', $user->name) }}"
-                                required
-                            >
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span>Citizenship</span>
+                            <span class="badge {{ !$citizenship ? 'bg-secondary' : ($citizenship->status == 'approved' ? 'bg-success' : ($citizenship->status == 'rejected' ? 'bg-danger' : 'bg-warning text-dark')) }}">
+                                {{ !$citizenship ? 'Not Uploaded' : ucfirst($citizenship->status) }}
+                            </span>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input
-                                type="email"
-                                class="form-control"
-                                value="{{ $user->email }}"
-                                disabled
-                            >
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            <input
-                                type="text"
-                                name="phone"
-                                class="form-control"
-                                value="{{ old('phone', $user->phone) }}"
-                            >
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
-                            <input
-                                type="text"
-                                name="address"
-                                class="form-control"
-                                value="{{ old('address', $user->address) }}"
-                            >
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 rounded-3">
-                            Update Profile
-                        </button>
-                    </form>
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('user.profile.edit') }}" class="btn btn-dark rounded-3">
+                            Edit Profile & Password
+                        </a>
+                        <a href="{{ route('user.profile.edit') }}#documents" class="btn btn-outline-dark rounded-3">
+                            Review Documents
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -391,158 +373,6 @@
                 </div>
             </div>
 
-            {{-- Documents --}}
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="mb-0 fw-bold">Documents</h5>
-                </div>
-
-                <div class="card-body px-4 pb-4">
-                    @php
-                        $license = $documents['license'] ?? null;
-                        $citizenship = $documents['citizenship'] ?? null;
-                    @endphp
-
-                    {{-- Driving License --}}
-                    <div class="border rounded-3 p-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold">Driving License</h6>
-
-                            @if($license)
-                                <span class="badge
-                                    {{ $license->status == 'approved' ? 'bg-success' :
-                                       ($license->status == 'rejected' ? 'bg-danger' : 'bg-warning text-dark') }}">
-                                    {{ ucfirst($license->status) }}
-                                </span>
-                            @else
-                                <span class="badge bg-secondary">Not Uploaded</span>
-                            @endif
-                        </div>
-
-                        @if($license)
-                            <div class="mb-2 small text-muted">
-                                Document Number: <span class="fw-semibold text-dark">{{ $license->document_number ?: 'N/A' }}</span>
-                            </div>
-
-                            <a href="{{ asset('storage/'.$license->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-3">
-                                View Document
-                            </a>
-                        @endif
-
-                        <form
-                            action="{{ $license ? route('user.documents.update', $license) : route('user.documents.store') }}"
-                            method="POST"
-                            enctype="multipart/form-data"
-                        >
-                            @csrf
-                            @if($license)
-                                @method('PUT')
-                            @endif
-
-                            <input type="hidden" name="type" value="license">
-
-                            <div class="row g-2">
-                                <div class="col-md-3">
-                                    <input type="file" name="file" class="form-control form-control-sm" {{ $license ? '' : 'required' }}>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <input
-                                        type="text"
-                                        name="document_number"
-                                        class="form-control form-control-sm"
-                                        placeholder="License Number"
-                                        value="{{ $license->document_number ?? '' }}"
-                                    >
-                                </div>
-
-                                <div class="col-md-2">
-                                    <input
-                                        type="date"
-                                        name="issued_at"
-                                        class="form-control form-control-sm"
-                                        value="{{ $license->issued_at ?? '' }}"
-                                    >
-                                </div>
-
-                                <div class="col-md-2">
-                                    <input
-                                        type="date"
-                                        name="expires_at"
-                                        class="form-control form-control-sm"
-                                        value="{{ $license->expires_at ?? '' }}"
-                                    >
-                                </div>
-
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    {{-- Citizenship --}}
-                    <div class="border rounded-3 p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold">Citizenship</h6>
-
-                            @if($citizenship)
-                                <span class="badge
-                                    {{ $citizenship->status == 'approved' ? 'bg-success' :
-                                       ($citizenship->status == 'rejected' ? 'bg-danger' : 'bg-warning text-dark') }}">
-                                    {{ ucfirst($citizenship->status) }}
-                                </span>
-                            @else
-                                <span class="badge bg-secondary">Not Uploaded</span>
-                            @endif
-                        </div>
-
-                        @if($citizenship)
-                            <div class="mb-2 small text-muted">
-                                Document Number: <span class="fw-semibold text-dark">{{ $citizenship->document_number ?: 'N/A' }}</span>
-                            </div>
-
-                            <a href="{{ asset('storage/'.$citizenship->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-3">
-                                View Document
-                            </a>
-                        @endif
-
-                        <form
-                            action="{{ $citizenship ? route('user.documents.update', $citizenship) : route('user.documents.store') }}"
-                            method="POST"
-                            enctype="multipart/form-data"
-                        >
-                            @csrf
-                            @if($citizenship)
-                                @method('PUT')
-                            @endif
-
-                            <input type="hidden" name="type" value="citizenship">
-
-                            <div class="row g-2">
-                                <div class="col-md-4">
-                                    <input type="file" name="file" class="form-control form-control-sm" {{ $citizenship ? '' : 'required' }}>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <input
-                                        type="text"
-                                        name="document_number"
-                                        class="form-control form-control-sm"
-                                        placeholder="Citizenship Number"
-                                        value="{{ $citizenship->document_number ?? '' }}"
-                                    >
-                                </div>
-
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
             {{-- Recent Booking History --}}
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4">
@@ -631,3 +461,4 @@
     </div>
 </div>
 @endsection
+
