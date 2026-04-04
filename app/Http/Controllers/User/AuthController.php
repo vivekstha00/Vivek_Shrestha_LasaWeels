@@ -59,7 +59,9 @@ class AuthController extends Controller
 
             // if vendor not verified, send to verification page
             if ($user->vendor_status !== 'approved') {
-                return redirect()->route('vendor.verification');
+                return redirect()
+                    ->route('vendor.verification')
+                    ->with('error', 'Please complete the document verification process first.');
             }
 
             return redirect()->route('vendor.dashboard');

@@ -33,7 +33,9 @@ class VendorMiddleware
             if (!$request->routeIs('vendor.verification') &&
                 !$request->routeIs('vendor.verification.resubmit')) {
 
-                return redirect()->route('vendor.verification');
+                return redirect()
+                    ->route('vendor.verification')
+                    ->with('error', 'Please complete the document verification process first.');
             }
         }
 

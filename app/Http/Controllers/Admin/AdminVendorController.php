@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\VendorProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\VendorApprovedNotification;
 use App\Notifications\VendorRejectedNotification;
 use App\Notifications\VendorReSubmissionNotification;
@@ -51,8 +52,8 @@ class AdminVendorController extends Controller
             ->update(['status' => 'approved']);
 
         $vendorUser = User::find($profile->user_id);
-        if ($vendorUser) {
-            $vendorUser->notify(new VendorApprovedNotification());
+        if ($vendorUser && !empty($vendorUser->email)) {
+            Notification::sendNow($vendorUser, new VendorApprovedNotification());
         }
 
         return back()->with('success', 'Vendor approved.');
@@ -82,8 +83,8 @@ class AdminVendorController extends Controller
             ->update(['status' => 'rejected']);
 
         $vendorUser = User::find($profile->user_id);
-        if ($vendorUser) {
-            $vendorUser->notify(new VendorRejectedNotification($request->remarks));
+        if ($vendorUser && !empty($vendorUser->email)) {
+            Notification::sendNow($vendorUser, new VendorRejectedNotification($request->remarks));
         }
 
         return back()->with('success', 'Vendor rejected.');
@@ -110,8 +111,8 @@ class AdminVendorController extends Controller
         ]);
 
         $vendorUser = User::find($profile->user_id);
-        if ($vendorUser) {
-            $vendorUser->notify(new VendorReSubmissionNotification($request->remarks));
+        if ($vendorUser && !empty($vendorUser->email)) {
+            Notification::sendNow($vendorUser, new VendorReSubmissionNotification($request->remarks));
         }
 
         return back()->with('success', 'Marked as resubmit requested.');

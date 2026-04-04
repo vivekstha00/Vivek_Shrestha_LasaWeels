@@ -38,6 +38,7 @@
                                 $statusConfig = match($profile->status) {
                                     'approved' => ['class' => 'bg-success', 'icon' => 'fa-circle-check'],
                                     'pending' => ['class' => 'bg-warning text-dark', 'icon' => 'fa-clock'],
+                                    'resubmit' => ['class' => 'bg-info text-dark', 'icon' => 'fa-rotate'],
                                     'rejected' => ['class' => 'bg-danger', 'icon' => 'fa-circle-xmark'],
                                     default => ['class' => 'bg-secondary', 'icon' => 'fa-circle-question'],
                                 };
@@ -130,81 +131,109 @@
                     <i class="fa-solid fa-file-lines me-2 text-primary"></i> Uploaded Documents
                 </h5>
 
-                @forelse($docs as $index => $doc)
-                    <div class="border rounded-3 p-3 mb-3" style="background: #faf8f5;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0 text-capitalize">{{ $doc->type }}</h6>
-                                <small class="text-muted">Uploaded {{ $doc->created_at?->format('d M Y') }}</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                @php
-                                    $docStatusClass = match($doc->status) {
-                                        'approved' => 'bg-success',
-                                        'pending' => 'bg-warning text-dark',
-                                        'rejected' => 'bg-danger',
-                                        default => 'bg-secondary'
-                                    };
-                                @endphp
-                                <span class="badge {{ $docStatusClass }}">{{ ucfirst($doc->status) }}</span>
-                                <a href="{{ asset('storage/'.$doc->file_path) }}"
-                                   target="_blank"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="fa-solid fa-external-link me-1"></i> Open
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                @empty
+                @if($docs->isEmpty())
                     <div class="text-center text-muted py-4">
                         <i class="fa-solid fa-folder-open fa-2x mb-2 d-block opacity-50"></i>
                         No documents uploaded.
                     </div>
-                @endforelse
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width: 170px;">Document</th>
+                                    <th style="min-width: 130px;">Uploaded</th>
+                                    <th style="min-width: 120px;">Status</th>
+                                    <th style="min-width: 220px;">Remark</th>
+                                    <th style="min-width: 360px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($docs as $doc)
+                                    @php
+                                        $docStatusClass = match($doc->status) {
+                                            'approved' => 'bg-success',
+                                            'pending' => 'bg-warning text-dark',
+                                            'rejected' => 'bg-danger',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td class="fw-semibold">{{ ucwords(str_replace('_', ' ', $doc->type)) }}</td>
+                                        <td>{{ $doc->created_at?->format('d M Y') ?? '—' }}</td>
+                                        <td>
+                                            <span class="badge {{ $docStatusClass }}">{{ ucfirst($doc->status) }}</span>
+                                        </td>
+                                        <td>{{ $doc->remarks ?: '—' }}</td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-2">
+                                                <a href="{{ asset('storage/'.$doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa-solid fa-external-link me-1"></i> View Document
+                                                </a>
+
+                                                @if($doc->status !== 'approved')
+                                                    <form action="{{ route('admin.documents.approve', $doc->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="redirect_to" value="{{ url()->full() }}">
+                                                        <button class="btn btn-success btn-sm w-100" type="submit">
+                                                            <i class="fa-solid fa-check me-1"></i> Approve
+                                                        </button>
+                                                    </form>
+
+                                                    <form action="{{ route('admin.documents.reject', $doc->id) }}" method="POST" class="d-flex gap-2">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="redirect_to" value="{{ url()->full() }}">
+                                                        <input
+                                                            type="text"
+                                                            name="remarks"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Reason for rejection"
+                                                            required
+                                                        >
+                                                        <button class="btn btn-warning btn-sm" type="submit">
+                                                            Reject
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
         </div>
-    <!-- Actions -->
+    <!-- Manual Override Actions -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
-            <h5 class="fw-bold mb-3">
-                <i class="fa-solid fa-bolt me-2 text-primary"></i> Actions
-            </h5>
+            <h5 class="fw-bold mb-3">Manual Override Actions</h5>
 
-            <div class="row g-3">
-                @if($profile->status === 'pending')
-                    <div class="col-lg-4">
-                        <div class="border rounded-3 p-3 h-100 bg-light">
-                            <h6 class="fw-semibold mb-3">Approve Vendor</h6>
-                            <form action="{{ route('admin.vendors.approve', $profile->id) }}" method="POST">
-                                @csrf
-                                <button class="btn btn-success w-100">Approve</button>
-                            </form>
-                        </div>
+            <div class="row g-3 align-items-end">
+                @if($profile->status !== 'approved')
+                    <div class="col-md-4">
+                        <form action="{{ route('admin.vendors.approve', $profile->id) }}" method="POST">
+                            @csrf
+                            <button class="btn btn-success w-100">Approve Vendor</button>
+                        </form>
                     </div>
                 @endif
 
-                <div class="col-lg-4">
-                    <div class="border rounded-3 p-3 h-100 bg-light">
-                        <h6 class="fw-semibold mb-2">Request Resubmission</h6>
-                        <form action="{{ route('admin.vendors.resubmit', $profile->id) }}" method="POST">
-                            @csrf
-                            <textarea name="remarks" class="form-control mb-2" rows="2"
-                                      placeholder="Reason for resubmission..." required></textarea>
-                            <button class="btn btn-warning w-100">Request Resubmit</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="border rounded-3 p-3 h-100 bg-light">
-                        <h6 class="fw-semibold mb-2">Reject Vendor</h6>
-                        <form action="{{ route('admin.vendors.reject', $profile->id) }}" method="POST">
-                            @csrf
-                            <textarea name="remarks" class="form-control mb-2" rows="2"
-                                      placeholder="Reason for rejection..." required></textarea>
-                            <button class="btn btn-danger w-100">Reject</button>
-                        </form>
-                    </div>
+                <div class="col-md-8">
+                    <form action="{{ route('admin.vendors.reject', $profile->id) }}" method="POST" class="d-flex gap-2">
+                        @csrf
+                        <input
+                            type="text"
+                            name="remarks"
+                            class="form-control"
+                            placeholder="Reason for rejection"
+                            required
+                        >
+                        <button class="btn btn-danger">Reject Vendor</button>
+                    </form>
                 </div>
             </div>
         </div>

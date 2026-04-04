@@ -414,19 +414,35 @@ class VendorRegisterController extends Controller
         try {
             $this->storeOrUpdateDocument($vendor, $request->file('document'), $validated['type']);
 
+            $remainingRejectedCount = $vendor->vendorDocuments()
+                ->where('purpose', self::DOCUMENT_PURPOSE)
+                ->where('status', 'rejected')
+                ->count();
+
+            $nextStatus = $remainingRejectedCount > 0 ? 'resubmit' : 'pending';
+
             $vendor->update([
-                'vendor_status' => 'pending',
+                'vendor_status' => $nextStatus,
                 'verification_note' => null,
             ]);
 
             $vendor->vendorProfile()->update([
-                'status' => 'pending',
+                'status' => $nextStatus,
                 'remarks' => null,
                 'reviewed_by' => null,
                 'reviewed_at' => null,
             ]);
 
             DB::commit();
+
+            $admins = User::query()
+                ->where('role', 'admin')
+                ->whereNotNull('email')
+                ->get();
+
+            if ($admins->isNotEmpty()) {
+                Notification::sendNow($admins, new VendorRequestSubmittedNotification($vendor));
+            }
 
             return back()->with('success', ucfirst(str_replace('_', ' ', $validated['type'])) . ' resubmitted successfully.');
         } catch (\Throwable $e) {
