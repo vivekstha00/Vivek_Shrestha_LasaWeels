@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\VendorSubscription;
+use App\Notifications\VendorSubscriptionActivatedNotification;
 use App\Services\VendorSubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 
 class VendorSubscriptionPaymentController extends Controller
 {
@@ -207,7 +209,17 @@ class VendorSubscriptionPaymentController extends Controller
                 $currentActiveSubscription->update([
                     'ends_at' => $newEndsAt,
                     'amount_paid' => (float) $currentActiveSubscription->amount_paid + (float) $subscriptionPayment->amount,
+                    'expiry_reminder_sent_on' => null,
                 ]);
+
+                $currentActiveSubscription->load(['vendor', 'plan']);
+
+                if ($currentActiveSubscription->vendor && !empty($currentActiveSubscription->vendor->email)) {
+                    Notification::sendNow(
+                        $currentActiveSubscription->vendor,
+                        new VendorSubscriptionActivatedNotification($currentActiveSubscription, true)
+                    );
+                }
 
                 Cookie::queue(Cookie::forget('khalti_subscription_payment_id'));
 
@@ -224,14 +236,24 @@ class VendorSubscriptionPaymentController extends Controller
             $startsAt = now();
             $endsAt = $this->calculateEndDate($plan, $startsAt);
 
-            VendorSubscription::create([
+            $newSubscription = VendorSubscription::create([
                 'vendor_id' => $vendorId,
                 'subscription_plan_id' => $plan->id,
                 'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
                 'status' => 'active',
                 'amount_paid' => $subscriptionPayment->amount,
+                'expiry_reminder_sent_on' => null,
             ]);
+
+            $newSubscription->load(['vendor', 'plan']);
+
+            if ($newSubscription->vendor && !empty($newSubscription->vendor->email)) {
+                Notification::sendNow(
+                    $newSubscription->vendor,
+                    new VendorSubscriptionActivatedNotification($newSubscription, false)
+                );
+            }
 
             Cookie::queue(Cookie::forget('khalti_subscription_payment_id'));
 

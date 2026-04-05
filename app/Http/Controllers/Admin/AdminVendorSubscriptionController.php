@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Models\VendorProfile;
 use App\Models\VendorSubscription;
+use App\Notifications\VendorSubscriptionActivatedNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class AdminVendorSubscriptionController extends Controller
 {
@@ -44,7 +46,18 @@ class AdminVendorSubscriptionController extends Controller
             $this->deactivateOtherActiveSubscriptions($preparedData['vendor_id']);
         }
 
-        VendorSubscription::create($preparedData);
+        $vendorSubscription = VendorSubscription::create($preparedData);
+
+        if ($preparedData['status'] === 'active') {
+            $vendorSubscription->load(['vendor', 'plan']);
+
+            if ($vendorSubscription->vendor && !empty($vendorSubscription->vendor->email)) {
+                Notification::sendNow(
+                    $vendorSubscription->vendor,
+                    new VendorSubscriptionActivatedNotification($vendorSubscription, false)
+                );
+            }
+        }
 
         return redirect()
             ->route('admin.vendor-subscriptions.index')
@@ -82,6 +95,11 @@ class AdminVendorSubscriptionController extends Controller
 
         $preparedData = $this->prepareData($data);
 
+        $oldStatus = $vendorSubscription->status;
+        $oldPlanId = $vendorSubscription->subscription_plan_id;
+        $oldStartsAt = optional($vendorSubscription->starts_at)?->toDateTimeString();
+        $oldEndsAt = optional($vendorSubscription->ends_at)?->toDateTimeString();
+
         if ($preparedData['status'] === 'active') {
             $this->deactivateOtherActiveSubscriptions(
                 $preparedData['vendor_id'],
@@ -90,6 +108,28 @@ class AdminVendorSubscriptionController extends Controller
         }
 
         $vendorSubscription->update($preparedData);
+
+        if ($preparedData['status'] === 'active') {
+            $newStartsAt = optional($vendorSubscription->starts_at)?->toDateTimeString();
+            $newEndsAt = optional($vendorSubscription->ends_at)?->toDateTimeString();
+
+            $shouldNotify =
+                $oldStatus !== 'active'
+                || (int) $oldPlanId !== (int) $vendorSubscription->subscription_plan_id
+                || $oldStartsAt !== $newStartsAt
+                || $oldEndsAt !== $newEndsAt;
+
+            if ($shouldNotify) {
+                $vendorSubscription->load(['vendor', 'plan']);
+
+                if ($vendorSubscription->vendor && !empty($vendorSubscription->vendor->email)) {
+                    Notification::sendNow(
+                        $vendorSubscription->vendor,
+                        new VendorSubscriptionActivatedNotification($vendorSubscription, false)
+                    );
+                }
+            }
+        }
 
         return redirect()
             ->route('admin.vendor-subscriptions.index')
