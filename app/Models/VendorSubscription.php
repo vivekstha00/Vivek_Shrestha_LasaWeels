@@ -15,6 +15,7 @@ class VendorSubscription extends Model
         'subscription_plan_id',
         'starts_at',
         'ends_at',
+        'expiry_reminder_sent_on',
         'status',
         'amount_paid',
     ];
@@ -22,6 +23,7 @@ class VendorSubscription extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'expiry_reminder_sent_on' => 'date',
         'amount_paid' => 'decimal:2',
     ];
 
