@@ -8,6 +8,9 @@
 <div class="container-fluid py-4">
 
     <h3 class="mb-4">Edit Vehicle</h3>
+    <div class="alert alert-warning rounded-3">
+        Updating this vehicle will submit it again for admin approval.
+    </div>
 
     <form method="POST" action="{{ route('vendor.vehicles.update',$vehicle->id) }}" enctype="multipart/form-data">
         @csrf
@@ -163,6 +166,35 @@
                     <div class="col-md-6">
                         <label class="form-label">Add More Images</label>
                         <input type="file" name="images[]" multiple class="form-control" accept="image/*">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Registration Document</label>
+                        <input type="file" name="vehicle_registration_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                        @error('vehicle_registration_document') <small class="text-danger">{{ $message }}</small> @enderror
+                        @if($vehicle->vehicle_registration_document_path)
+                            <a href="{{ asset('storage/' . $vehicle->vehicle_registration_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                View Current Registration Document
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Document</label>
+                        <input type="file" name="insurance_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                        @error('insurance_document') <small class="text-danger">{{ $message }}</small> @enderror
+                        @if($vehicle->insurance_document_path)
+                            <a href="{{ asset('storage/' . $vehicle->insurance_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                View Current Insurance Document
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Expiry Date</label>
+                        <input type="date" name="insurance_expiry_date" class="form-control"
+                               value="{{ old('insurance_expiry_date', optional($vehicle->insurance_expiry_date)->format('Y-m-d')) }}">
+                        @error('insurance_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="col-12">

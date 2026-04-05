@@ -48,6 +48,9 @@ class Vehicle extends Model
         'pickup_address',
 
         'image_url',
+    'vehicle_registration_document_path',
+    'insurance_document_path',
+    'insurance_expiry_date',
         'description',
 
         'status',
@@ -72,6 +75,7 @@ class Vehicle extends Model
         'discount_60_days' => 'decimal:2',
         'is_active' => 'boolean',
         'approved_at' => 'datetime',
+        'insurance_expiry_date' => 'date',
     ];
 
     public function vendor(): BelongsTo

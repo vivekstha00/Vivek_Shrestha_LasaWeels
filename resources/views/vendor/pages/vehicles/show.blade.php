@@ -311,6 +311,39 @@
     </div>
 </div>
 
+{{-- Verification Documents --}}
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <h5 class="mb-3">Verification Documents</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="small text-muted">Registration Document</div>
+                @if($vehicle->vehicle_registration_document_path)
+                    <a href="{{ asset('storage/' . $vehicle->vehicle_registration_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                        View
+                    </a>
+                @else
+                    <div class="fw-semibold">—</div>
+                @endif
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Insurance Document</div>
+                @if($vehicle->insurance_document_path)
+                    <a href="{{ asset('storage/' . $vehicle->insurance_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                        View
+                    </a>
+                @else
+                    <div class="fw-semibold">—</div>
+                @endif
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Insurance Expiry Date</div>
+                <div class="fw-semibold">{{ optional($vehicle->insurance_expiry_date)->format('d M Y') ?? '—' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Service History --}}
 <div class="card shadow-sm mt-3">
     <div class="card-body">

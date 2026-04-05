@@ -45,33 +45,58 @@
                     <span class="small text-muted">Profile + Photo</span>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data">
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" novalidate>
                         @csrf
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Profile Image</label>
-                                <input type="file" name="profile_image" class="form-control">
+                                <input type="file" name="profile_image" class="form-control @error('profile_image') is-invalid @enderror">
+                                @error('profile_image')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                                 <small class="text-muted">JPG/PNG/WEBP • max 2MB</small>
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label">Full Name</label>
-                                <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $user->name) }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-4">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" value="{{ $user->email }}" disabled>
+                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required>
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}">
+                                <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}" placeholder="10-digit phone number">
+                                @error('phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Address</label>
-                                <input type="text" name="address" class="form-control" value="{{ old('address', $user->address) }}">
+                                <input type="text" name="address" class="form-control @error('address') is-invalid @enderror" value="{{ old('address', $user->address) }}">
+                                @error('address')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 

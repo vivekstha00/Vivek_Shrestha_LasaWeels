@@ -111,10 +111,27 @@ class UserProfileController extends Controller
 
         $validated = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
-            'phone'         => ['nullable', 'string', 'max:20'],
+            'email'         => [
+                'required',
+                'email:rfc,dns',
+                'max:255',
+                'unique:users,email,' . $user->id,
+                function ($attribute, $value, $fail) {
+                    if (!str_ends_with(strtolower($value), '@gmail.com')) {
+                        $fail('Please enter the valid email address.');
+                    }
+                },
+            ],
+            'phone'         => ['nullable', 'regex:/^\d{10}$/'],
             'address'       => ['nullable', 'string', 'max:255'],
             'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'email.email' => 'Please enter the valid email address.',
+            'email.required' => 'Please enter the valid email address.',
+            'phone.regex' => 'Phone number must be exactly 10 digits.',
         ]);
+
+        $validated['email'] = strtolower($validated['email']);
 
         if ($request->hasFile('profile_image')) {
             if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {

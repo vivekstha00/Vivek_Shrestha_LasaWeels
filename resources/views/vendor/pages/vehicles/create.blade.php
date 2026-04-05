@@ -8,6 +8,9 @@
 <div class="container-fluid py-4">
 
     <h3 class="mb-4">Create Vehicle</h3>
+    <div class="alert alert-info rounded-3">
+        New vehicles require admin approval before going live. Please upload valid registration and insurance documents.
+    </div>
 
     @if(isset($subscriptionSummary))
         <div class="alert {{ ($canAddVehicle ?? false) ? 'alert-info' : 'alert-warning' }} rounded-3 mb-4">
@@ -172,6 +175,24 @@
                         <input type="file" name="images[]" multiple class="form-control" accept="image/*">
                         @error('images') <small class="text-danger">{{ $message }}</small> @enderror
                         @error('images.*') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Vehicle Registration Document *</label>
+                        <input type="file" name="vehicle_registration_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                        @error('vehicle_registration_document') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Document *</label>
+                        <input type="file" name="insurance_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                        @error('insurance_document') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Expiry Date *</label>
+                        <input type="date" name="insurance_expiry_date" class="form-control" value="{{ old('insurance_expiry_date') }}" required>
+                        @error('insurance_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="col-12">

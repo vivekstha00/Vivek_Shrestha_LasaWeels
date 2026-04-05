@@ -73,6 +73,8 @@
                                 <td>
                                     @php
                                         $statusClass = match($vehicle->status) {
+                                            'approved' => 'bg-success',
+                                            'rejected' => 'bg-danger',
                                             'available' => 'bg-success',
                                             'pending' => 'bg-warning text-dark',
                                             'maintenance' => 'bg-secondary',

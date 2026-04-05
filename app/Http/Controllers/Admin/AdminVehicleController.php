@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\VehicleApprovedToVendorNotification;
+use App\Notifications\VehicleRejectedToVendorNotification;
 
 class AdminVehicleController extends Controller
 {
@@ -34,6 +37,10 @@ class AdminVehicleController extends Controller
             'is_active'    => true,
         ]);
 
+        if ($vehicle->vendor && !empty($vehicle->vendor->email)) {
+            Notification::sendNow($vehicle->vendor, new VehicleApprovedToVendorNotification($vehicle->fresh('vendor')));
+        }
+
         return back()->with('success', 'Vehicle approved successfully.');
     }
 
@@ -49,7 +56,12 @@ class AdminVehicleController extends Controller
             'approved_by'   => Auth::id(),
             'approved_at'   => now(),
             'reject_reason' => $data['reject_reason'],
+            'is_active'     => false,
         ]);
+
+        if ($vehicle->vendor && !empty($vehicle->vendor->email)) {
+            Notification::sendNow($vehicle->vendor, new VehicleRejectedToVendorNotification($vehicle->fresh('vendor'), $data['reject_reason']));
+        }
 
         return back()->with('success', 'Vehicle rejected successfully.');
     }
@@ -63,6 +75,10 @@ class AdminVehicleController extends Controller
 
     public function toggleActive(Vehicle $vehicle)
     {
+        if ($vehicle->status !== 'approved' && !$vehicle->is_active) {
+            return back()->with('error', 'Only approved vehicles can be activated.');
+        }
+
         $vehicle->update([
             'is_active' => !$vehicle->is_active,
         ]);

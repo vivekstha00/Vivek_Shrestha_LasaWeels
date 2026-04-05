@@ -32,7 +32,14 @@
                         <td class="text-capitalize">{{ $vehicle->vehicle_type }}</td>
                         <td>NPR {{ number_format($vehicle->price_per_day, 2) }}</td>
                         <td>
-                            <span class="badge {{ $vehicle->status === 'approved' ? 'bg-success' : 'bg-warning' }}">
+                            @php
+                                $statusClass = match($vehicle->status) {
+                                    'approved' => 'bg-success',
+                                    'rejected' => 'bg-danger',
+                                    default => 'bg-warning text-dark',
+                                };
+                            @endphp
+                            <span class="badge {{ $statusClass }}">
                                 {{ ucfirst($vehicle->status) }}
                             </span>
                         </td>

@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Services\VendorSubscriptionService;
+use App\Notifications\VehicleApprovalRequestToAdminNotification;
+use Illuminate\Support\Facades\Notification;
+use App\Models\User;
 
 class VendorVehicleController extends Controller
 {
@@ -109,6 +112,9 @@ class VendorVehicleController extends Controller
 
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'max:2048'],
+            'vehicle_registration_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'insurance_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'insurance_expiry_date' => ['required', 'date', 'after_or_equal:today'],
         ]);
 
         $this->normalizeVehicleData($data);
@@ -158,12 +164,20 @@ class VendorVehicleController extends Controller
 
             'description' => $data['description'] ?? null,
             'location_city' => $data['location_city'],
+            'insurance_expiry_date' => $data['insurance_expiry_date'],
 
-            'status' => 'available',
-            'is_active' => true,
+            'status' => 'pending',
+            'is_active' => false,
             'approved_by' => null,
             'approved_at' => null,
             'reject_reason' => null,
+        ]);
+
+        $vehicle->update([
+            'vehicle_registration_document_path' => $request->file('vehicle_registration_document')
+                ->store('vehicle-documents/registration', 'public'),
+            'insurance_document_path' => $request->file('insurance_document')
+                ->store('vehicle-documents/insurance', 'public'),
         ]);
 
         if ($request->hasFile('images')) {
@@ -184,9 +198,18 @@ class VendorVehicleController extends Controller
             }
         }
 
+        $admins = User::query()
+            ->where('role', 'admin')
+            ->whereNotNull('email')
+            ->get();
+
+        if ($admins->isNotEmpty()) {
+            Notification::sendNow($admins, new VehicleApprovalRequestToAdminNotification($vehicle->fresh('vendor')));
+        }
+
         return redirect()
             ->route('vendor.vehicles.index')
-            ->with('success', 'Vehicle added successfully.');
+            ->with('success', 'Vehicle submitted successfully and sent for admin approval.');
     }
 
     public function edit(Vehicle $vehicle)
@@ -239,6 +262,23 @@ class VendorVehicleController extends Controller
 
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'max:2048'],
+            'vehicle_registration_document' => [
+                $vehicle->vehicle_registration_document_path ? 'nullable' : 'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
+            ],
+            'insurance_document' => [
+                $vehicle->insurance_document_path ? 'nullable' : 'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
+            ],
+            'insurance_expiry_date' => [
+                $vehicle->insurance_expiry_date ? 'nullable' : 'required',
+                'date',
+                'after_or_equal:today',
+            ],
         ]);
 
         $this->normalizeVehicleData($data);
@@ -287,12 +327,36 @@ class VendorVehicleController extends Controller
 
             'location_city' => $data['location_city'],
             'description' => $data['description'] ?? null,
+            'insurance_expiry_date' => $data['insurance_expiry_date'] ?? $vehicle->insurance_expiry_date,
 
             'status' => 'pending',
+            'is_active' => false,
             'approved_by' => null,
             'approved_at' => null,
             'reject_reason' => null,
         ]);
+
+        if ($request->hasFile('vehicle_registration_document')) {
+            if ($vehicle->vehicle_registration_document_path && Storage::disk('public')->exists($vehicle->vehicle_registration_document_path)) {
+                Storage::disk('public')->delete($vehicle->vehicle_registration_document_path);
+            }
+
+            $vehicle->update([
+                'vehicle_registration_document_path' => $request->file('vehicle_registration_document')
+                    ->store('vehicle-documents/registration', 'public'),
+            ]);
+        }
+
+        if ($request->hasFile('insurance_document')) {
+            if ($vehicle->insurance_document_path && Storage::disk('public')->exists($vehicle->insurance_document_path)) {
+                Storage::disk('public')->delete($vehicle->insurance_document_path);
+            }
+
+            $vehicle->update([
+                'insurance_document_path' => $request->file('insurance_document')
+                    ->store('vehicle-documents/insurance', 'public'),
+            ]);
+        }
 
         if ($request->hasFile('images')) {
             $hasPrimary = $vehicle->images()->where('is_primary', true)->exists();
@@ -312,6 +376,15 @@ class VendorVehicleController extends Controller
             }
         }
 
+        $admins = User::query()
+            ->where('role', 'admin')
+            ->whereNotNull('email')
+            ->get();
+
+        if ($admins->isNotEmpty()) {
+            Notification::sendNow($admins, new VehicleApprovalRequestToAdminNotification($vehicle->fresh('vendor')));
+        }
+
         return redirect()
             ->route('vendor.vehicles.index')
             ->with('success', 'Vehicle updated successfully and sent for re-approval.');
@@ -327,6 +400,14 @@ class VendorVehicleController extends Controller
             if ($img->path && Storage::disk('public')->exists($img->path)) {
                 Storage::disk('public')->delete($img->path);
             }
+        }
+
+        if ($vehicle->vehicle_registration_document_path && Storage::disk('public')->exists($vehicle->vehicle_registration_document_path)) {
+            Storage::disk('public')->delete($vehicle->vehicle_registration_document_path);
+        }
+
+        if ($vehicle->insurance_document_path && Storage::disk('public')->exists($vehicle->insurance_document_path)) {
+            Storage::disk('public')->delete($vehicle->insurance_document_path);
         }
 
         $vehicle->delete();

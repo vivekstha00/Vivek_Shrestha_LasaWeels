@@ -18,6 +18,13 @@
     </div>
 @endif
 
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 <div class="row g-4">
     <!-- Left Column -->
     <div class="col-lg-8">
@@ -158,6 +165,37 @@
                 @endif
             </div>
         </div>
+
+        <!-- Verification Documents -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fa-solid fa-file-shield me-2 text-primary"></i> Verification Documents
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="text-muted small">Registration Document</div>
+                        @if($vehicle->vehicle_registration_document_path)
+                            <a href="{{ asset('storage/' . $vehicle->vehicle_registration_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">View Document</a>
+                        @else
+                            <div class="fw-semibold">Not Uploaded</div>
+                        @endif
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">Insurance Document</div>
+                        @if($vehicle->insurance_document_path)
+                            <a href="{{ asset('storage/' . $vehicle->insurance_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">View Document</a>
+                        @else
+                            <div class="fw-semibold">Not Uploaded</div>
+                        @endif
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">Insurance Expiry Date</div>
+                        <div class="fw-semibold">{{ optional($vehicle->insurance_expiry_date)->format('d M Y') ?? '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Right Column -->
@@ -241,7 +279,9 @@
                     </form>
                     <form method="POST" action="{{ route('admin.vehicles.reject', $vehicle) }}">
                         @csrf
-                        <input type="hidden" name="reject_reason" value="Rejected by admin">
+                        <div class="mb-2">
+                            <textarea name="reject_reason" class="form-control" rows="2" placeholder="Write rejection reason" required></textarea>
+                        </div>
                         <button type="submit" class="btn btn-danger w-100">
                             <i class="fa-solid fa-xmark me-1"></i> Reject
                         </button>
