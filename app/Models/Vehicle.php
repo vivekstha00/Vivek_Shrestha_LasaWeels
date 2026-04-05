@@ -51,6 +51,10 @@ class Vehicle extends Model
     'vehicle_registration_document_path',
     'insurance_document_path',
     'insurance_expiry_date',
+    'road_tax_document_path',
+    'road_tax_expiry_date',
+    'insurance_expiry_reminder_sent_on',
+    'road_tax_expiry_reminder_sent_on',
         'description',
 
         'status',
@@ -76,6 +80,9 @@ class Vehicle extends Model
         'is_active' => 'boolean',
         'approved_at' => 'datetime',
         'insurance_expiry_date' => 'date',
+        'road_tax_expiry_date' => 'date',
+        'insurance_expiry_reminder_sent_on' => 'date',
+        'road_tax_expiry_reminder_sent_on' => 'date',
     ];
 
     public function vendor(): BelongsTo

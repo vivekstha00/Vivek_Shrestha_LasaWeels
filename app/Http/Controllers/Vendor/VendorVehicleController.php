@@ -115,6 +115,8 @@ class VendorVehicleController extends Controller
             'vehicle_registration_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'insurance_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'insurance_expiry_date' => ['required', 'date', 'after_or_equal:today'],
+            'road_tax_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'road_tax_expiry_date' => ['required', 'date', 'after_or_equal:today'],
         ]);
 
         $this->normalizeVehicleData($data);
@@ -165,6 +167,7 @@ class VendorVehicleController extends Controller
             'description' => $data['description'] ?? null,
             'location_city' => $data['location_city'],
             'insurance_expiry_date' => $data['insurance_expiry_date'],
+            'road_tax_expiry_date' => $data['road_tax_expiry_date'],
 
             'status' => 'pending',
             'is_active' => false,
@@ -178,6 +181,10 @@ class VendorVehicleController extends Controller
                 ->store('vehicle-documents/registration', 'public'),
             'insurance_document_path' => $request->file('insurance_document')
                 ->store('vehicle-documents/insurance', 'public'),
+            'road_tax_document_path' => $request->file('road_tax_document')
+                ->store('vehicle-documents/road-tax', 'public'),
+            'insurance_expiry_reminder_sent_on' => null,
+            'road_tax_expiry_reminder_sent_on' => null,
         ]);
 
         if ($request->hasFile('images')) {
@@ -279,6 +286,17 @@ class VendorVehicleController extends Controller
                 'date',
                 'after_or_equal:today',
             ],
+            'road_tax_document' => [
+                $vehicle->road_tax_document_path ? 'nullable' : 'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
+            ],
+            'road_tax_expiry_date' => [
+                $vehicle->road_tax_expiry_date ? 'nullable' : 'required',
+                'date',
+                'after_or_equal:today',
+            ],
         ]);
 
         $this->normalizeVehicleData($data);
@@ -328,6 +346,7 @@ class VendorVehicleController extends Controller
             'location_city' => $data['location_city'],
             'description' => $data['description'] ?? null,
             'insurance_expiry_date' => $data['insurance_expiry_date'] ?? $vehicle->insurance_expiry_date,
+            'road_tax_expiry_date' => $data['road_tax_expiry_date'] ?? $vehicle->road_tax_expiry_date,
 
             'status' => 'pending',
             'is_active' => false,
@@ -356,6 +375,31 @@ class VendorVehicleController extends Controller
                 'insurance_document_path' => $request->file('insurance_document')
                     ->store('vehicle-documents/insurance', 'public'),
             ]);
+        }
+
+        if ($request->hasFile('road_tax_document')) {
+            if ($vehicle->road_tax_document_path && Storage::disk('public')->exists($vehicle->road_tax_document_path)) {
+                Storage::disk('public')->delete($vehicle->road_tax_document_path);
+            }
+
+            $vehicle->update([
+                'road_tax_document_path' => $request->file('road_tax_document')
+                    ->store('vehicle-documents/road-tax', 'public'),
+            ]);
+        }
+
+        $resetReminderPayload = [];
+
+        if (!empty($data['insurance_expiry_date'])) {
+            $resetReminderPayload['insurance_expiry_reminder_sent_on'] = null;
+        }
+
+        if (!empty($data['road_tax_expiry_date'])) {
+            $resetReminderPayload['road_tax_expiry_reminder_sent_on'] = null;
+        }
+
+        if (!empty($resetReminderPayload)) {
+            $vehicle->update($resetReminderPayload);
         }
 
         if ($request->hasFile('images')) {
@@ -408,6 +452,10 @@ class VendorVehicleController extends Controller
 
         if ($vehicle->insurance_document_path && Storage::disk('public')->exists($vehicle->insurance_document_path)) {
             Storage::disk('public')->delete($vehicle->insurance_document_path);
+        }
+
+        if ($vehicle->road_tax_document_path && Storage::disk('public')->exists($vehicle->road_tax_document_path)) {
+            Storage::disk('public')->delete($vehicle->road_tax_document_path);
         }
 
         $vehicle->delete();

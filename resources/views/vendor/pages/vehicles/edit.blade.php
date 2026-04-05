@@ -197,6 +197,24 @@
                         @error('insurance_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label">Road Tax Document</label>
+                        <input type="file" name="road_tax_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                        @error('road_tax_document') <small class="text-danger">{{ $message }}</small> @enderror
+                        @if($vehicle->road_tax_document_path)
+                            <a href="{{ asset('storage/' . $vehicle->road_tax_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                View Current Road Tax Document
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Road Tax Expiry Date</label>
+                        <input type="date" name="road_tax_expiry_date" class="form-control"
+                               value="{{ old('road_tax_expiry_date', optional($vehicle->road_tax_expiry_date)->format('Y-m-d')) }}">
+                        @error('road_tax_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label">Description</label>
                         <textarea name="description" class="form-control" rows="4">{{ old('description',$vehicle->description) }}</textarea>

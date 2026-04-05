@@ -8,11 +8,26 @@ use Illuminate\Http\Request;
 
 class UserVehicleController extends Controller
 {
+    private function applyPublicVisibilityFilters($query)
+    {
+        return $query
+            ->where('status', 'approved')
+            ->where('is_active', 1)
+            ->where(function ($q) {
+                $q->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+            })
+            ->where(function ($q) {
+                $q->whereNull('road_tax_expiry_date')
+                    ->orWhereDate('road_tax_expiry_date', '>=', now()->toDateString());
+            });
+    }
+
     public function index(Request $request)
     {
-        $query = Vehicle::with(['images', 'primaryImage'])
-            ->where('status', 'available')
-            ->where('is_active', 1);
+        $query = $this->applyPublicVisibilityFilters(
+            Vehicle::with(['images', 'primaryImage'])
+        );
 
         if ($request->filled('wheel_type')) {
             $query->where('wheel_type', $request->wheel_type);
@@ -45,6 +60,18 @@ class UserVehicleController extends Controller
 
     public function browseShow(Vehicle $vehicle)
     {
+        abort_unless(
+            $vehicle->status === 'approved'
+            && (bool) $vehicle->is_active
+            && (is_null($vehicle->insurance_expiry_date) || $vehicle->insurance_expiry_date->isToday() || $vehicle->insurance_expiry_date->isFuture()),
+            404
+        );
+
+        abort_unless(
+            is_null($vehicle->road_tax_expiry_date) || $vehicle->road_tax_expiry_date->isToday() || $vehicle->road_tax_expiry_date->isFuture(),
+            404
+        );
+
         $vehicle->load([
             'images',
             'primaryImage',
@@ -82,6 +109,18 @@ class UserVehicleController extends Controller
 
     public function show(Request $request, Vehicle $vehicle)
     {
+        abort_unless(
+            $vehicle->status === 'approved'
+            && (bool) $vehicle->is_active
+            && (is_null($vehicle->insurance_expiry_date) || $vehicle->insurance_expiry_date->isToday() || $vehicle->insurance_expiry_date->isFuture()),
+            404
+        );
+
+        abort_unless(
+            is_null($vehicle->road_tax_expiry_date) || $vehicle->road_tax_expiry_date->isToday() || $vehicle->road_tax_expiry_date->isFuture(),
+            404
+        );
+
         $search = $request->validate([
             'service'         => ['nullable', 'in:self,driver'],
             'wheel_type'      => ['nullable', 'in:2_wheeler,4_wheeler'],

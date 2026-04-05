@@ -39,3 +39,4 @@ Artisan::command('mail:test {to? : Recipient email address}', function (?string 
 
 Schedule::command('bookings:auto-complete')->everyFiveMinutes();
 Schedule::command('app:send-booking-reminders')->everyFifteenMinutes();
+Schedule::command('vehicles:check-compliance-expiry')->dailyAt('08:00');

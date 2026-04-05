@@ -9,7 +9,7 @@
 
     <h3 class="mb-4">Create Vehicle</h3>
     <div class="alert alert-info rounded-3">
-        New vehicles require admin approval before going live. Please upload valid registration and insurance documents.
+        New vehicles require admin approval before going live. Please upload valid registration, insurance, and road tax documents.
     </div>
 
     @if(isset($subscriptionSummary))
@@ -193,6 +193,18 @@
                         <label class="form-label">Insurance Expiry Date *</label>
                         <input type="date" name="insurance_expiry_date" class="form-control" value="{{ old('insurance_expiry_date') }}" required>
                         @error('insurance_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Road Tax Document *</label>
+                        <input type="file" name="road_tax_document" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required>
+                        @error('road_tax_document') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Road Tax Expiry Date *</label>
+                        <input type="date" name="road_tax_expiry_date" class="form-control" value="{{ old('road_tax_expiry_date') }}" required>
+                        @error('road_tax_expiry_date') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="col-12">

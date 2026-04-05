@@ -340,6 +340,20 @@
                 <div class="small text-muted">Insurance Expiry Date</div>
                 <div class="fw-semibold">{{ optional($vehicle->insurance_expiry_date)->format('d M Y') ?? '—' }}</div>
             </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Road Tax Document</div>
+                @if($vehicle->road_tax_document_path)
+                    <a href="{{ asset('storage/' . $vehicle->road_tax_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                        View
+                    </a>
+                @else
+                    <div class="fw-semibold">—</div>
+                @endif
+            </div>
+            <div class="col-md-4">
+                <div class="small text-muted">Road Tax Expiry Date</div>
+                <div class="fw-semibold">{{ optional($vehicle->road_tax_expiry_date)->format('d M Y') ?? '—' }}</div>
+            </div>
         </div>
     </div>
 </div>
