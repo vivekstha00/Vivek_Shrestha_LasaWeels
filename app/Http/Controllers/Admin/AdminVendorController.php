@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\Driver;
+use App\Models\Booking;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VendorProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +32,33 @@ class AdminVendorController extends Controller
         $profile = VendorProfile::with('user')->findOrFail($id);
         $docs = Document::where('user_id', $profile->user_id)->latest()->get();
 
-        return view('admin.vendors.show', compact('profile', 'docs'));
+        $vendorUserId = $profile->user_id;
+
+        $totalVehicles = Vehicle::where('vendor_id', $vendorUserId)->count();
+
+        $vehiclesOnTrip = Booking::query()
+            ->where('status', 'active')
+            ->whereHas('vehicle', fn ($q) => $q->where('vendor_id', $vendorUserId))
+            ->distinct('vehicle_id')
+            ->count('vehicle_id');
+
+        $totalDrivers = Driver::where('vendor_id', $vendorUserId)->count();
+
+        $driversOnTrip = Booking::query()
+            ->where('status', 'active')
+            ->whereNotNull('driver_id')
+            ->whereHas('driver', fn ($q) => $q->where('vendor_id', $vendorUserId))
+            ->distinct('driver_id')
+            ->count('driver_id');
+
+        return view('admin.vendors.show', compact(
+            'profile',
+            'docs',
+            'totalVehicles',
+            'vehiclesOnTrip',
+            'totalDrivers',
+            'driversOnTrip'
+        ));
     }
 
     public function approve($id)

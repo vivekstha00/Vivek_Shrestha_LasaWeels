@@ -81,6 +81,53 @@
             </div>
         </div>
 
+        <!-- Vendor Operations Snapshot -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fa-solid fa-chart-column me-2 text-primary"></i> Operations Snapshot
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                            <div class="text-muted small mb-1">
+                                <i class="fa-solid fa-car-side me-1"></i> Total Vehicles
+                            </div>
+                            <div class="fw-bold fs-4">{{ $totalVehicles }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                            <div class="text-muted small mb-1">
+                                <i class="fa-solid fa-route me-1"></i> Vehicles on Trip
+                            </div>
+                            <div class="fw-bold fs-4 text-success">{{ $vehiclesOnTrip }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                            <div class="text-muted small mb-1">
+                                <i class="fa-solid fa-id-card me-1"></i> Total Drivers
+                            </div>
+                            <div class="fw-bold fs-4">{{ $totalDrivers }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                            <div class="text-muted small mb-1">
+                                <i class="fa-solid fa-user-check me-1"></i> Drivers on Trip
+                            </div>
+                            <div class="fw-bold fs-4 text-success">{{ $driversOnTrip }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Vendor Location -->
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-4">

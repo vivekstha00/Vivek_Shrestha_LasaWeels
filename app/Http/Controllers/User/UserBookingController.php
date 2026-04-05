@@ -17,6 +17,7 @@ use App\Notifications\BookingRequestToAdminNotification;
 use App\Notifications\BookingRequestToVendorNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Services\LoyaltyService;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class UserBookingController extends Controller
@@ -92,7 +93,7 @@ class UserBookingController extends Controller
 
         $this->validateBookingTimeWindow($pickup, $drop);
 
-    $days = $this->calculateBillableDays($pickup, $drop);
+        $days = $this->calculateBillableDays($pickup, $drop);
 
         $sortColumn = $data['service'] === 'driver'
             ? 'with_driver_price_per_day'
@@ -100,12 +101,21 @@ class UserBookingController extends Controller
 
         $vehicles = Vehicle::query()
             ->with(['primaryImage', 'images'])
-            ->where('status', 'available')
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
+            })
+            ->where(function ($q) {
+                $q->whereNull('road_tax_expiry_date')
+                    ->orWhereDate('road_tax_expiry_date', '>=', now()->toDateString());
+            })
             ->when($data['service'] === 'driver', fn ($q) =>
                 $q->where('wheel_type', '!=', '2_wheeler')
             )
             ->whereDoesntHave('bookings', function ($q) use ($pickup, $drop) {
-                $q->whereIn('status', ['pending', 'confirmed'])
+                $q->whereIn('status', ['pending', 'confirmed', 'active'])
                     ->where('pickup_datetime', '<=', $drop)
                     ->where('drop_datetime', '>=', $pickup);
             })
@@ -158,7 +168,13 @@ class UserBookingController extends Controller
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
-            'driver_id'        => ['nullable', 'exists:drivers,id'],
+            'driver_id'        => [
+                'nullable',
+                Rule::exists('drivers', 'id')->where(fn ($query) => $query
+                    ->where('vendor_id', $vehicle->vendor_id)
+                    ->where('status', 'approved')
+                    ->where('availability_status', 'available')),
+            ],
         ]);
 
         /** @var \App\Models\User $user */
@@ -210,7 +226,10 @@ class UserBookingController extends Controller
 
         $selectedDriver = null;
         if ($service === 'driver' && ! empty($data['driver_id'])) {
-            $selectedDriver = Driver::find($data['driver_id']);
+            $selectedDriver = Driver::where('vendor_id', $vehicle->vendor_id)
+                ->where('status', 'approved')
+                ->where('availability_status', 'available')
+                ->find($data['driver_id']);
         }
 
         $activeDiscountCodes = DiscountCode::query()
@@ -250,7 +269,13 @@ class UserBookingController extends Controller
             'pickup_datetime'  => ['required', 'date'],
             'drop_datetime'    => ['required', 'date', 'after:pickup_datetime'],
             'special_request'  => ['nullable', 'string', 'max:1000'],
-            'driver_id'        => [$request->service === 'driver' ? 'required' : 'nullable', 'exists:drivers,id'],
+            'driver_id'        => [
+                $request->service === 'driver' ? 'required' : 'nullable',
+                Rule::exists('drivers', 'id')->where(fn ($query) => $query
+                    ->where('vendor_id', $vehicle->vendor_id)
+                    ->where('status', 'approved')
+                    ->where('availability_status', 'available')),
+            ],
             'discount_choice'  => ['nullable', 'in:none,loyalty,code'],
             'redeem_points'    => ['nullable', 'integer', 'min:0'],
             'discount_code'    => ['nullable', 'string', 'max:50'],
@@ -282,7 +307,21 @@ class UserBookingController extends Controller
         }
 
         if ($data['service'] === 'driver' && ! empty($data['driver_id'])) {
-            $driverBusy = Booking::where('driver_id', $data['driver_id'])
+            $selectedDriver = Driver::where('id', $data['driver_id'])
+                ->where('vendor_id', $vehicle->vendor_id)
+                ->where('status', 'approved')
+                ->where('availability_status', 'available')
+                ->first();
+
+            if (! $selectedDriver) {
+                return back()
+                    ->withErrors([
+                        'driver_id' => 'Please select a driver from this vehicle vendor.'
+                    ])
+                    ->withInput();
+            }
+
+            $driverBusy = Booking::where('driver_id', $selectedDriver->id)
                 ->whereIn('status', ['pending', 'confirmed', 'active'])
                 ->where('pickup_datetime', '<=', $drop)
                 ->where('drop_datetime', '>=', $pickup)

@@ -16,10 +16,14 @@ class UserDocumentController extends Controller
 
         $validated = $request->validate([
             'type'            => ['required', 'string', 'max:50'],
-            'file'            => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'file'            => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'document_number' => ['nullable', 'string', 'max:100'],
             'issued_at'       => ['nullable', 'date'],
             'expires_at'      => ['nullable', 'date', 'after_or_equal:issued_at'],
+        ], [
+            'file.uploaded' => 'File upload failed. Please try again with a smaller file.',
+            'file.max' => 'File size must not exceed 5MB.',
+            'file.mimes' => 'Only JPG, JPEG, PNG, or PDF files are allowed.',
         ]);
 
 
@@ -61,10 +65,14 @@ class UserDocumentController extends Controller
         abort_unless($document->user_id === $user->id, 403);
 
         $validated = $request->validate([
-            'file'            => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'file'            => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'document_number' => ['nullable', 'string', 'max:100'],
             'issued_at'       => ['nullable', 'date'],
             'expires_at'      => ['nullable', 'date', 'after_or_equal:issued_at'],
+        ], [
+            'file.uploaded' => 'File upload failed. Please try again with a smaller file.',
+            'file.max' => 'File size must not exceed 5MB.',
+            'file.mimes' => 'Only JPG, JPEG, PNG, or PDF files are allowed.',
         ]);
 
         $needsReverification = false;

@@ -18,8 +18,17 @@ class UserDriverController extends Controller
         $dropLocation    = $request->get('drop_location');
         $service         = $request->get('service', 'driver');
 
+        $vehicle = null;
+        if (!empty($vehicleId)) {
+            $vehicle = Vehicle::find($vehicleId);
+        }
+
         $query = Driver::where('availability_status', 'available')
             ->where('status', 'approved');
+
+        if ($vehicle) {
+            $query->where('vendor_id', $vehicle->vendor_id);
+        }
 
         // Filter out drivers who have overlapping bookings
         if ($pickupDatetime && $dropDatetime) {
@@ -51,12 +60,18 @@ class UserDriverController extends Controller
     // Show driver details
     public function showDriver($driverId)
     {
-        $driver = Driver::findOrFail($driverId);
-
         $vehicle = null;
         if (request()->has('vehicle_id')) {
             $vehicle = Vehicle::find(request()->get('vehicle_id'));
         }
+
+        $driverQuery = Driver::query();
+
+        if ($vehicle) {
+            $driverQuery->where('vendor_id', $vehicle->vendor_id);
+        }
+
+        $driver = $driverQuery->findOrFail($driverId);
 
         $bookingData = [
             'vehicle_id'       => request()->get('vehicle_id'),
