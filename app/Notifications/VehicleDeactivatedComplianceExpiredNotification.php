@@ -20,13 +20,15 @@ class VehicleDeactivatedComplianceExpiredNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $updateUrl = route('vendor.vehicles.edit', $this->vehicle);
+
         return (new MailMessage)
             ->subject('Vehicle Deactivated Due to Expired Compliance')
-            ->greeting('Hi ' . ($notifiable->name ?? 'Vendor') . ',')
-            ->line('Your vehicle has been temporarily deactivated because required compliance document(s) expired.')
-            ->line('Vehicle: ' . trim(($this->vehicle->brand ?? '') . ' ' . ($this->vehicle->model ?? '')))
-            ->line('Expired: ' . implode(', ', $this->expiredItems))
-            ->line('Please upload updated documents. The vehicle will go through admin review again.')
-            ->action('Update Vehicle Documents', route('vendor.vehicles.edit', $this->vehicle));
+            ->view('vendor.emails.vehicle-compliance-deactivated', [
+                'vendorUser' => $notifiable,
+                'vehicle' => $this->vehicle,
+                'expiredItems' => $this->expiredItems,
+                'updateUrl' => $updateUrl,
+            ]);
     }
 }

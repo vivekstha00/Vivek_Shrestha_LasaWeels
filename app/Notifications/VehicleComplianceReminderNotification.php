@@ -23,12 +23,16 @@ class VehicleComplianceReminderNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $manageUrl = route('vendor.vehicles.edit', $this->vehicle);
+
         return (new MailMessage)
             ->subject('Vehicle ' . $this->documentType . ' Expiry Reminder')
-            ->greeting('Hi ' . ($notifiable->name ?? 'Vendor') . ',')
-            ->line('Your vehicle ' . trim(($this->vehicle->brand ?? '') . ' ' . ($this->vehicle->model ?? '')) . ' has an upcoming compliance expiry.')
-            ->line($this->documentType . ' expiry date: ' . $this->expiryDate->format('d M Y'))
-            ->line('Please update and re-upload the document before expiry to avoid vehicle deactivation.')
-            ->action('Manage Vehicle', route('vendor.vehicles.edit', $this->vehicle));
+            ->view('vendor.emails.vehicle-compliance-reminder', [
+                'vendorUser' => $notifiable,
+                'vehicle' => $this->vehicle,
+                'documentType' => $this->documentType,
+                'expiryDate' => $this->expiryDate,
+                'manageUrl' => $manageUrl,
+            ]);
     }
 }

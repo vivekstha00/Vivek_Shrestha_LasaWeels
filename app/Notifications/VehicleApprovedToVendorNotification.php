@@ -20,13 +20,14 @@ class VehicleApprovedToVendorNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $vehicle = $this->vehicle;
+        $vehiclesUrl = route('vendor.vehicles.index');
 
         return (new MailMessage)
             ->subject('Your Vehicle Was Approved')
-            ->greeting('Hi ' . ($notifiable->name ?? 'Vendor') . ',')
-            ->line('Great news — your vehicle has been approved and is now active.')
-            ->line('Vehicle: ' . trim(($vehicle->brand ?? '') . ' ' . ($vehicle->model ?? '')))
-            ->line('Registration: ' . ($vehicle->registration_no ?? 'N/A'))
-            ->action('View My Vehicles', route('vendor.vehicles.index'));
+            ->view('vendor.emails.vehicle-approved', [
+                'vendorUser' => $notifiable,
+                'vehicle' => $vehicle,
+                'vehiclesUrl' => $vehiclesUrl,
+            ]);
     }
 }

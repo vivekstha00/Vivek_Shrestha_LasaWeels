@@ -20,15 +20,14 @@ class VehicleApprovalRequestToAdminNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $vehicle = $this->vehicle;
+        $reviewUrl = route('admin.vehicles.show', $vehicle);
 
         return (new MailMessage)
             ->subject('Vehicle Approval Request Submitted')
-            ->greeting('Hello Admin,')
-            ->line('A vehicle has been submitted for approval review.')
-            ->line('Vendor: ' . ($vehicle->vendor?->name ?? 'N/A'))
-            ->line('Vehicle: ' . trim(($vehicle->brand ?? '') . ' ' . ($vehicle->model ?? '')))
-            ->line('Registration: ' . ($vehicle->registration_no ?? 'N/A'))
-            ->line('Please review the request in the admin panel.')
-            ->action('Review Vehicle', route('admin.vehicles.show', $vehicle));
+            ->view('admin.emails.vehicle-approval-request', [
+                'admin' => $notifiable,
+                'vehicle' => $vehicle,
+                'reviewUrl' => $reviewUrl,
+            ]);
     }
 }

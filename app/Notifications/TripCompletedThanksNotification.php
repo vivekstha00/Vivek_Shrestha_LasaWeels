@@ -35,13 +35,15 @@ class TripCompletedThanksNotification extends Notification implements ShouldQueu
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $reviewUrl = route('user.booking.show', $this->booking);
+
         return (new MailMessage)
             ->subject('Trip Completed — Thank you for choosing LasaWheels 🙏')
-            ->greeting('Hello ' . ($notifiable->name ?? 'there') . '!')
-            ->line('We hope you enjoyed your trip!')
-            ->line('Booking ID: ' . $this->booking->id)
-            ->action('Leave a Review', url('/user/bookings/' . $this->booking->id))
-            ->line('Your feedback helps us improve.');
+            ->view('user.emails.trip-completed-thanks', [
+                'user' => $notifiable,
+                'booking' => $this->booking,
+                'reviewUrl' => $reviewUrl,
+            ]);
     }
 
     /**
