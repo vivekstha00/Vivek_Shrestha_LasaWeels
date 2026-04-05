@@ -1,16 +1,4 @@
-git add \
-app/Notifications/TripCompletedThanksNotification.php \
-app/Notifications/VehicleApprovalRequestToAdminNotification.php \
-app/Notifications/VehicleApprovedToVendorNotification.php \
-app/Notifications/VehicleComplianceReminderNotification.php \
-app/Notifications/VehicleDeactivatedComplianceExpiredNotification.php \
-app/Notifications/VehicleRejectedToVendorNotification.php \
-resources/views/admin/emails/vehicle-approval-request.blade.php \
-resources/views/user/emails/trip-completed-thanks.blade.php \
-resources/views/vendor/emails/vehicle-approved.blade.php \
-resources/views/vendor/emails/vehicle-compliance-deactivated.blade.php \
-resources/views/vendor/emails/vehicle-compliance-reminder.blade.php \
-resources/views/vendor/emails/vehicle-rejected.blade.php<?php
+<?php
 
 namespace App\Console\Commands;
 
