@@ -111,12 +111,29 @@ class VendorVehicleController extends Controller
             'location_city' => ['required', 'string', 'max:100'],
 
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'max:2048'],
-            'vehicle_registration_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'insurance_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,jfif,avif', 'max:10240'],
+            'vehicle_registration_document' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,jfif,pdf', 'max:5120'],
+            'insurance_document' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,jfif,pdf', 'max:5120'],
             'insurance_expiry_date' => ['required', 'date', 'after_or_equal:today'],
-            'road_tax_document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'road_tax_document' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,jfif,pdf', 'max:5120'],
             'road_tax_expiry_date' => ['required', 'date', 'after_or_equal:today'],
+        ], [
+            'images.*.image' => 'Each vehicle image must be a valid image file.',
+            'images.*.mimes' => 'Vehicle images must be jpg, jpeg, png, webp, jfif, or avif.',
+            'images.*.uploaded' => 'One of the selected vehicle images failed to upload. Please reduce file size and try again.',
+            'images.*.max' => 'Each vehicle image must be under 10MB.',
+
+            'vehicle_registration_document.mimes' => 'Vehicle registration document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'vehicle_registration_document.uploaded' => 'Vehicle registration document failed to upload. Please ensure it is under 5MB.',
+            'vehicle_registration_document.max' => 'Vehicle registration document must be under 5MB.',
+
+            'insurance_document.mimes' => 'Insurance document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'insurance_document.uploaded' => 'Insurance document failed to upload. Please ensure it is under 5MB.',
+            'insurance_document.max' => 'Insurance document must be under 5MB.',
+
+            'road_tax_document.mimes' => 'Road tax document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'road_tax_document.uploaded' => 'Road tax document failed to upload. Please ensure it is under 5MB.',
+            'road_tax_document.max' => 'Road tax document must be under 5MB.',
         ]);
 
         $this->normalizeVehicleData($data);
@@ -234,7 +251,7 @@ class VendorVehicleController extends Controller
             abort(403);
         }
 
-        $data = $request->validate([
+    $data = $request->validate([
             'wheel_type' => ['required', Rule::in(['2_wheeler', '4_wheeler'])],
             'vehicle_type' => ['required', 'string', 'max:50'],
             'brand' => ['required', 'string', 'max:100'],
@@ -268,17 +285,17 @@ class VendorVehicleController extends Controller
             'description' => ['nullable', 'string'],
 
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['image', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,jfif,avif', 'max:10240'],
             'vehicle_registration_document' => [
                 $vehicle->vehicle_registration_document_path ? 'nullable' : 'required',
                 'file',
-                'mimes:jpg,jpeg,png,pdf',
+                'mimes:jpg,jpeg,png,webp,jfif,pdf',
                 'max:5120',
             ],
             'insurance_document' => [
                 $vehicle->insurance_document_path ? 'nullable' : 'required',
                 'file',
-                'mimes:jpg,jpeg,png,pdf',
+                'mimes:jpg,jpeg,png,webp,jfif,pdf',
                 'max:5120',
             ],
             'insurance_expiry_date' => [
@@ -289,7 +306,7 @@ class VendorVehicleController extends Controller
             'road_tax_document' => [
                 $vehicle->road_tax_document_path ? 'nullable' : 'required',
                 'file',
-                'mimes:jpg,jpeg,png,pdf',
+                'mimes:jpg,jpeg,png,webp,jfif,pdf',
                 'max:5120',
             ],
             'road_tax_expiry_date' => [
@@ -297,6 +314,23 @@ class VendorVehicleController extends Controller
                 'date',
                 'after_or_equal:today',
             ],
+        ], [
+            'images.*.image' => 'Each vehicle image must be a valid image file.',
+            'images.*.mimes' => 'Vehicle images must be jpg, jpeg, png, webp, jfif, or avif.',
+            'images.*.uploaded' => 'One of the selected vehicle images failed to upload. Please reduce file size and try again.',
+            'images.*.max' => 'Each vehicle image must be under 10MB.',
+
+            'vehicle_registration_document.mimes' => 'Vehicle registration document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'vehicle_registration_document.uploaded' => 'Vehicle registration document failed to upload. Please ensure it is under 5MB.',
+            'vehicle_registration_document.max' => 'Vehicle registration document must be under 5MB.',
+
+            'insurance_document.mimes' => 'Insurance document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'insurance_document.uploaded' => 'Insurance document failed to upload. Please ensure it is under 5MB.',
+            'insurance_document.max' => 'Insurance document must be under 5MB.',
+
+            'road_tax_document.mimes' => 'Road tax document must be jpg, jpeg, png, webp, jfif, or pdf.',
+            'road_tax_document.uploaded' => 'Road tax document failed to upload. Please ensure it is under 5MB.',
+            'road_tax_document.max' => 'Road tax document must be under 5MB.',
         ]);
 
         $this->normalizeVehicleData($data);

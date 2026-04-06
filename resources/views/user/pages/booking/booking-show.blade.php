@@ -238,9 +238,9 @@
                                 <label class="form-label">Overall Rating</label>
                                 <select name="overall_rating" class="form-control" required>
                                     <option value="">Select Rating</option>
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
-                                    @endfor
+                                    @foreach([1,1.5,2,2.5,3,3.5,4,4.5,5] as $ratingValue)
+                                        <option value="{{ $ratingValue }}">{{ $ratingValue }} Star{{ $ratingValue > 1 ? 's' : '' }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -248,9 +248,9 @@
                                 <label class="form-label">Vehicle Rating</label>
                                 <select name="vehicle_rating" class="form-control" required>
                                     <option value="">Select Rating</option>
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
-                                    @endfor
+                                    @foreach([1,1.5,2,2.5,3,3.5,4,4.5,5] as $ratingValue)
+                                        <option value="{{ $ratingValue }}">{{ $ratingValue }} Star{{ $ratingValue > 1 ? 's' : '' }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -269,9 +269,9 @@
                                     <label class="form-label">Driver Rating</label>
                                     <select name="driver_rating" class="form-control" required>
                                         <option value="">Select Rating</option>
-                                        @for($i = 1; $i <= 5; $i++)
-                                            <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
-                                        @endfor
+                                        @foreach([1,1.5,2,2.5,3,3.5,4,4.5,5] as $ratingValue)
+                                            <option value="{{ $ratingValue }}">{{ $ratingValue }} Star{{ $ratingValue > 1 ? 's' : '' }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
 

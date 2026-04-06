@@ -21,6 +21,12 @@ class Review extends Model
         'driver_review',
     ];
 
+    protected $casts = [
+        'overall_rating' => 'decimal:1',
+        'vehicle_rating' => 'decimal:1',
+        'driver_rating' => 'decimal:1',
+    ];
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

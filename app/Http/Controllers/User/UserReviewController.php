@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Driver;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,13 +29,13 @@ class UserReviewController extends Controller
         $hasDriver = !is_null($booking->driver_id);
 
         $validated = $request->validate([
-            'overall_rating' => ['required', 'integer', 'between:1,5'],
+            'overall_rating' => ['required', 'numeric', 'between:1,5'],
             'overall_review' => ['nullable', 'string', 'max:1000'],
 
-            'vehicle_rating' => ['required', 'integer', 'between:1,5'],
+            'vehicle_rating' => ['required', 'numeric', 'between:1,5'],
             'vehicle_review' => ['nullable', 'string', 'max:1000'],
 
-            'driver_rating' => [$hasDriver ? 'required' : 'nullable', 'integer', 'between:1,5'],
+            'driver_rating' => [$hasDriver ? 'required' : 'nullable', 'numeric', 'between:1,5'],
             'driver_review' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -54,6 +55,17 @@ class UserReviewController extends Controller
             'driver_rating'   => $hasDriver ? ($validated['driver_rating'] ?? null) : null,
             'driver_review'   => $hasDriver ? ($validated['driver_review'] ?? null) : null,
         ]);
+
+        if ($hasDriver && !empty($booking->driver_id)) {
+            $avgDriverRating = Review::query()
+                ->where('driver_id', $booking->driver_id)
+                ->whereNotNull('driver_rating')
+                ->avg('driver_rating');
+
+            Driver::whereKey($booking->driver_id)->update([
+                'rating' => $avgDriverRating !== null ? round((float) $avgDriverRating, 1) : null,
+            ]);
+        }
 
         app(LoyaltyService::class)->awardReviewBonus($booking->fresh());
 

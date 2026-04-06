@@ -159,7 +159,16 @@ class UserPaymentController extends Controller
             $payment->gateway_reference = $pidx;
             $payment->gateway_payload = $lookup->json();
 
-            if ($status === 'Completed'&& ! $alreadyCompleted)  {
+            if ($status === 'Completed' && $alreadyCompleted) {
+                $payment->save();
+
+                Cookie::queue(Cookie::forget('khalti_booking_id'));
+
+                return redirect()->route('user.booking.success', $booking->id)
+                    ->with('success', 'Payment was already confirmed for this booking.');
+            }
+
+            if ($status === 'Completed' && ! $alreadyCompleted) {
                 $payment->status = 'completed';
                 $payment->paid_amount = $payment->deposit_amount;
                 $payment->remaining_amount = $payment->amount - $payment->deposit_amount;
@@ -229,7 +238,10 @@ class UserPaymentController extends Controller
             ]);
         }
 
-        if (! in_array($booking->payment->status, ['completed', 'refunded'])) {
+        $isInvoiceAllowed = in_array($booking->payment->status, ['completed', 'refunded'], true)
+            || in_array($booking->payment_status, ['paid', 'partial'], true);
+
+        if (! $isInvoiceAllowed) {
             return back()->withErrors([
                 'invoice' => 'Invoice is available only after payment is completed.',
             ]);

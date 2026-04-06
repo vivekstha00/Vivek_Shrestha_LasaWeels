@@ -10,6 +10,10 @@
             @php
                 $payment = $booking->payment ?? null; // booking hasOne payment
                 $isPaid  = ($booking->payment_status ?? 'unpaid') === 'paid';
+                $canDownloadInvoice = $payment && (
+                    in_array($payment->status, ['completed', 'refunded'], true)
+                    || $isPaid
+                );
             @endphp
 
             {{-- Success Header --}}
@@ -126,7 +130,7 @@
                             <i class="fa-solid fa-list me-2"></i>My Bookings
                         </a>
                     </div>
-                    @if($payment && in_array($payment->status, ['completed', 'refunded']))
+                    @if($canDownloadInvoice)
                         <div class="col-auto">
                             <a href="{{ route('user.booking.invoice', $booking->id) }}" class="btn btn-outline-dark px-4">
                                 <i class="fa-solid fa-download me-2"></i>Download Invoice

@@ -172,7 +172,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Vehicle Images</label>
-                        <input type="file" name="images[]" multiple class="form-control" accept="image/*">
+                        <input type="file" name="images[]" multiple class="form-control" accept=".jpg,.jpeg,.png,.webp,.jfif,.avif">
                         @error('images') <small class="text-danger">{{ $message }}</small> @enderror
                         @error('images.*') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>

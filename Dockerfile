@@ -19,10 +19,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Custom PHP upload limits (for web uploads)
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini
+
 # Copy FULL project first
 COPY . .
 
-# Install dependencies AFTER files exist 
+# Install dependencies AFTER files exist
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 # Permissions (important for Laravel)

@@ -17,6 +17,16 @@
 
     $priceAfterDurationDiscount = max(0, $basePriceForSummary - $durationDiscountAmountValue);
     $actualPrice = (float) $priceAfterDurationDiscount;
+
+    $activeDiscountCodesForJs = collect($activeDiscountCodes ?? [])->map(function ($offer) {
+        return [
+            'code' => strtoupper((string) $offer->code),
+            'title' => $offer->title,
+            'type' => $offer->type,
+            'value' => (float) $offer->value,
+            'max_discount_amount' => is_null($offer->max_discount_amount) ? null : (float) $offer->max_discount_amount,
+        ];
+    })->values()->all();
 @endphp
 
 <div class="container py-5">
@@ -246,6 +256,7 @@
                                 <label class="form-label">Discount Code</label>
                                 <input type="text" id="discount_code" name="discount_code" class="form-control"
                                        value="{{ old('discount_code') }}" placeholder="Enter code like NEWYEAR26">
+                                <small id="discount_feedback" class="d-block mt-2 text-muted"></small>
 
                                 @if(!empty($activeDiscountCodes) && $activeDiscountCodes->count())
                                     <div class="mt-3">
@@ -306,7 +317,6 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const actualPriceEl = document.getElementById('actual_price');
             const finalPriceEl = document.getElementById('final_price');
             const discountPriceEl = document.getElementById('discount_price');
             const discountTypeLabelEl = document.getElementById('discount_type_label');
@@ -323,9 +333,11 @@
 
             const applyLoyaltyBtn = document.getElementById('apply_loyalty');
             const applyCodeBtn = document.getElementById('apply_code');
+            const discountFeedbackEl = document.getElementById('discount_feedback');
 
             const actualPrice = {{ $actualPrice }};
             const maxRedeemable = {{ $maxRedeemablePoints ?? 0 }};
+            const activeDiscountCodes = @json($activeDiscountCodesForJs);
 
             let appliedDiscount = 0;
             let appliedDiscountType = 'None';
@@ -353,11 +365,36 @@
                     codeBox.style.display = selected === 'code' ? 'block' : 'none';
                 }
 
-                // Reset applied discount when switching options
-                if (selected === 'none') {
-                    appliedDiscount = 0;
-                    appliedDiscountType = 'None';
-                    updateSummary();
+                if (selected !== 'code' && discountCodeInput) {
+                    discountCodeInput.value = '';
+                }
+
+                if (selected !== 'loyalty' && redeemInput) {
+                    redeemInput.value = 0;
+                }
+
+                appliedDiscount = 0;
+                appliedDiscountType = 'None';
+                updateSummary();
+
+                if (applyLoyaltyBtn) {
+                    applyLoyaltyBtn.disabled = false;
+                    applyLoyaltyBtn.textContent = 'Apply Loyalty Points';
+                    applyLoyaltyBtn.classList.remove('btn-success');
+                    applyLoyaltyBtn.classList.add('btn-primary');
+                }
+
+                if (applyCodeBtn) {
+                    applyCodeBtn.disabled = false;
+                    applyCodeBtn.textContent = 'Apply Discount Code';
+                    applyCodeBtn.classList.remove('btn-success');
+                    applyCodeBtn.classList.add('btn-primary');
+                }
+
+                if (discountFeedbackEl) {
+                    discountFeedbackEl.textContent = '';
+                    discountFeedbackEl.classList.remove('text-success', 'text-danger');
+                    discountFeedbackEl.classList.add('text-muted');
                 }
             }
 
@@ -419,14 +456,40 @@
                     return;
                 }
 
-                // For now, show a placeholder message since we can't validate codes client-side
-                // In a real implementation, this would make an AJAX call to validate the code
-                alert('Discount code validation will be performed when you submit the form. For demo purposes, assuming 10% discount applied.');
+                const selectedOffer = activeDiscountCodes.find(function (offer) {
+                    return offer.code === code;
+                });
 
-                // Demo: Apply a sample discount (10% of base price)
-                appliedDiscount = Math.round(actualPrice * 0.1);
-                appliedDiscountType = `Discount Code (${code})`;
+                if (!selectedOffer) {
+                    if (discountFeedbackEl) {
+                        discountFeedbackEl.textContent = 'Invalid or unavailable discount code.';
+                        discountFeedbackEl.classList.remove('text-muted', 'text-success');
+                        discountFeedbackEl.classList.add('text-danger');
+                    }
+                    return;
+                }
+
+                let discount = 0;
+
+                if (selectedOffer.type === 'percentage') {
+                    discount = actualPrice * (selectedOffer.value / 100);
+                } else {
+                    discount = selectedOffer.value;
+                }
+
+                if (selectedOffer.max_discount_amount !== null) {
+                    discount = Math.min(discount, selectedOffer.max_discount_amount);
+                }
+
+                appliedDiscount = Math.round(Math.max(0, discount) * 100) / 100;
+                appliedDiscountType = `Discount Code (${selectedOffer.code})`;
                 updateSummary();
+
+                if (discountFeedbackEl) {
+                    discountFeedbackEl.textContent = `${selectedOffer.title} applied successfully. Final validation will happen on booking submit.`;
+                    discountFeedbackEl.classList.remove('text-muted', 'text-danger');
+                    discountFeedbackEl.classList.add('text-success');
+                }
 
                 // Disable the apply button and show success
                 applyCodeBtn.disabled = true;
@@ -446,6 +509,22 @@
 
             if (applyCodeBtn) {
                 applyCodeBtn.addEventListener('click', applyDiscountCode);
+            }
+
+            if (discountCodeInput) {
+                discountCodeInput.addEventListener('input', function () {
+                    if (applyCodeBtn) {
+                        applyCodeBtn.disabled = false;
+                        applyCodeBtn.textContent = 'Apply Discount Code';
+                        applyCodeBtn.classList.remove('btn-success');
+                        applyCodeBtn.classList.add('btn-primary');
+                    }
+                    if (discountFeedbackEl) {
+                        discountFeedbackEl.textContent = '';
+                        discountFeedbackEl.classList.remove('text-success', 'text-danger');
+                        discountFeedbackEl.classList.add('text-muted');
+                    }
+                });
             }
 
             // Initialize
