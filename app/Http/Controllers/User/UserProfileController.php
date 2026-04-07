@@ -154,15 +154,30 @@ class UserProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:6', 'confirmed', 'different:current_password'],
-        ]);
+        $isGoogleOnlyAccount = $user->isGoogleOnlyAccount();
+
+        $rules = [
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ];
+
+        if ($isGoogleOnlyAccount) {
+            $rules['current_password'] = ['nullable'];
+        } else {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['password'][] = 'different:current_password';
+        }
+
+        $validated = $request->validate($rules);
 
         $user->update([
             'password' => $validated['password'],
         ]);
 
-        return back()->with('success', 'Password changed successfully.');
+        return back()->with(
+            'success',
+            $isGoogleOnlyAccount
+                ? 'Password created successfully. You can now sign in with Google or email/password.'
+                : 'Password changed successfully.'
+        );
     }
 }

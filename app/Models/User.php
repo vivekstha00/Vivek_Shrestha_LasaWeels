@@ -80,9 +80,20 @@ class User extends Authenticatable
         return $this->hasOne(Review::class);
     }
 
-     public function bookings()
+    public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function hasPassword(): bool
+    {
+        return filled($this->password);
+    }
+
+    public function isGoogleOnlyAccount(): bool
+    {
+        return ! $this->hasPassword()
+            && ($this->auth_provider === 'google' || filled($this->google_id));
     }
 
     public function requiredSelfDriveDocuments(): array

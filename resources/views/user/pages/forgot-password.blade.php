@@ -9,6 +9,7 @@
                     <h3 class="text-center mb-2">Forgot your password?</h3>
                     <p class="text-center text-light-emphasis mb-4">
                         Don’t worry! We are here to help you. Enter your email address below to reset your password.
+                        If your account was created with Google, this will help you create a password too.
                     </p>
 
                     <form method="POST" action="{{ route('password.otp.send') }}" novalidate>

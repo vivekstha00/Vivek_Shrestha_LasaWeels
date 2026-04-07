@@ -6,8 +6,11 @@
         <div class="auth-card-wrap">
             <div class="card card-soft">
                 <div class="card-body p-4">
-                    <h3 class="text-center mb-2">Reset Password</h3>
-                    <p class="text-center text-light-emphasis mb-4">Set a new password for <strong>{{ $email }}</strong></p>
+                    <h3 class="text-center mb-2">{{ ($isPasswordCreation ?? false) ? 'Create Password' : 'Reset Password' }}</h3>
+                    <p class="text-center text-light-emphasis mb-4">
+                        {{ ($isPasswordCreation ?? false) ? 'Create a password for' : 'Set a new password for' }}
+                        <strong>{{ $email }}</strong>
+                    </p>
 
                     <form method="POST" action="{{ route('password.reset') }}" novalidate>
                         @csrf
@@ -15,7 +18,7 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">
-                                <i class="bi bi-lock me-2"></i>New Password
+                                <i class="bi bi-lock me-2"></i>{{ ($isPasswordCreation ?? false) ? 'Create Password' : 'New Password' }}
                             </label>
                             <div class="input-group">
                                 <input
@@ -53,7 +56,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-main w-100 mb-3">
-                            Reset Password
+                            {{ ($isPasswordCreation ?? false) ? 'Create Password' : 'Reset Password' }}
                         </button>
                     </form>
 

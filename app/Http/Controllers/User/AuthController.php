@@ -31,7 +31,18 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        /** @var \App\Models\User|null $user */
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user?->isGoogleOnlyAccount()) {
+            return back()
+                ->withErrors([
+                    'email' => 'This account was created with Google. Please sign in with Google or use Forgot Password to create a password.',
+                ])
+                ->onlyInput('email');
+        }
+
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
                 ->withErrors(['email' => 'Invalid email or password'])
                 ->onlyInput('email');
@@ -39,6 +50,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Admin
@@ -142,15 +154,21 @@ class AuthController extends Controller
         ]);
 
         $email = $validated['email'];
+        /** @var \App\Models\User|null $user */
+        $user = User::where('email', $email)->first();
+
         $this->issuePasswordResetOtp($email);
 
         return redirect()
             ->route('password.otp.form', ['email' => $email])
-            ->with('success', 'We sent a 6-digit OTP to your email.');
+            ->with('success', $user?->isGoogleOnlyAccount()
+                ? 'We sent a 6-digit OTP to your email so you can create a password.'
+                : 'We sent a 6-digit OTP to your email.');
     }
 
     public function sendAuthenticatedPasswordResetOtp(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
         if (!$user) {
@@ -162,12 +180,20 @@ class AuthController extends Controller
 
         return redirect()
             ->route('password.otp.form', ['email' => $email])
-            ->with('success', 'OTP sent to your registered email.');
+            ->with('success', $user->isGoogleOnlyAccount()
+                ? 'OTP sent to your registered email so you can create a password.'
+                : 'OTP sent to your registered email.');
     }
 
     public function otpVerificationForm(Request $request)
     {
         $email = $request->query('email');
+
+        if (Auth::check() && $email && Auth::user()->email !== $email) {
+            return redirect()
+                ->route('user.profile.edit')
+                ->with('error', 'You can only verify password reset for your own account.');
+        }
 
         if (!$email) {
             if (Auth::check()) {
@@ -179,7 +205,11 @@ class AuthController extends Controller
             return redirect()->route('password.forgot')->with('error', 'Please enter your email first.');
         }
 
-        return view('user.pages.verify-otp', compact('email'));
+        /** @var \App\Models\User|null $user */
+        $user = User::where('email', $email)->first();
+        $isPasswordCreation = $user?->isGoogleOnlyAccount() ?? false;
+
+        return view('user.pages.verify-otp', compact('email', 'isPasswordCreation'));
     }
 
     public function verifyPasswordResetOtp(Request $request)
@@ -188,6 +218,9 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'exists:users,email'],
             'otp' => ['required', 'digits:6'],
         ]);
+
+        /** @var \App\Models\User|null $user */
+        $user = User::where('email', $validated['email'])->first();
 
         if (Auth::check() && Auth::user()->email !== $validated['email']) {
             return back()->with('error', 'You can only reset password for your own account.');
@@ -214,7 +247,11 @@ class AuthController extends Controller
             'password_reset_verified_at' => now()->timestamp,
         ]);
 
-        return redirect()->route('password.reset.form')->with('success', 'OTP verified. Set your new password.');
+        return redirect()
+            ->route('password.reset.form')
+            ->with('success', $user?->isGoogleOnlyAccount()
+                ? 'OTP verified. Create your password.'
+                : 'OTP verified. Set your new password.');
     }
 
     public function resetPasswordForm()
@@ -225,8 +262,13 @@ class AuthController extends Controller
             return redirect()->route('password.forgot')->with('error', 'Please verify OTP first.');
         }
 
+        /** @var \App\Models\User|null $user */
+        $user = User::where('email', $verifiedEmail)->first();
+        $isPasswordCreation = $user?->isGoogleOnlyAccount() ?? false;
+
         return view('user.pages.reset-password', [
             'email' => $verifiedEmail,
+            'isPasswordCreation' => $isPasswordCreation,
         ]);
     }
 
@@ -249,19 +291,26 @@ class AuthController extends Controller
             return back()->with('error', 'You can only reset password for your own account.');
         }
 
+        /** @var \App\Models\User $user */
         $user = User::where('email', $validated['email'])->firstOrFail();
+        $wasGoogleOnlyAccount = $user->isGoogleOnlyAccount();
+
         $user->update([
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
         ]);
 
         DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
         session()->forget(['password_reset_verified_email', 'password_reset_verified_at']);
 
+        $successMessage = $wasGoogleOnlyAccount
+            ? 'Password created successfully. You can now sign in with Google or email/password.'
+            : 'Password reset successful. Please login.';
+
         if (Auth::check() && Auth::user()->email === $validated['email']) {
-            return redirect()->route('user.profile')->with('success', 'Password reset successful.');
+            return redirect()->route('user.profile')->with('success', $successMessage);
         }
 
-        return redirect()->route('login')->with('success', 'Password reset successful. Please login.');
+        return redirect()->route('login')->with('success', $successMessage);
     }
 
     private function issuePasswordResetOtp(string $email): void
@@ -297,6 +346,7 @@ class AuthController extends Controller
             return redirect()->route('login')->with('error', 'Google login failed. Please try again.');
         }
 
+        /** @var \App\Models\User|null $user */
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if ($user) {
@@ -322,6 +372,37 @@ class AuthController extends Controller
 
         Auth::login($user, true);
         $request->session()->regenerate();
+
+        // Admin
+        if ($user->role === 'admin') {
+            if ($user->status !== 'approved') {
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Your account is pending approval.');
+            }
+
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Vendor
+        if ($user->role === 'vendor') {
+            if (!in_array($user->status, ['active', 'approved'])) {
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Your account is pending approval or suspended.');
+            }
+
+            if ($user->vendor_status !== 'approved') {
+                return redirect()
+                    ->route('vendor.verification')
+                    ->with('error', 'Please complete the document verification process first.');
+            }
+
+            return redirect()->route('vendor.dashboard');
+        }
+
+        if ($user->status !== 'approved') {
+            Auth::logout();
+            return redirect()->route('login')->with('error', 'Your account is pending approval.');
+        }
 
         if (!$user->phone) {
             return redirect()->route('user.profile.edit')

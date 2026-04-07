@@ -50,11 +50,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'registerStore'])->name('register.store');
     Route::get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.forgot');
     Route::post('/forgot-password/send-otp', [AuthController::class, 'sendPasswordResetOtp'])->name('password.otp.send');
-    Route::get('/forgot-password/verify-otp', [AuthController::class, 'otpVerificationForm'])->name('password.otp.form');
-    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp'])->name('password.otp.verify');
-    Route::get('/reset-password', [AuthController::class, 'resetPasswordForm'])->name('password.reset.form');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 });
+
+Route::get('/forgot-password/verify-otp', [AuthController::class, 'otpVerificationForm'])->name('password.otp.form');
+Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp'])->name('password.otp.verify');
+Route::get('/reset-password', [AuthController::class, 'resetPasswordForm'])->name('password.reset.form');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('google_redirect');

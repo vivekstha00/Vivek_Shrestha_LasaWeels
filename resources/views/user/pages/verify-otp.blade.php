@@ -8,7 +8,8 @@
                 <div class="card-body p-4">
                     <h3 class="text-center mb-2">Verify OTP</h3>
                     <p class="text-center text-light-emphasis mb-4">
-                        We sent a code to <strong>{{ $email }}</strong>
+                        We sent a code to <strong>{{ $email }}</strong>.
+                        {{ ($isPasswordCreation ?? false) ? 'Verify it to create your password.' : 'Verify it to continue resetting your password.' }}
                     </p>
 
                     <form method="POST" action="{{ route('password.otp.verify') }}" novalidate>

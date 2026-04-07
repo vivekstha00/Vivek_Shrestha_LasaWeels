@@ -2,6 +2,10 @@
 
 @section('user-content')
 <div class="container py-4">
+    @php($isGoogleOnlyAccount = $user->isGoogleOnlyAccount())
+    @php($license = $documents['license'] ?? null)
+    @php($citizenship = $documents['citizenship'] ?? null)
+
     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
         <div>
             <h3 class="fw-bold mb-1">Profile Settings</h3>
@@ -110,24 +114,32 @@
                     <h5 class="mb-0 fw-bold">Security</h5>
                 </div>
                 <div class="card-body p-4">
+                    @if($isGoogleOnlyAccount)
+                        <div class="alert alert-info border-0 rounded-3">
+                            Your account was created with Google. Create a password here to enable email/password login too.
+                        </div>
+                    @endif
+
                     <form action="{{ route('user.profile.password.update') }}" method="POST">
                         @csrf
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label" for="current_password">Current Password</label>
-                                <div class="input-group">
-                                    <input type="password" id="current_password" name="current_password" class="form-control password-input @error('current_password') is-invalid @enderror" required>
-                                    <span class="input-group-text">
-                                        <i class="bi bi-eye password-toggle"></i>
-                                    </span>
+                            @unless($isGoogleOnlyAccount)
+                                <div class="col-md-4">
+                                    <label class="form-label" for="current_password">Current Password</label>
+                                    <div class="input-group">
+                                        <input type="password" id="current_password" name="current_password" class="form-control password-input @error('current_password') is-invalid @enderror" required>
+                                        <span class="input-group-text">
+                                            <i class="bi bi-eye password-toggle"></i>
+                                        </span>
+                                    </div>
+                                    @error('current_password')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                @error('current_password')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            @endunless
 
-                            <div class="col-md-4">
-                                <label class="form-label" for="new_password">New Password</label>
+                            <div class="col-md-{{ $isGoogleOnlyAccount ? '6' : '4' }}">
+                                <label class="form-label" for="new_password">{{ $isGoogleOnlyAccount ? 'Create Password' : 'New Password' }}</label>
                                 <div class="input-group">
                                     <input type="password" id="new_password" name="password" class="form-control password-input @error('password') is-invalid @enderror" required>
                                     <span class="input-group-text">
@@ -139,7 +151,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-{{ $isGoogleOnlyAccount ? '6' : '4' }}">
                                 <label class="form-label" for="new_password_confirmation">Confirm Password</label>
                                 <div class="input-group">
                                     <input type="password" id="new_password_confirmation" name="password_confirmation" class="form-control password-input" required>
@@ -147,11 +159,16 @@
                                         <i class="bi bi-eye password-toggle"></i>
                                     </span>
                                 </div>
+                                @error('password_confirmation')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
 
-                        <button type="submit" class="btn btn-dark mt-4 rounded-3">Update Password</button>
+                        <button type="submit" class="btn btn-dark mt-4 rounded-3">
+                            {{ $isGoogleOnlyAccount ? 'Create Password' : 'Update Password' }}
+                        </button>
                     </form>
                 </div>
             </div>
@@ -161,11 +178,6 @@
                     <h5 class="mb-0 fw-bold">Verification Documents</h5>
                 </div>
                 <div class="card-body px-4 pb-4">
-                    @php
-                        $license = $documents['license'] ?? null;
-                        $citizenship = $documents['citizenship'] ?? null;
-                    @endphp
-
                     <div class="border rounded-3 p-3 mb-3 bg-light-subtle">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="mb-0 fw-bold">Driving License</h6>
@@ -237,4 +249,3 @@
     </div>
 </div>
 @endsection
-
