@@ -16,7 +16,7 @@
 
                         <div class="mb-3">
                             <label for="email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email
+                                <i class="bi bi-envelope me-2"></i>Email
                             </label>
                             <input
                                 type="email"

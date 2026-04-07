@@ -7,7 +7,7 @@
             <div class="card card-soft">
                 <div class="card-body p-4">
                     <h3 class="mb-4">
-                        <i class="fas fa-user-plus me-2"></i>User Registration
+                        <i class="bi bi-person-plus me-2"></i>User Registration
                     </h3>
 
                     <form id="registerForm" action="{{ route('register.store') }}" method="POST" novalidate>
@@ -107,7 +107,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-main w-100">
-                            <i class="fas fa-user-plus me-2"></i>Register
+                            <i class="bi bi-person-plus me-2"></i>Register
                         </button>
 
                         <div class="text-center mt-3">

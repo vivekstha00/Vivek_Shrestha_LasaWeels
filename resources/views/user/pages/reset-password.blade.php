@@ -15,7 +15,7 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">
-                                <i class="fas fa-lock me-2"></i>New Password
+                                <i class="bi bi-lock me-2"></i>New Password
                             </label>
                             <div class="input-group">
                                 <input
@@ -36,7 +36,7 @@
 
                         <div class="mb-3">
                             <label for="password_confirmation" class="form-label">
-                                <i class="fas fa-lock me-2"></i>Confirm Password
+                                <i class="bi bi-lock me-2"></i>Confirm Password
                             </label>
                             <div class="input-group">
                                 <input

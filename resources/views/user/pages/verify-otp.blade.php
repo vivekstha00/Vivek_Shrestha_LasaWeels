@@ -17,7 +17,7 @@
 
                         <div class="mb-3">
                             <label for="otp" class="form-label">
-                                <i class="fas fa-key me-2"></i>6-digit OTP
+                                <i class="bi bi-key me-2"></i>6-digit OTP
                             </label>
                             <input
                                 type="text"

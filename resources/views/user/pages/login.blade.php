@@ -13,7 +13,7 @@
 
                         <div class="mb-3">
                             <label for="email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email
+                                <i class="bi bi-envelope me-2"></i>Email
                             </label>
                             <input
                                 type="email"
@@ -31,7 +31,7 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">
-                                <i class="fas fa-lock me-2"></i>Password
+                                <i class="bi bi-lock me-2"></i>Password
                             </label>
                             <div class="input-group">
                                 <input
@@ -62,7 +62,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-main w-100 mb-3">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
                         </button>
                     </form>
 
@@ -85,7 +85,15 @@
 
 @push('js')
 <script>
-    $(document).ready(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        if (!loginForm || !emailInput || !passwordInput) {
+            return;
+        }
+
         function showErrors(errors) {
             [...new Set(errors)].forEach((message) => {
                 if (typeof window.showNotification === 'function') {
@@ -93,9 +101,10 @@
                 }
             });
         }
-        $('#loginForm').on('submit', function (event) {
-            const email = $('#email').val()?.trim() || '';
-            const password = $('#password').val() || '';
+
+        loginForm.addEventListener('submit', function (event) {
+            const email = (emailInput.value || '').trim();
+            const password = passwordInput.value || '';
             const errors = [];
 
             if (!email) {
