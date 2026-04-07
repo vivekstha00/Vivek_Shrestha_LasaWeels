@@ -110,6 +110,14 @@
                             <i class="bi bi-person-plus me-2"></i>Register
                         </button>
 
+                        <div class="my-3 text-center">
+                            <span class="text-muted">or</span>
+                        </div>
+
+                        <a href="{{ route('google_redirect') }}" class="btn btn-outline-dark w-100">
+                            <i class="bi bi-google me-2"></i>Sign up with Google
+                            </a>
+                            
                         <div class="text-center mt-3">
                             <p class="mb-0">
                                 Already have an account?

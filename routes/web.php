@@ -57,12 +57,14 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('google_redirect');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('google_callback');
+
 Route::get('/search-vehicles', [UserBookingController::class, 'search'])->name('user.search.vehicles');
 
 Route::get('/vehicles', [UserVehicleController::class, 'index'])->name('vehicles.index');
 
-Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browseShow'])
-    ->name('vehicles.browse.show');
+Route::get('/vehicles/{vehicle}/details', [UserVehicleController::class, 'browseShow'])->name('vehicles.browse.show');
 
 Route::get('/vehicles/{vehicle}', [UserVehicleController::class, 'show'])->name('vehicles.show');
 

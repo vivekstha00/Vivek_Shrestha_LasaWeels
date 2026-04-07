@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 use App\Notifications\WelcomeUserNotification;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -281,5 +282,53 @@ class AuthController extends Controller
                 $message->to($email)->subject('LasaWheels Password Reset OTP');
             }
         );
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Throwable $e) {
+            return redirect()->route('login')->with('error', 'Google login failed. Please try again.');
+        }
+
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            if (!$user->google_id) {
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'auth_provider' => 'google',
+                    'name' => $user->name ?: $googleUser->getName(),
+                ]);
+            }
+        } else {
+            $user = User::create([
+                'name' => $googleUser->getName() ?: 'Google User',
+                'email' => $googleUser->getEmail(),
+                'phone' => null,
+                'password' => null,
+                'google_id' => $googleUser->getId(),
+                'auth_provider' => 'google',
+                'role' => 'user',
+                'status' => 'approved',
+            ]);
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        if (!$user->phone) {
+            return redirect()->route('user.profile.edit')
+                ->with('warning', 'Please complete your phone number and profile details.');
+        }
+
+        return redirect()->intended(route('home'))
+            ->with('success', 'Logged in with Google successfully.');
     }
 }
