@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'My Drivers')
-@section('page_title', 'My Drivers')
-@section('page_subtitle', 'Manage drivers and track subscription usage.')
 
 @section('vendor-content')
 <div class="d-flex justify-content-between align-items-center mb-5">
@@ -53,7 +51,6 @@
                             <th>License</th>
                             <th>Latest Booking</th>
                             <th>Availability</th>
-                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,9 +81,6 @@
                                     <span class="badge {{ $driver->availability_status === 'available' ? 'bg-success' : 'bg-secondary' }}">
                                         {{ ucfirst($driver->availability_status) }}
                                     </span>
-                                </td>
-                                <td>
-                                    <td colspan="6" class="text-center py-5 text-muted">No drivers found</td>
                                 </td>
                             </tr>
                         @endforeach

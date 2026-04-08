@@ -80,8 +80,37 @@ class VendorDriverController extends Controller
 
     public function show($driverId)
     {
-        $driver = Driver::where('vendor_id', Auth::id())->findOrFail($driverId);
-        return view('vendor.pages.drivers.show', compact('driver'));
+        $vendorId = Auth::id();
+
+        $driver = Driver::where('vendor_id', $vendorId)->findOrFail($driverId);
+
+        $bookingQuery = Booking::query()
+            ->where('driver_id', $driver->id)
+            ->whereHas('vehicle', function ($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            });
+
+        $totalBookings = (clone $bookingQuery)->count();
+        $completedBookings = (clone $bookingQuery)
+            ->where('status', 'completed')
+            ->count();
+        $ongoingBookings = (clone $bookingQuery)
+            ->whereIn('status', ['pending', 'confirmed', 'active', 'ongoing'])
+            ->count();
+
+        $lastThreeBookings = (clone $bookingQuery)
+            ->with(['user:id,name', 'vehicle:id,title,brand,model', 'payment:id,booking_id,status'])
+            ->latest('pickup_datetime')
+            ->limit(3)
+            ->get();
+
+        return view('vendor.pages.drivers.show', compact(
+            'driver',
+            'totalBookings',
+            'completedBookings',
+            'ongoingBookings',
+            'lastThreeBookings'
+        ));
     }
 
     public function edit($driverId)

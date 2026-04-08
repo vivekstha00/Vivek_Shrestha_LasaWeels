@@ -40,7 +40,7 @@
                             {{ strtoupper(substr($driver->name, 0, 1)) }}
                         </span>
                     </div>
-                @endif>
+                @endif
 
                 <h3 class="fw-bold mb-2">{{ $driver->name }}</h3>
                 <p class="text-muted mb-4">{{ $driver->phone ?? 'No phone number' }}</p>
@@ -92,16 +92,68 @@
                         <div class="fw-semibold">{{ $driver->created_at->format('d M Y') }}</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <hr class="my-5">
+<div class="mt-5">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="fw-bold mb-4">Booking Summary</h5>
 
-                <div class="bg-light p-4 rounded-3">
-                    <h6 class="fw-bold mb-3">Notes</h6>
-                    <p class="text-muted mb-0">
-                        You can add additional notes about this driver here in future updates.
-                    </p>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Total Bookings</div>
+                        <div class="fs-4 fw-bold">{{ $totalBookings ?? 0 }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Completed</div>
+                        <div class="fs-4 fw-bold text-success">{{ $completedBookings ?? 0 }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Going On</div>
+                        <div class="fs-4 fw-bold text-primary">{{ $ongoingBookings ?? 0 }}</div>
+                    </div>
                 </div>
             </div>
+
+            <h6 class="fw-bold mb-3">Last 3 Bookings</h6>
+            @if(!empty($lastThreeBookings) && $lastThreeBookings->isNotEmpty())
+                <div class="list-group list-group-flush border rounded-3 overflow-hidden mb-2">
+                    @foreach($lastThreeBookings as $booking)
+                        @php
+                            $vehicleName = trim(($booking->vehicle->brand ?? '') . ' ' . ($booking->vehicle->model ?? ''));
+                            $paymentState = $booking->payment_status ?? ($booking->payment->status ?? 'unpaid');
+                        @endphp
+                        <div class="list-group-item px-3 py-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">Booking #{{ $booking->id }}</div>
+                                    <div class="text-muted small">Customer: {{ $booking->user->name ?? 'N/A' }}</div>
+                                    <div class="text-muted small">{{ $vehicleName ?: ($booking->vehicle->title ?? 'N/A') }}</div>
+                                    <div class="text-muted small">Pickup: {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d M Y, h:i A') }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-light text-dark text-capitalize">{{ $booking->status }}</span>
+                                    <div class="mt-2">
+                                        <span class="badge {{ $paymentState === 'paid' ? 'bg-success' : ($paymentState === 'partial' ? 'bg-warning text-dark' : 'bg-danger') }} text-capitalize">
+                                            {{ $paymentState }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-muted mb-0">No recent bookings found for this driver.</p>
+            @endif
         </div>
     </div>
 </div>

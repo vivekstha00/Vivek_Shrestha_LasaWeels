@@ -47,6 +47,11 @@
                 <i class="fas fa-star"></i> Reviews
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('vendor.reports.*') ? 'active' : '' }}" href="{{ route('vendor.reports.index') }}">
+                <i class="fas fa-chart-line"></i> Reports
+            </a>
+        </li>
     </ul>
 
     <div class="logout-btn">

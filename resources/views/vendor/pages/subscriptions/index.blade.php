@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'Subscription Plans')
-@section('page_title', 'Subscription Plans')
-@section('page_subtitle', 'Choose a monthly or yearly plan to unlock more vehicles and drivers.')
 
 @section('vendor-content')
 <div class="mb-5">

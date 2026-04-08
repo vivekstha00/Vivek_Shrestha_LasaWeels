@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'My Vehicles')
-@section('page_title', 'My Vehicles')
-@section('page_subtitle', 'Manage your vehicle listings and subscription usage.')
 
 @section('vendor-content')
 <div class="d-flex justify-content-between align-items-center mb-5">

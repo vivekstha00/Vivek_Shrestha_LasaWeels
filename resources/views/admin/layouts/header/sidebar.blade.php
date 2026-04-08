@@ -67,6 +67,11 @@
                 <i class="fa-solid fa-star"></i> Reviews
             </a>
         </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
+                <i class="fa-solid fa-chart-column"></i> Reports
+            </a>
+        </li>
     </ul>
 
     <!-- Logout at bottom -->

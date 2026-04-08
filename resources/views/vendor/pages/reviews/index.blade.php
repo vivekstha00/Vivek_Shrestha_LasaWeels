@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'Customer Reviews')
-@section('page_title', 'Customer Reviews')
-@section('page_subtitle', 'Reviews and ratings for your vehicles')
 
 @section('vendor-content')
 <div class="mb-5">

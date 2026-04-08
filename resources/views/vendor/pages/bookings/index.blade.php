@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'Bookings')
-@section('page_title', 'Bookings')
-@section('page_subtitle', 'Manage all your vehicle bookings')
 
 @section('vendor-content')
 <div class="mb-5">

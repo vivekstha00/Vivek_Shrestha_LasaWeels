@@ -1,8 +1,6 @@
 @extends('vendor.layouts.master')
 
 @section('title', 'My Payments')
-@section('page_title', 'My Payments')
-@section('page_subtitle', 'Track customer payments, commission, and payouts')
 
 @section('vendor-content')
 <div class="mb-5">

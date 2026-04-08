@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Admin\AdminVendorSubscriptionController;
 use App\Http\Controllers\Admin\AdminRefundController;
+use App\Http\Controllers\Admin\AdminReportController;
 
 use App\Http\Controllers\Vendor\VendorProfileController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Vendor\VendorVehicleServiceController;
 use App\Http\Controllers\Vendor\VendorPaymentController;
 use App\Http\Controllers\Vendor\VendorReviewController;
 use App\Http\Controllers\Vendor\VendorSubscriptionPaymentController;
+use App\Http\Controllers\Vendor\VendorReportController;
 
 use App\Http\Controllers\User\UserBookingController;
 use App\Http\Controllers\User\UserVehicleController;
@@ -161,6 +163,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
 
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+
     Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
     Route::patch('/documents/{document}/approve', [AdminDocumentController::class, 'approve'])->name('documents.approve');
@@ -268,6 +272,8 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'vendor'])->group(
 
     Route::get('/reviews', [VendorReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [VendorReviewController::class, 'show'])->name('reviews.show');
+
+    Route::get('/reports', [VendorReportController::class, 'index'])->name('reports.index');
 
     Route::get('/subscriptions', [VendorSubscriptionPaymentController::class, 'index'])
         ->name('subscriptions.index');
