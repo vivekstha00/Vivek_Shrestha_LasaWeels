@@ -136,6 +136,16 @@
                                 <i class="fa-solid fa-download me-2"></i>Download Invoice
                             </a>
                         </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-primary px-4"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#sendInvoiceEmailForm"
+                                    aria-expanded="{{ $errors->has('invoice_email') ? 'true' : 'false' }}"
+                                    aria-controls="sendInvoiceEmailForm">
+                                <i class="fa-solid fa-envelope me-2"></i>Send Invoice Email
+                            </button>
+                        </div>
                     @endif
                     @if(!$isPaid)
                         <div class="col-auto">
@@ -146,6 +156,45 @@
                     @endif
                 </div>
             </div>
+
+            @if($canDownloadInvoice)
+                <div class="collapse {{ $errors->has('invoice_email') ? 'show' : '' }} mt-4" id="sendInvoiceEmailForm">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fa-solid fa-paper-plane me-2 text-primary"></i>Send Invoice by Email
+                            </h5>
+                            <p class="text-muted mb-3">
+                                Enter any email address. You can send the invoice to yourself or to someone else.
+                            </p>
+
+                            <form method="POST" action="{{ route('user.booking.invoice.email', $booking->id) }}">
+                                @csrf
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-8">
+                                        <label for="invoice_email" class="form-label fw-semibold">Recipient Email</label>
+                                        <input type="email"
+                                               id="invoice_email"
+                                               name="invoice_email"
+                                               class="form-control @error('invoice_email') is-invalid @enderror"
+                                               value="{{ old('invoice_email', auth()->user()->email ?? '') }}"
+                                               placeholder="Enter email address"
+                                               required>
+                                        @error('invoice_email')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-4 d-grid">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa-solid fa-envelope-circle-check me-2"></i>Send Invoice
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
         </div>
     </div>

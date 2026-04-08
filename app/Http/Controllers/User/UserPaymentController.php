@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Services\LoyaltyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -225,6 +227,83 @@ class UserPaymentController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
+        $invoice = $this->buildInvoicePdf($booking);
+
+        if (isset($invoice['error'])) {
+            return back()->withErrors([
+                'invoice' => $invoice['error'],
+            ]);
+        }
+
+        return $invoice['pdf']->download($invoice['file_name']);
+    }
+
+    public function emailInvoice(Request $request, Booking $booking)
+    {
+        abort_unless($booking->user_id === Auth::id(), 403);
+
+        $validated = $request->validate([
+            'invoice_email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $invoice = $this->buildInvoicePdf($booking);
+
+        if (isset($invoice['error'])) {
+            return back()->withErrors([
+                'invoice' => $invoice['error'],
+            ])->withInput();
+        }
+
+        try {
+            Mail::raw(
+                "Please find attached the invoice for booking #{$booking->id}.",
+                function ($message) use ($validated, $invoice, $booking) {
+                    $message->to($validated['invoice_email'])
+                        ->subject("LasaWheels Booking Invoice #{$booking->id}")
+                        ->attachData(
+                            $invoice['pdf']->output(),
+                            $invoice['file_name'],
+                            ['mime' => 'application/pdf']
+                        );
+                }
+            );
+        } catch (\Throwable $exception) {
+            Log::warning('Booking invoice email failed.', [
+                'booking_id' => $booking->id,
+                'recipient_email' => $validated['invoice_email'],
+                'error' => $exception->getMessage(),
+            ]);
+
+            return back()
+                ->withErrors(['invoice_email' => 'Unable to send invoice email right now. Please try again.'])
+                ->withInput();
+        }
+
+        return back()->with('success', 'Invoice sent successfully to ' . $validated['invoice_email'] . '.');
+    }
+
+    private function calculateBillableDays(Carbon $pickup, Carbon $drop): int
+    {
+        $totalMinutes = max(0, $pickup->diffInMinutes($drop));
+        $minutesPerDay = 24 * 60;
+
+        $fullDays = intdiv($totalMinutes, $minutesPerDay);
+        $remainingMinutes = $totalMinutes % $minutesPerDay;
+        $graceMinutes = (int) config('vehicle.billing_grace_hours', 2) * 60;
+
+        if ($remainingMinutes === 0) {
+            return max(1, $fullDays);
+        }
+
+        if ($remainingMinutes <= $graceMinutes) {
+            return max(1, $fullDays);
+        }
+
+        return max(1, $fullDays + 1);
+    }
+
+    private function buildInvoicePdf(Booking $booking): array
+    {
         $booking->load([
             'user',
             'vehicle',
@@ -233,18 +312,18 @@ class UserPaymentController extends Controller
         ]);
 
         if (! $booking->payment) {
-            return back()->withErrors([
-                'invoice' => 'Invoice is not available because payment record was not found.',
-            ]);
+            return [
+                'error' => 'Invoice is not available because payment record was not found.',
+            ];
         }
 
         $isInvoiceAllowed = in_array($booking->payment->status, ['completed', 'refunded'], true)
             || in_array($booking->payment_status, ['paid', 'partial'], true);
 
         if (! $isInvoiceAllowed) {
-            return back()->withErrors([
-                'invoice' => 'Invoice is available only after payment is completed.',
-            ]);
+            return [
+                'error' => 'Invoice is available only after payment is completed.',
+            ];
         }
 
         $payment = $booking->payment;
@@ -267,6 +346,7 @@ class UserPaymentController extends Controller
         $durationDiscountAmount = round($baseAmount * ($durationDiscountPercent / 100), 2);
 
         $invoiceNumber = 'INV-BOOK-' . $booking->id . '-' . $payment->id;
+        $fileName = $invoiceNumber . '.pdf';
 
         $pdf = Pdf::loadView('user.invoices.booking-invoice', [
             'booking' => $booking,
@@ -279,26 +359,9 @@ class UserPaymentController extends Controller
             'durationDiscountAmount' => $durationDiscountAmount,
         ])->setPaper('a4');
 
-        return $pdf->download($invoiceNumber . '.pdf');
-    }
-
-    private function calculateBillableDays(Carbon $pickup, Carbon $drop): int
-    {
-        $totalMinutes = max(0, $pickup->diffInMinutes($drop));
-        $minutesPerDay = 24 * 60;
-
-        $fullDays = intdiv($totalMinutes, $minutesPerDay);
-        $remainingMinutes = $totalMinutes % $minutesPerDay;
-        $graceMinutes = (int) config('vehicle.billing_grace_hours', 2) * 60;
-
-        if ($remainingMinutes === 0) {
-            return max(1, $fullDays);
-        }
-
-        if ($remainingMinutes <= $graceMinutes) {
-            return max(1, $fullDays);
-        }
-
-        return max(1, $fullDays + 1);
+        return [
+            'pdf' => $pdf,
+            'file_name' => $fileName,
+        ];
     }
 };

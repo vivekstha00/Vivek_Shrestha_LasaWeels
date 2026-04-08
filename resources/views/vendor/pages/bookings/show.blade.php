@@ -2,7 +2,6 @@
 
 @section('title', 'Booking Details')
 @section('page_title', 'Booking Details')
-@section('page_subtitle', 'Booking #{{ $booking->id }}')
 
 @section('vendor-content')
 <div class="mb-5">
