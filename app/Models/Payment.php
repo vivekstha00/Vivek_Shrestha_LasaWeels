@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
@@ -32,9 +33,13 @@ class Payment extends Model
 
         'refund_amount',
         'refund_status',
+        'dispute_status',
         'refund_requested_at',
         'refund_processed_at',
         'refund_note',
+
+        'paid_out_at',
+        'paid_out_by',
     ];
 
     protected $casts = [
@@ -47,6 +52,7 @@ class Payment extends Model
         'refund_amount' => 'decimal:2',
         'gateway_payload' => 'array',
         'paid_at' => 'datetime',
+        'paid_out_at' => 'datetime',
         'refund_requested_at' => 'datetime',
         'refund_processed_at' => 'datetime',
     ];
@@ -64,5 +70,68 @@ class Payment extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendor_id');
+    }
+
+    public function paidOutBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paid_out_by');
+    }
+
+    public function scopeForVendor(Builder $query, int $vendorId): Builder
+    {
+        return $query->where('vendor_id', $vendorId);
+    }
+
+    public function scopeEligibleForPayout(Builder $query): Builder
+    {
+        return $query
+            ->where('status', 'completed')
+            ->where(function (Builder $q) {
+                $q->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
+            ->where(function (Builder $q) {
+                $q->whereNull('dispute_status')
+                    ->orWhere('dispute_status', '!=', 'pending');
+            })
+            ->whereHas('booking', function (Builder $q) {
+                $q->where('status', 'completed');
+            })
+            ->where(function (Builder $q) {
+                $q->where('payment_type', '!=', 'deposit_cash')
+                    ->orWhere('settlement_status', 'balance_received');
+            });
+    }
+
+    public function isEligibleForPayout(?string $effectiveStatus = null, ?string $effectiveSettlementStatus = null): bool
+    {
+        $bookingStatus = $this->relationLoaded('booking')
+            ? ($this->booking?->status)
+            : $this->booking()?->value('status');
+
+        if ($bookingStatus !== 'completed') {
+            return false;
+        }
+
+        $status = $effectiveStatus ?? $this->status;
+        $settlementStatus = $effectiveSettlementStatus ?? $this->settlement_status;
+
+        if ($status !== 'completed') {
+            return false;
+        }
+
+        if (($this->refund_status ?? 'none') === 'refunded') {
+            return false;
+        }
+
+        if (($this->dispute_status ?? 'none') === 'pending') {
+            return false;
+        }
+
+        if ($this->payment_type === 'deposit_cash' && $settlementStatus !== 'balance_received') {
+            return false;
+        }
+
+        return true;
     }
 }

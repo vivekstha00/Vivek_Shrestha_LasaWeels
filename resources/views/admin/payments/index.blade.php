@@ -150,6 +150,8 @@
                                 <span class="badge text-bg-dark rounded-pill px-2 py-1">Hold</span>
                             @elseif($p->payout_status === 'paid')
                                 <span class="badge text-bg-success rounded-pill px-2 py-1">Paid</span>
+                            @elseif($p->payout_status === 'ready_for_payout')
+                                <span class="badge text-bg-info rounded-pill px-2 py-1">Ready</span>
                             @elseif($p->payout_status === 'pending')
                                 <span class="badge text-bg-warning rounded-pill px-2 py-1">Pending</span>
                             @else

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\SubscriptionPayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminPaymentController extends Controller
 {
@@ -181,10 +182,24 @@ class AdminPaymentController extends Controller
     {
         $data = $request->validate([
             'status' => 'required|in:pending,completed,failed,refunded',
-            'payout_status' => 'nullable|in:unpaid,pending,paid,hold',
+            'payout_status' => 'nullable|in:unpaid,pending,ready_for_payout,paid,hold',
             'deposit_status' => 'nullable|in:pending,paid,refunded,forfeited',
             'settlement_status' => 'nullable|in:pending_balance,balance_received,payout_pending,paid_to_vendor,not_applicable,refunded',
         ]);
+
+        $payment->loadMissing('booking');
+
+        $requestedPayoutStatus = $data['payout_status'] ?? $payment->payout_status;
+        $effectiveStatus = $data['status'] ?? $payment->status;
+        $effectiveSettlementStatus = $data['settlement_status'] ?? $payment->settlement_status;
+
+        if (in_array($requestedPayoutStatus, ['ready_for_payout', 'paid'], true)) {
+            if (! $payment->isEligibleForPayout($effectiveStatus, $effectiveSettlementStatus)) {
+                return back()->withErrors([
+                    'payout_status' => 'Vendor payout is allowed only after the booking is completed, payment is completed, no refund/dispute is pending, and (for deposit flow) full balance is received.',
+                ])->withInput();
+            }
+        }
 
         $isRefundedAction =
             ($data['status'] ?? null) === 'refunded' ||
@@ -197,6 +212,8 @@ class AdminPaymentController extends Controller
                 'refund_status' => 'refunded',
                 'refund_processed_at' => $payment->refund_processed_at ?? now(),
                 'payout_status' => 'hold',
+                'paid_out_at' => null,
+                'paid_out_by' => null,
                 'settlement_status' => 'refunded',
                 'deposit_status' => $payment->payment_type === 'deposit_cash' ? 'refunded' : $payment->deposit_status,
                 'remaining_amount' => 0,
@@ -213,12 +230,22 @@ class AdminPaymentController extends Controller
                 ->with('success', 'Refunded payment updated successfully.');
         }
 
+        $nextPayoutStatus = $data['payout_status'] ?? $payment->payout_status;
+
         $payment->update([
             'status' => $data['status'],
-            'payout_status' => $data['payout_status'] ?? $payment->payout_status,
+            'payout_status' => $nextPayoutStatus,
             'deposit_status' => $data['deposit_status'] ?? $payment->deposit_status,
             'settlement_status' => $data['settlement_status'] ?? $payment->settlement_status,
+            'paid_out_at' => $nextPayoutStatus === 'paid' ? now() : null,
+            'paid_out_by' => $nextPayoutStatus === 'paid' ? Auth::id() : null,
         ]);
+
+        if ($nextPayoutStatus === 'paid' && $payment->settlement_status !== 'refunded') {
+            $payment->update([
+                'settlement_status' => 'paid_to_vendor',
+            ]);
+        }
 
         if ($payment->booking) {
             if ($payment->payment_type === 'full_online') {

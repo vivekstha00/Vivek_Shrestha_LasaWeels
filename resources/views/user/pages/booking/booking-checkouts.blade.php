@@ -290,11 +290,43 @@
 
                         {{-- Terms --}}
                         <div class="mb-4">
+                            <div class="border rounded-4 p-4 mb-3 bg-white" style="border: 2px solid #0d6efd;">
+                                <h4 class="fw-bold text-primary mb-3">Important Booking Terms</h4>
+
+                                {{-- Common terms for both services --}}
+                                <ol class="mb-3 ps-3" style="line-height: 1.8;">
+                                    <li>Booking is confirmed only after successful payment and final validation.</li>
+                                    <li>Pickup and drop details must be accurate at the time of booking.</li>
+                                    <li>Late return, vehicle damage, traffic fines, or misuse may result in additional charges.</li>
+                                    <li>Cancellation and refund are subject to the booking policy of the platform.</li>
+                                </ol>
+
+                                {{-- Self-drive specific terms --}}
+                                @if($selectedService === 'self')
+                                    <h5 class="fw-bold text-dark mt-3 mb-2">Self-Drive Terms</h5>
+                                    <ol class="mb-0 ps-3" style="line-height: 1.8;">
+                                        <li>Approved valid driving licence and required documents are mandatory before booking confirmation.</li>
+                                        <li>Valid citizenship, passport, or other identity documents may be required for verification.</li>
+                                        <li>A refundable security deposit may apply depending on the vehicle category.</li>
+                                        <li>The user must return the vehicle in proper condition and is responsible for any misuse during the booking period.</li>
+                                    </ol>
+                                @elseif($selectedService === 'driver')
+                                    {{-- With-driver specific terms --}}
+                                    <h5 class="fw-bold text-dark mt-3 mb-2">With-Driver Terms</h5>
+                                    <ol class="mb-0 ps-3" style="line-height: 1.8;">
+                                        <li>Driver assignment is subject to availability and booking confirmation.</li>
+                                        <li>The user must treat the assigned driver respectfully during the trip.</li>
+                                        <li>Extra waiting time, route extension, or time extension may result in additional charges.</li>
+                                        <li>The service is limited to the confirmed booking duration and agreed trip details.</li>
+                                    </ol>
+                                @endif
+                            </div>
+
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="accept_terms" value="1"
-                                       id="accept_terms" {{ old('accept_terms') ? 'checked' : '' }} required>
+                                    id="accept_terms" {{ old('accept_terms') ? 'checked' : '' }} required>
                                 <label class="form-check-label" for="accept_terms">
-                                    I agree to the Terms & Conditions
+                                    I have read and agree to the above booking terms and conditions.
                                 </label>
                             </div>
                         </div>

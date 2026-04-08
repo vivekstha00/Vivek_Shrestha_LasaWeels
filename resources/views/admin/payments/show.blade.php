@@ -136,6 +136,18 @@
                         <div class="text-muted small">Payout Status</div>
                         <div class="fw-semibold">{{ ucfirst($payment->payout_status ?? 'N/A') }}</div>
                     </div>
+                    @if($payment->paid_out_at)
+                        <div class="col-md-6">
+                            <div class="text-muted small">Paid Out At</div>
+                            <div class="fw-semibold">{{ $payment->paid_out_at->format('d M Y, h:i A') }}</div>
+                        </div>
+                    @endif
+                    @if($payment->paidOutBy)
+                        <div class="col-md-6">
+                            <div class="text-muted small">Paid Out By</div>
+                            <div class="fw-semibold">{{ $payment->paidOutBy->name }}</div>
+                        </div>
+                    @endif
                     <div class="col-md-6">
                         <div class="text-muted small">Settlement Status</div>
                         <div class="fw-semibold">{{ ucfirst(str_replace('_', ' ', $payment->settlement_status ?? 'N/A')) }}</div>
@@ -245,6 +257,7 @@
                         <select name="payout_status" class="form-select">
                             <option value="unpaid" {{ $payment->payout_status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                             <option value="pending" {{ $payment->payout_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="ready_for_payout" {{ $payment->payout_status === 'ready_for_payout' ? 'selected' : '' }}>Ready For Payout</option>
                             <option value="paid" {{ $payment->payout_status === 'paid' ? 'selected' : '' }}>Paid</option>
                             <option value="hold" {{ $payment->payout_status === 'hold' ? 'selected' : '' }}>Hold</option>
                         </select>
