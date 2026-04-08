@@ -14,6 +14,41 @@
     <div class="col-md-6 col-xl-3">
         <div class="card h-100">
             <div class="card-body">
+                <small class="text-muted">Total Received (Paid Out)</small>
+                <h4 class="fw-bold text-success mt-2">Rs. {{ number_format($receivedAmount ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Payout Ready Amount</small>
+                <h4 class="fw-bold text-primary mt-2">Rs. {{ number_format($payoutReadyAmount ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Pending Amount</small>
+                <h4 class="fw-bold text-warning mt-2">Rs. {{ number_format($pendingAmount ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <small class="text-muted">Refunded / Blocked</small>
+                <h4 class="fw-bold text-danger mt-2">Rs. {{ number_format($refundedAmount ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
                 <small class="text-muted">Original Booking Value</small>
                 <h4 class="fw-bold mt-2">Rs. {{ number_format($totalOriginalVehicleValue ?? $totalOriginalValue ?? 0, 2) }}</h4>
             </div>
@@ -131,6 +166,8 @@
                                     <span class="badge text-bg-dark rounded-pill px-3 py-2">Blocked</span>
                                 @elseif($payment->payout_status === 'paid')
                                     <span class="badge text-bg-success rounded-pill px-3 py-2">Paid</span>
+                                @elseif($payment->payout_status === 'ready_for_payout')
+                                    <span class="badge text-bg-info rounded-pill px-3 py-2">Ready</span>
                                 @elseif($payment->payout_status === 'pending')
                                     <span class="badge text-bg-warning rounded-pill px-3 py-2">Pending</span>
                                 @else

@@ -88,9 +88,23 @@
 
                 <h6 class="fw-bold mb-3">Additional Notes</h6>
                 <div class="bg-light p-4 rounded-3">
-                    <p class="text-muted mb-0">
-                        This section can later display booking history, uploaded documents, and activity logs.
-                    </p>
+                    @if(!empty($latestBooking))
+                        @php
+                            $vehicleName = trim(($latestBooking->vehicle->brand ?? '') . ' ' . ($latestBooking->vehicle->model ?? ''));
+                        @endphp
+                        <div class="small text-muted mb-1">Latest Booking</div>
+                        <div class="fw-semibold">#{{ $latestBooking->id }}</div>
+                        <div class="text-muted small">{{ $vehicleName ?: ($latestBooking->vehicle->title ?? 'N/A') }}</div>
+                        <div class="text-muted small">Pickup: {{ \Carbon\Carbon::parse($latestBooking->pickup_datetime)->format('d M Y, h:i A') }}</div>
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            <span class="badge bg-light text-dark text-capitalize">{{ $latestBooking->status }}</span>
+                            <span class="badge {{ ($latestBooking->payment_status ?? 'unpaid') === 'paid' ? 'bg-success' : (($latestBooking->payment_status ?? 'unpaid') === 'partial' ? 'bg-warning text-dark' : 'bg-danger') }} text-capitalize">
+                                {{ $latestBooking->payment_status ?? 'unpaid' }}
+                            </span>
+                        </div>
+                    @else
+                        <p class="text-muted mb-0">No bookings yet.</p>
+                    @endif
                 </div>
             </div>
         </div>

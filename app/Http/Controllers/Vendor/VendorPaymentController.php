@@ -25,7 +25,10 @@ class VendorPaymentController extends Controller
 
         $earningQuery = Payment::where('vendor_id', $vendorId)
             ->where('status', 'completed')
-            ->where('refund_status', '!=', 'refunded')
+            ->where(function ($q) {
+                $q->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
             ->whereHas('booking', function ($q) {
                 $q->where('status', '!=', 'cancelled');
             });
@@ -36,7 +39,10 @@ class VendorPaymentController extends Controller
 
         $pendingPayout = Payment::where('vendor_id', $vendorId)
             ->whereIn('payout_status', ['unpaid', 'pending'])
-            ->where('refund_status', '!=', 'refunded')
+            ->where(function ($q) {
+                $q->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
             ->whereHas('booking', function ($q) {
                 $q->where('status', '!=', 'cancelled');
             })
@@ -44,11 +50,35 @@ class VendorPaymentController extends Controller
 
         $paidPayout = Payment::where('vendor_id', $vendorId)
             ->where('payout_status', 'paid')
-            ->where('refund_status', '!=', 'refunded')
+            ->where(function ($q) {
+                $q->whereNull('refund_status')
+                    ->orWhere('refund_status', '!=', 'refunded');
+            })
             ->whereHas('booking', function ($q) {
                 $q->where('status', '!=', 'cancelled');
             })
             ->sum('vendor_amount');
+
+        $payoutReadyAmount = Payment::query()
+            ->forVendor($vendorId)
+            ->eligibleForPayout()
+            ->whereIn('payout_status', ['unpaid', 'pending', 'ready_for_payout'])
+            ->sum('vendor_amount');
+
+        $pendingAmount = max(0, $pendingPayout - $payoutReadyAmount);
+
+        $refundedAmount = Payment::query()
+            ->forVendor($vendorId)
+            ->where(function ($query) {
+                $query->where('refund_status', 'refunded')
+                    ->orWhere('status', 'refunded')
+                    ->orWhereHas('booking', function ($bookingQuery) {
+                        $bookingQuery->where('status', 'cancelled');
+                    });
+            })
+            ->sum('vendor_amount');
+
+        $receivedAmount = $paidPayout;
 
         $totalLoyaltyDiscount = Payment::where('vendor_id', $vendorId)
             ->where('payments.status', 'completed')
@@ -78,6 +108,10 @@ class VendorPaymentController extends Controller
             'totalNet',
             'pendingPayout',
             'paidPayout',
+            'payoutReadyAmount',
+            'pendingAmount',
+            'refundedAmount',
+            'receivedAmount',
             'totalLoyaltyDiscount',
             'totalOriginalValue',
             'totalOriginalVehicleValue'

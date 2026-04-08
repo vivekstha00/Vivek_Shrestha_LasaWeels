@@ -51,12 +51,17 @@
                             <th>Name</th>
                             <th>Phone</th>
                             <th>License</th>
+                            <th>Latest Booking</th>
                             <th>Availability</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($drivers as $driver)
+                            @php
+                                $latestBooking = $driver->latestBooking;
+                                $latestVehicleName = trim(($latestBooking?->vehicle?->brand ?? '') . ' ' . ($latestBooking?->vehicle?->model ?? ''));
+                            @endphp
                             <tr style="cursor: pointer;"
                                 onclick="window.location='{{ route('vendor.drivers.show', $driver) }}'">
                                 <td>
@@ -65,12 +70,23 @@
                                 <td>{{ $driver->phone ?? 'N/A' }}</td>
                                 <td>{{ $driver->license_number }}</td>
                                 <td>
+                                    @if($latestBooking)
+                                        <div class="fw-semibold">#{{ $latestBooking->id }}</div>
+                                        <small class="text-muted d-block">{{ $latestBooking->user?->name ?? 'N/A' }}</small>
+                                        <small class="text-muted d-block">{{ $latestVehicleName ?: ($latestBooking->vehicle?->title ?? 'N/A') }}</small>
+                                        <small class="text-muted d-block">{{ \Carbon\Carbon::parse($latestBooking->pickup_datetime)->format('d M Y, h:i A') }}</small>
+                                        <span class="badge bg-light text-dark text-capitalize mt-1">{{ $latestBooking->status }}</span>
+                                    @else
+                                        <span class="text-muted">No bookings yet</span>
+                                    @endif
+                                </td>
+                                <td>
                                     <span class="badge {{ $driver->availability_status === 'available' ? 'bg-success' : 'bg-secondary' }}">
                                         {{ ucfirst($driver->availability_status) }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary text-capitalize">{{ $driver->status }}</span>
+                                    <td colspan="6" class="text-center py-5 text-muted">No drivers found</td>
                                 </td>
                             </tr>
                         @endforeach

@@ -14,7 +14,12 @@ class VendorDriverController extends Controller
 {
     public function index()
     {
-        $drivers = Driver::where('vendor_id', Auth::id())->latest()->paginate(10);
+        $drivers = Driver::query()
+            ->where('vendor_id', Auth::id())
+            ->with(['latestBooking.user:id,name', 'latestBooking.vehicle:id,title,brand,model'])
+            ->latest()
+            ->paginate(10);
+
         $subscriptionSummary = app(VendorSubscriptionService::class)->getSummary(Auth::id());
 
         return view('vendor.pages.drivers.index', compact('drivers', 'subscriptionSummary'));

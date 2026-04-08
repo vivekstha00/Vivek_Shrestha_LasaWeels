@@ -25,15 +25,18 @@
                         <th>Contact</th>
                         <th>Join Date</th>
                         <th>Total Bookings</th>
+                        <th>Latest Booking</th>
                         <th class="pe-4">Document Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($users as $u)
                         @php
-                            $totalBookings = $u->bookings_count ?? 0;
+                            $totalBookings = $u->vendor_bookings_count ?? 0;
                             $status = $u->selfDriveVerificationStatus();
                             $docStatus = $status === 'approved' ? 'Verified' : 'Not Verified';
+                            $latestBooking = $u->latestVendorBooking;
+                            $latestVehicleName = trim(($latestBooking?->vehicle?->brand ?? '') . ' ' . ($latestBooking?->vehicle?->model ?? ''));
                         @endphp
                         <tr role="button"
                             onclick="window.location='{{ route('vendor.users.show', $u->id) }}'">
@@ -55,6 +58,21 @@
                             </td>
                             <td>{{ optional($u->created_at)->format('d M Y') }}</td>
                             <td>{{ $totalBookings }}</td>
+                            <td>
+                                @if($latestBooking)
+                                    <div class="fw-semibold">#{{ $latestBooking->id }}</div>
+                                    <small class="text-muted d-block">{{ $latestVehicleName ?: ($latestBooking->vehicle?->title ?? 'N/A') }}</small>
+                                    <small class="text-muted d-block">{{ \Carbon\Carbon::parse($latestBooking->pickup_datetime)->format('d M Y, h:i A') }}</small>
+                                    <div class="d-flex gap-1 mt-1 flex-wrap">
+                                        <span class="badge bg-light text-dark text-capitalize">{{ $latestBooking->status }}</span>
+                                        <span class="badge {{ ($latestBooking->payment_status ?? 'unpaid') === 'paid' ? 'bg-success' : (($latestBooking->payment_status ?? 'unpaid') === 'partial' ? 'bg-warning text-dark' : 'bg-danger') }} text-capitalize">
+                                            {{ $latestBooking->payment_status ?? 'unpaid' }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <span class="text-muted">No bookings yet</span>
+                                @endif
+                            </td>
                             <td class="pe-4">
                                 <span class="badge
                                     {{ $docStatus === 'Verified' ? 'bg-success' : 'bg-warning' }}">
@@ -64,7 +82,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No users found.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">No users found.</td>
                         </tr>
                     @endforelse
                 </tbody>
