@@ -15,7 +15,7 @@ class BookingReminder24hNotification extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(public Booking $booking)
+    public function __construct(public Booking $booking, public string $reminderLabel = '24 hours')
     {
         //
     }
@@ -36,10 +36,11 @@ class BookingReminder24hNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Reminder: Trip starts in 24 hours')
+            ->subject('Reminder: Trip starts in ' . $this->reminderLabel)
             ->view('user.emails.booking-reminder-24', [
                 'user' => $notifiable,
                 'booking' => $this->booking,
+                'reminderLabel' => $this->reminderLabel,
             ]);
     }
 

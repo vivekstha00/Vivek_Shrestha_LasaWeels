@@ -11,14 +11,61 @@ class VendorBookingController extends Controller
     {
         $vendorId = Auth::id();
 
-        $bookings = Booking::with('vehicle', 'user')
-            ->whereHas('vehicle', function ($query) {
-                $query->where('vendor_id', Auth::id());
-            })
-            ->latest()
-            ->paginate(10);
+        $vendorScopedBookings = Booking::query()
+            ->whereHas('vehicle', function ($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            });
 
-        return view('vendor.pages.bookings.index', compact('bookings'));
+        $now = now();
+
+        $bookings = Booking::with('vehicle', 'user')
+            ->whereHas('vehicle', function ($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            })
+            ->orderByDesc('pickup_datetime')
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $upcomingBookings = (clone $vendorScopedBookings)
+            ->with(['vehicle:id,title,brand,model', 'user:id,name'])
+            ->whereIn('status', ['pending', 'confirmed', 'approved'])
+            ->where('pickup_datetime', '>=', $now)
+            ->where('pickup_datetime', '<=', $now->copy()->addDay())
+            ->orderBy('pickup_datetime')
+            ->limit(6)
+            ->get();
+
+        $currentTrips = (clone $vendorScopedBookings)
+            ->with(['vehicle:id,title,brand,model', 'user:id,name'])
+            ->whereIn('status', ['confirmed', 'approved', 'active'])
+            ->where('pickup_datetime', '<=', $now)
+            ->where('drop_datetime', '>=', $now)
+            ->orderBy('drop_datetime')
+            ->limit(6)
+            ->get();
+
+        $missedArrivalBookings = (clone $vendorScopedBookings)
+            ->with(['vehicle:id,title,brand,model', 'user:id,name'])
+            ->whereIn('status', ['pending', 'confirmed', 'approved'])
+            ->where('pickup_datetime', '<', $now->copy()->subMinutes(30))
+            ->orderByDesc('pickup_datetime')
+            ->limit(6)
+            ->get();
+
+        $bookingMonitorSummary = [
+            'upcoming' => $upcomingBookings->count(),
+            'on_trip' => $currentTrips->count(),
+            'missed_arrival' => $missedArrivalBookings->count(),
+        ];
+
+        return view('vendor.pages.bookings.index', compact(
+            'bookings',
+            'upcomingBookings',
+            'currentTrips',
+            'missedArrivalBookings',
+            'bookingMonitorSummary'
+        ));
     }
 
     public function show(Booking $booking)

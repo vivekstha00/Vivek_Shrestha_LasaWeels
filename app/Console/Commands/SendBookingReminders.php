@@ -21,36 +21,66 @@ class SendBookingReminders extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Send booking reminder emails for 1 week, 24 hours, and 2 hours before pickup';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        // window: between 24h and 24h + 15min from now
-        $from = Carbon::now()->addHours(24);
-        $to   = Carbon::now()->addHours(24)->addMinutes(15);
+        $now = Carbon::now();
+        $windowMinutes = 15;
+        $validStatuses = ['confirmed', 'approved', 'active'];
 
-        $bookings = Booking::with('user')
-            ->whereNull('reminder_sent_at')
-            ->whereIn('status', ['confirmed', 'approved', 'active']) 
-            ->whereBetween('pickup_datetime', [$from, $to])
-            ->get();
+        $reminderConfigs = [
+            [
+                'hours' => 24 * 7,
+                'column' => 'reminder_7d_sent_at',
+                'label' => '1 week',
+            ],
+            [
+                'hours' => 24,
+                'column' => 'reminder_sent_at',
+                'label' => '24 hours',
+            ],
+            [
+                'hours' => 2,
+                'column' => 'reminder_2h_sent_at',
+                'label' => '2 hours',
+            ],
+        ];
 
-        $count = 0;
+        $totalSent = 0;
 
-        foreach ($bookings as $booking) {
-            if (!$booking->user) continue;
+        foreach ($reminderConfigs as $config) {
+            $from = $now->copy()->addHours($config['hours']);
+            $to = $from->copy()->addMinutes($windowMinutes);
 
-            $booking->user->notify(new BookingReminder24hNotification($booking));
+            $bookings = Booking::with('user')
+                ->whereNull($config['column'])
+                ->whereIn('status', $validStatuses)
+                ->whereBetween('pickup_datetime', [$from, $to])
+                ->get();
 
-            $booking->reminder_sent_at = Carbon::now();
-            $booking->save();
+            $sentForWindow = 0;
 
-            $count++;
+            foreach ($bookings as $booking) {
+                if (! $booking->user) {
+                    continue;
+                }
+
+                $booking->user->notify(new BookingReminder24hNotification($booking, $config['label']));
+
+                $booking->{$config['column']} = $now;
+                $booking->save();
+
+                $sentForWindow++;
+                $totalSent++;
+            }
+
+            $this->info("{$config['label']} reminders sent: {$sentForWindow}");
         }
 
-        $this->info("Reminder emails sent: {$count}");
+        $this->info("Total reminder emails sent: {$totalSent}");
     }
 }

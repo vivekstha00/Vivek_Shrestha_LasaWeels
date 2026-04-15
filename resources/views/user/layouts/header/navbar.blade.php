@@ -52,7 +52,17 @@
                                 type="button"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false">
-                            <i class="fa-solid fa-user-circle me-1"></i> {{ Auth::user()->name }}
+                            @if(Auth::user()->profile_image)
+                                <img
+                                    src="{{ asset('storage/' . Auth::user()->profile_image) }}"
+                                    alt="{{ Auth::user()->name }}"
+                                    class="rounded-circle"
+                                    style="width: 28px; height: 28px; object-fit: cover;"
+                                >
+                            @else
+                                <i class="fa-solid fa-user-circle me-1"></i>
+                            @endif
+                            {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow rounded-3">
                             <li><a class="dropdown-item" href="{{ route('user.profile') }}">Profile</a></li>

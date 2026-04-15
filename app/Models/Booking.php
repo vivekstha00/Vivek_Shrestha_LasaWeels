@@ -30,6 +30,8 @@ class Booking extends Model
         'total_price',
 
         'reminder_sent_at',
+        'reminder_7d_sent_at',
+        'reminder_2h_sent_at',
         'loyalty_points_earned',
         'loyalty_points_redeemed',
         'loyalty_discount_amount',
@@ -48,6 +50,9 @@ class Booking extends Model
         'discount_amount' => 'decimal:2',
         'total_price' => 'decimal:2',
         'security_deposit' => 'decimal:2',
+        'reminder_sent_at' => 'datetime',
+        'reminder_7d_sent_at' => 'datetime',
+        'reminder_2h_sent_at' => 'datetime',
         'cancellation_requested_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];

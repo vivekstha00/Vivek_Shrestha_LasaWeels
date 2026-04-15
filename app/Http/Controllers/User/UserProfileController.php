@@ -117,7 +117,7 @@ class UserProfileController extends Controller
                 'max:255',
                 'unique:users,email,' . $user->id,
                 function ($attribute, $value, $fail) {
-                    if (!str_ends_with(strtolower($value), '@gmail.com')) {
+                    if (!str_ends_with(strtolower($value), '@gmail.com') && !str_ends_with(strtolower($value), '@icp.edu.np')) {
                         $fail('Please enter the valid email address.');
                     }
                 },
