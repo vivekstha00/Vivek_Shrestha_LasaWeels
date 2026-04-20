@@ -13,13 +13,8 @@
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.loyalty.*') ? 'active' : '' }}" href="{{ route('admin.loyalty.index') }}">
-                <i class="fa-solid fa-gift"></i> Loyalty
-            </a>
-        </li>
-        <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.subscription-plans.*') ? 'active' : '' }}" href="{{ route('admin.subscription-plans.index') }}">
-                <i class="fa-solid fa-list"></i> Subscription Plans
+            <a class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}" href="{{ route('admin.vendors.index') }}">
+                <i class="fa-solid fa-building"></i> Vendors
             </a>
         </li>
         <li class="nav-item mb-1">
@@ -28,23 +23,49 @@
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.discount-codes.*') ? 'active' : '' }}" href="{{ route('admin.discount-codes.index') }}">
-                <i class="fa-solid fa-tags"></i> Discount Codes
-            </a>
-        </li>
-        <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}" href="{{ route('admin.refunds.index') }}">
-                <i class="fa-solid fa-arrow-rotate-left"></i> Refund Requests
-            </a>
-        </li>
-        <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}" href="{{ route('admin.vendors.index') }}">
-                <i class="fa-solid fa-building"></i> Vendors
-            </a>
-        </li>
-        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}" href="{{ route('admin.vehicles.index') }}">
                 <i class="fa-solid fa-car"></i> Vehicles
+            </a>
+        </li>
+        @php
+            $financeActive = request()->routeIs('admin.discount-codes.*')
+                || request()->routeIs('admin.payments.*')
+                || request()->routeIs('admin.refunds.*');
+        @endphp
+        <li class="nav-item mb-1">
+            <a class="nav-link d-flex justify-content-between align-items-center {{ $financeActive ? 'active' : '' }}"
+               data-bs-toggle="collapse"
+               href="#adminFinanceMenu"
+               role="button"
+               aria-expanded="{{ $financeActive ? 'true' : 'false' }}"
+               aria-controls="adminFinanceMenu">
+                <span><i class="fa-solid fa-wallet"></i> Finance</span>
+                <i class="fa-solid fa-chevron-down small"></i>
+            </a>
+
+            <div class="collapse {{ $financeActive ? 'show' : '' }}" id="adminFinanceMenu">
+                <ul class="nav flex-column ms-3 mt-1">
+                    <li class="nav-item mb-1">
+                        <a class="nav-link py-1 {{ request()->routeIs('admin.discount-codes.*') ? 'active' : '' }}" href="{{ route('admin.discount-codes.index') }}">
+                            <i class="fa-solid fa-tags"></i> Discount Codes
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a class="nav-link py-1 {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" href="{{ route('admin.payments.index') }}">
+                            <i class="fa-solid fa-money-bill-wave"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a class="nav-link py-1 {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}" href="{{ route('admin.refunds.index') }}">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Refund Requests
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.subscription-plans.*') ? 'active' : '' }}" href="{{ route('admin.subscription-plans.index') }}">
+                <i class="fa-solid fa-list"></i> Subscription Plans
             </a>
         </li>
         <li class="nav-item mb-1">
@@ -58,11 +79,6 @@
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" href="{{ route('admin.payments.index') }}">
-                <i class="fa-solid fa-money-bill-wave"></i> Payments
-            </a>
-        </li>
-        <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}" href="{{ route('admin.reviews.index') }}">
                 <i class="fa-solid fa-star"></i> Reviews
             </a>
@@ -70,6 +86,11 @@
         <li class="nav-item mb-1">
             <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
                 <i class="fa-solid fa-chart-column"></i> Reports
+            </a>
+        </li>
+        <li class="nav-item mb-1">
+            <a class="nav-link {{ request()->routeIs('admin.loyalty.*') ? 'active' : '' }}" href="{{ route('admin.loyalty.index') }}">
+                <i class="fa-solid fa-gift"></i> Loyalty
             </a>
         </li>
     </ul>

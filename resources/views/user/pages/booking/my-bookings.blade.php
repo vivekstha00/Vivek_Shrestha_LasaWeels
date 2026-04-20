@@ -87,7 +87,6 @@
                     <a href="{{ route('home') }}" class="btn btn-primary">Browse Vehicles</a>
                 </div>
             @else
-                <p class="small text-muted mb-2">Tip: Click any booking row to view full details.</p>
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Your Bookings ({{ $bookings->total() }})</h5>

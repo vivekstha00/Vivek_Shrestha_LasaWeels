@@ -64,7 +64,7 @@ class UserBookingController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
-        $booking->load(['vehicle', 'payment', 'driver']);
+        $booking->load(['vehicle', 'payment', 'driver', 'review']);
 
         return view('user.pages.booking.booking-show', compact('booking'));
     }

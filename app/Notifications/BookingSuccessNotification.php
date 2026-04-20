@@ -36,8 +36,12 @@ class BookingSuccessNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Booking Created')
+            ->subject('Your LasaWheels Booking Details (#' . $this->booking->id . ')')
             ->view('user.emails.booking-success', [
+                'user' => $notifiable,
+                'booking' => $this->booking,
+            ])
+            ->text('user.emails.booking-success-text', [
                 'user' => $notifiable,
                 'booking' => $this->booking,
             ]);

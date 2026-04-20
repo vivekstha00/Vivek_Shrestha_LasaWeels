@@ -226,8 +226,64 @@
                 <h5 class="mb-3">Review</h5>
 
                 @if($booking->review)
-                    <div class="alert alert-success mb-0">
-                        You already submitted a review for this booking.
+                    @php
+                        $review = $booking->review;
+                    @endphp
+
+                    <div class="alert alert-success">
+                        You have already submitted a review for this booking.
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="small text-muted">Overall Rating</div>
+                                <div class="fw-bold">{{ number_format((float) $review->overall_rating, 1) }} ★ / 5</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="small text-muted">Vehicle Rating</div>
+                                <div class="fw-bold">{{ number_format((float) $review->vehicle_rating, 1) }} ★ / 5</div>
+                            </div>
+                        </div>
+                        @if($booking->service === 'driver')
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="small text-muted">Driver Rating</div>
+                                    <div class="fw-bold">{{ number_format((float) ($review->driver_rating ?? 0), 1) }} ★ / 5</div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="row g-3">
+                        @if(!empty($review->overall_review))
+                            <div class="col-12">
+                                <div class="border rounded p-3">
+                                    <div class="small text-muted mb-1">Overall Review</div>
+                                    <div>{{ $review->overall_review }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if(!empty($review->vehicle_review))
+                            <div class="col-12">
+                                <div class="border rounded p-3">
+                                    <div class="small text-muted mb-1">Vehicle Review</div>
+                                    <div>{{ $review->vehicle_review }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($booking->service === 'driver' && !empty($review->driver_review))
+                            <div class="col-12">
+                                <div class="border rounded p-3">
+                                    <div class="small text-muted mb-1">Driver Review</div>
+                                    <div>{{ $review->driver_review }}</div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @else
                     <form action="{{ route('user.bookings.review.store', $booking) }}" method="POST">
