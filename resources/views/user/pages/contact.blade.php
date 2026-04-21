@@ -6,12 +6,6 @@
         <h2 class="fw-bold mb-0">Contact Us</h2>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success rounded-3 border-0 shadow-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <div class="row g-4 align-items-stretch">
         <div class="col-lg-7">
             <h4 class="mb-3 fw-semibold">Get in Touch</h4>
@@ -45,31 +39,27 @@
                     <h6 class="mb-0 fw-semibold">Submit a Query</h6>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('contact.store') }}">
+                    <form method="POST" action="{{ route('contact.store') }}" id="contactSupportForm" novalidate>
                         @csrf
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email</label>
                             <input type="email" name="email" class="form-control" placeholder="you@example.com" value="{{ old('email', auth()->user()->email ?? '') }}" required>
-                            @error('email') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Phone Number</label>
                             <input type="text" name="phone" class="form-control" placeholder="98XXXXXXXX" value="{{ old('phone', auth()->user()->phone ?? '') }}" required>
-                            @error('phone') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Subject</label>
-                            <input type="text" name="subject" class="form-control" placeholder="Enter your subject" value="{{ old('subject') }}" required>
-                            @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
+                            <input type="text" name="subject" id="contactSubject" class="form-control" placeholder="Enter your subject" value="{{ old('subject') }}" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Message</label>
-                            <textarea name="message" rows="5" class="form-control" placeholder="Write your query here..." required>{{ old('message') }}</textarea>
-                            @error('message') <small class="text-danger">{{ $message }}</small> @enderror
+                            <textarea name="message" id="contactMessage" rows="5" class="form-control" placeholder="Write your query here..." required>{{ old('message') }}</textarea>
                         </div>
 
                         <button class="btn btn-dark px-4">Submit Query</button>
@@ -151,4 +141,58 @@
     }
 
 </style>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('contactSupportForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            const email = (form.querySelector('input[name="email"]')?.value || '').trim();
+            const phone = (form.querySelector('input[name="phone"]')?.value || '').trim();
+            const subject = document.getElementById('contactSubject')?.value?.trim() || '';
+            const message = document.getElementById('contactMessage')?.value?.trim() || '';
+            const errors = [];
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^(?:\+977[-\s]?)?9\d{9}$/;
+
+            if (!email) {
+                errors.push('Email is required.');
+            } else if (!emailRegex.test(email)) {
+                errors.push('Please enter a valid email address.');
+            }
+
+            if (!phone) {
+                errors.push('Phone number is required.');
+            } else if (!phoneRegex.test(phone)) {
+                errors.push('Please enter a valid phone number (example: 98XXXXXXXX or +97798XXXXXXXX).');
+            }
+
+            if (!subject) {
+                errors.push('Subject is required.');
+            } else if (subject.length < 3) {
+                errors.push('Subject must be at least 3 characters.');
+            }
+
+            if (!message) {
+                errors.push('Message is required.');
+            } else if (message.length < 10) {
+                errors.push('Message must be at least 10 characters.');
+            }
+
+            if (errors.length > 0) {
+                e.preventDefault();
+
+                [...new Set(errors)].forEach((msg) => {
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification('error', msg);
+                    }
+                });
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

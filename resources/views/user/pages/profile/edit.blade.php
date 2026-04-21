@@ -9,7 +9,6 @@
     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
         <div>
             <h3 class="fw-bold mb-1">Profile Settings</h3>
-            <p class="text-muted mb-0">Manage account details, security, profile photo, and verification documents.</p>
         </div>
         <a href="{{ route('user.profile') }}" class="btn btn-outline-secondary rounded-3">Back to Profile</a>
     </div>
@@ -46,18 +45,8 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">Account Information</h5>
-                    <span class="small text-muted">Profile + Photo</span>
                 </div>
                 <div class="card-body p-4">
-                    @if($errors->any())
-                        <div class="alert alert-danger">
-                            <ul class="mb-0 ps-3">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
 
                     <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" novalidate>
                         @csrf
@@ -68,7 +57,6 @@
                                 @error('profile_image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">JPG/PNG/WEBP • max 2MB</small>
                             </div>
 
                             <div class="col-md-4">
@@ -104,7 +92,21 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary mt-4 rounded-3">Save Profile Changes</button>
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary rounded-3">Save Profile Changes</button>
+
+                            @if($user->profile_image)
+                                <button
+                                    type="submit"
+                                    name="remove_profile_image"
+                                    value="1"
+                                    class="btn btn-outline-danger rounded-3"
+                                    onclick="return confirm('Are you sure you want to remove your current profile picture?');"
+                                >
+                                    Remove Current Picture
+                                </button>
+                            @endif
+                        </div>
                     </form>
                 </div>
             </div>

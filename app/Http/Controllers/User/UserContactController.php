@@ -49,10 +49,19 @@ class UserContactController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:30',
-            'subject' => 'required|max:255',
-            'message' => 'required'
+            'email' => 'required|email:rfc,dns|max:255',
+            'phone' => ['required', 'string', 'max:30', 'regex:/^(?:\+977[-\s]?)?9\d{9}$/'],
+            'subject' => 'required|string|min:3|max:255',
+            'message' => 'required|string|min:10'
+        ], [
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'phone.required' => 'Phone number is required.',
+            'phone.regex' => 'Please enter a valid phone number (example: 98XXXXXXXX or +97798XXXXXXXX).',
+            'subject.required' => 'Subject is required.',
+            'subject.min' => 'Subject must be at least 3 characters.',
+            'message.required' => 'Message is required.',
+            'message.min' => 'Message must be at least 10 characters.',
         ]);
 
         ContactRequest::create([

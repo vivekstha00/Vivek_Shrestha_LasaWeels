@@ -125,6 +125,7 @@ class UserProfileController extends Controller
             'phone'         => ['nullable', 'regex:/^\d{10}$/'],
             'address'       => ['nullable', 'string', 'max:255'],
             'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_profile_image' => ['nullable', 'boolean'],
         ], [
             'email.email' => 'Please enter the valid email address.',
             'email.required' => 'Please enter the valid email address.',
@@ -133,7 +134,13 @@ class UserProfileController extends Controller
 
         $validated['email'] = strtolower($validated['email']);
 
-        if ($request->hasFile('profile_image')) {
+        if ($request->boolean('remove_profile_image')) {
+            if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+
+            $validated['profile_image'] = null;
+        } elseif ($request->hasFile('profile_image')) {
             if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
                 Storage::disk('public')->delete($user->profile_image);
             }
@@ -143,6 +150,8 @@ class UserProfileController extends Controller
         } else {
             unset($validated['profile_image']);
         }
+
+        unset($validated['remove_profile_image']);
 
         $user->update($validated);
 

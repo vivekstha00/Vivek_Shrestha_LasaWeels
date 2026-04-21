@@ -10,11 +10,7 @@
 <div class="mb-5 d-flex justify-content-between align-items-start flex-wrap gap-3">
     <div>
         <h2 class="fw-bold mb-1">Platform Control Center</h2>
-        <p class="text-muted mb-0">Operational snapshot and priority queues for daily admin actions</p>
     </div>
-    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-        Refresh
-    </a>
 </div>
 
 <!-- Executive Snapshot -->
