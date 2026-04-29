@@ -42,11 +42,11 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['email' => 'Invalid email or password'])
-                ->onlyInput('email');
-        }
+            if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+                return back()
+                    ->with('error', 'Invalid email or password')
+                    ->onlyInput('email');
+            }
 
         $request->session()->regenerate();
 

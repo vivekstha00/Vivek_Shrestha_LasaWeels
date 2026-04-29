@@ -95,7 +95,11 @@ class Payment extends Model
                     ->orWhere('dispute_status', '!=', 'pending');
             })
             ->whereHas('booking', function (Builder $q) {
-                $q->where('status', 'completed');
+                $q->where('status', 'completed')
+                    ->orWhere(function (Builder $sub) {
+                        $sub->whereIn('status', ['confirmed', 'active'])
+                            ->where('drop_datetime', '<=', now());
+                    });
             })
             ->where(function (Builder $q) {
                 $q->where('payment_type', '!=', 'deposit_cash')
@@ -105,11 +109,20 @@ class Payment extends Model
 
     public function isEligibleForPayout(?string $effectiveStatus = null, ?string $effectiveSettlementStatus = null): bool
     {
-        $bookingStatus = $this->relationLoaded('booking')
-            ? ($this->booking?->status)
-            : $this->booking()?->value('status');
+        $booking = $this->relationLoaded('booking')
+            ? $this->booking
+            : $this->booking()->select(['status', 'drop_datetime'])->first();
 
-        if ($bookingStatus !== 'completed') {
+        if (! $booking) {
+            return false;
+        }
+
+        $isBookingCompleted = $booking->status === 'completed';
+        $isTripEndedWithoutAutoCompletion = in_array($booking->status, ['confirmed', 'active'], true)
+            && $booking->drop_datetime
+            && $booking->drop_datetime->isPast();
+
+        if (! $isBookingCompleted && ! $isTripEndedWithoutAutoCompletion) {
             return false;
         }
 

@@ -27,6 +27,10 @@
                     <input type="text" class="form-control" name="name" value="{{ old('name', $driver->name) }}" required>
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label fw-medium">Driver Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="email" value="{{ old('email', $driver->email) }}" required>
+                </div>
+                <div class="col-md-6">
                     <label class="form-label fw-medium">Phone <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="phone" value="{{ old('phone', $driver->phone) }}" required>
                 </div>
@@ -42,11 +46,6 @@
                         <option value="available" {{ $driver->availability_status == 'available' ? 'selected' : '' }}>Available</option>
                         <option value="unavailable" {{ $driver->availability_status == 'unavailable' ? 'selected' : '' }}>Unavailable</option>
                     </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label fw-medium">Rating (Optional)</label>
-                    <input type="number" class="form-control" name="rating" min="0" max="5" step="0.1" value="{{ old('rating', $driver->rating) }}">
                 </div>
 
                 <div class="col-12">

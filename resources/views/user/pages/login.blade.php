@@ -19,14 +19,11 @@
                                 type="email"
                                 name="email"
                                 id="email"
-                                class="form-control @error('email') is-invalid @enderror"
+                                class="form-control"
                                 value="{{ old('email') }}"
                                 placeholder="Enter your email"
                                 required
                             >
-                            @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
 
                         <div class="mb-3">
@@ -38,16 +35,13 @@
                                     type="password"
                                     name="password"
                                     id="password"
-                                    class="form-control password-input @error('password') is-invalid @enderror"
+                                    class="form-control password-input"
                                     required
                                 >
                                 <span class="input-group-text" style="cursor: pointer;">
                                     <i class="bi bi-eye password-toggle"></i>
                                 </span>
                             </div>
-                            @error('password')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="mb-3 d-flex justify-content-between align-items-center">
                             <div class="form-check">

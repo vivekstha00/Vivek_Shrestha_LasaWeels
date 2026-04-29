@@ -43,7 +43,8 @@
                 @endif
 
                 <h3 class="fw-bold mb-2">{{ $driver->name }}</h3>
-                <p class="text-muted mb-4">{{ $driver->phone ?? 'No phone number' }}</p>
+                <p class="text-muted mb-1">{{ $driver->phone ?? 'No phone number' }}</p>
+                <p class="text-muted mb-4">{{ $driver->email ?? 'No email' }}</p>
 
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
                     <span class="badge bg-success px-4 py-2">Available</span>
@@ -68,6 +69,10 @@
                         <div class="small text-muted">Phone</div>
                         <div class="fw-semibold">{{ $driver->phone ?? '—' }}</div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted">Email</div>
+                        <div class="fw-semibold">{{ $driver->email ?? '—' }}</div>
+                    </div>
 
                     <div class="col-md-6">
                         <div class="small text-muted">License Number</div>
@@ -75,7 +80,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="small text-muted">Rating</div>
-                        <div class="fw-semibold">{{ $driver->rating ? $driver->rating . ' / 5' : 'Not Rated' }}</div>
+                        <div class="fw-semibold">{{ $driver->average_rating !== null ? $driver->average_rating . ' / 5' : 'Not Rated' }}</div>
                     </div>
 
                     <div class="col-md-6">

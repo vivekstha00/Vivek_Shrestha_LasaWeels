@@ -8,21 +8,16 @@
 
     @php($faviconVersion = @filemtime(public_path('favicon.ico')) ?: time())
     @php($logoVersion = @filemtime(public_path('images/logo.png')) ?: time())
-    @php($hasToastNotifications = session()->has('success') || session()->has('error') || $errors->any())
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ $faviconVersion }}">
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ $faviconVersion }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/logo.png') }}?v={{ $logoVersion }}">
 
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    @if($hasToastNotifications)
-        <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    @endif
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    @if($hasToastNotifications)
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-    @endif
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
 
     @stack('styles')
 
@@ -162,9 +157,8 @@
         @yield('user-content')
     </main>
 
-    @if($hasToastNotifications)
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    @endif
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
         window.showNotification = function (type, message) {
@@ -174,10 +168,7 @@
 
             if (typeof toastr !== 'undefined') {
                 toastr[type](message);
-                return;
             }
-
-            alert(message);
         };
 
         document.addEventListener('DOMContentLoaded', function () {

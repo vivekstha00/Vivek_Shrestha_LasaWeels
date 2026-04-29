@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Mail\DriverBookingNotificationMail;
 use App\Notifications\PaymentSuccessNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Services\LoyaltyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Throwable;
 
 class UserPaymentController extends Controller
 {
@@ -204,6 +206,22 @@ class UserPaymentController extends Controller
                 }
 
                 $booking->user->notify(new PaymentSuccessNotification($payment));
+
+                $booking->loadMissing(['driver', 'user', 'vehicle']);
+
+                if ($booking->driver && $booking->driver->email) {
+                    try {
+                        Mail::to($booking->driver->email)
+                            ->send(new DriverBookingNotificationMail($booking));
+                    } catch (Throwable $exception) {
+                        Log::error('Driver booking notification email failed.', [
+                            'booking_id' => $booking->id,
+                            'driver_id' => $booking->driver->id,
+                            'driver_email' => $booking->driver->email,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
+                }
 
                 Cookie::queue(Cookie::forget('khalti_booking_id'));
 

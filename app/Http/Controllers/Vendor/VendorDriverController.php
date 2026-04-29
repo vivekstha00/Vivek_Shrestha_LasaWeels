@@ -17,6 +17,7 @@ class VendorDriverController extends Controller
         $drivers = Driver::query()
             ->where('vendor_id', Auth::id())
             ->with(['latestBooking.user:id,name', 'latestBooking.vehicle:id,title,brand,model'])
+            ->withAvg('reviews', 'driver_rating')
             ->latest()
             ->paginate(10);
 
@@ -47,6 +48,7 @@ class VendorDriverController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('drivers', 'email')],
             'phone' => [
                 'nullable',
                 'string',
@@ -59,7 +61,6 @@ class VendorDriverController extends Controller
                 Rule::unique('drivers', 'license_number')->where(fn ($query) => $query->where('vendor_id', $vendorId)),
             ],
             'availability_status' => 'required|in:available,unavailable',
-            'rating' => 'nullable|numeric|min:0|max:5',
             'image' => 'nullable|image|max:1024'
         ]);
 
@@ -68,10 +69,10 @@ class VendorDriverController extends Controller
         Driver::create([
             'vendor_id' => $vendorId,
             'name' => $request->name,
+            'email' => $request->email,
             'phone' => $request->phone,
             'license_number' => $request->license_number,
             'availability_status' => $request->availability_status,
-            'rating' => $request->rating,
             'image' => $imagePath
         ]);
 
@@ -125,6 +126,12 @@ class VendorDriverController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('drivers', 'email')->ignore($driverId),
+            ],
             'phone' => [
                 'nullable',
                 'string',
@@ -141,7 +148,6 @@ class VendorDriverController extends Controller
                     ->ignore($driverId),
             ],
             'availability_status' => 'required|in:available,unavailable',
-            'rating' => 'nullable|numeric|min:0|max:5',
             'image' => 'nullable|image|max:1024'
         ]);
 
@@ -154,10 +160,10 @@ class VendorDriverController extends Controller
 
         $driver->update([
             'name' => $request->name,
+            'email' => $request->email,
             'phone' => $request->phone,
             'license_number' => $request->license_number,
             'availability_status' => $request->availability_status,
-            'rating' => $request->rating,
         ]);
 
         return redirect()->route('vendor.drivers.index')->with('success', 'Driver updated successfully!');

@@ -47,6 +47,7 @@
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Email</th>
                             <th>Phone</th>
                             <th>License</th>
                             <th>Latest Booking</th>
@@ -64,6 +65,7 @@
                                 <td>
                                     <div class="fw-semibold">{{ $driver->name }}</div>
                                 </td>
+                                <td>{{ $driver->email ?? 'N/A' }}</td>
                                 <td>{{ $driver->phone ?? 'N/A' }}</td>
                                 <td>{{ $driver->license_number }}</td>
                                 <td>
