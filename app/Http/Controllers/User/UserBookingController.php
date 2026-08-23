@@ -188,7 +188,7 @@ class UserBookingController extends Controller
         $drop   = Carbon::parse($data['drop_datetime']);
 
         $this->validateBookingTimeWindow($pickup, $drop);
-
+        // Prevent double booking for overlapping rental dates.
         $overlap = $vehicle->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('pickup_datetime', '<=', $drop)

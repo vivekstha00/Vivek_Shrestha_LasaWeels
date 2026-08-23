@@ -126,7 +126,7 @@ class UserPaymentController extends Controller
         ]);
     }
 
-    // 3) Khalti callback
+    // Khalti callback
     public function khaltiCallback(Request $request)
     {
         $pidx = $request->query('pidx');

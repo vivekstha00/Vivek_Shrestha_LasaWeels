@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class VendorRegisterController extends Controller
 {
@@ -179,11 +180,16 @@ class VendorRegisterController extends Controller
 
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'regex:/^\d{10}$/'],
+            'phone' => [
+                'required',
+                'regex:/^\d{10}$/',
+                Rule::unique('users', 'phone')->ignore($user->id),
+            ],
             'national_id_number' => ['required', 'string', 'max:100'],
             'residential_address' => ['required', 'string', 'max:1000'],
         ], [
             'phone.regex' => 'Phone number must be exactly 10 digits.',
+            'phone.unique' => 'Phone number is already in use. Please use a different number.',
         ]);
 
         DB::beginTransaction();

@@ -125,8 +125,7 @@ Route::get('/blog/{slug}', [UserBlogController::class, 'show'])->name('blog.show
 
 
 // Admin
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class,'index'])->name('dashboard');
 
     Route::get('/users', [AdminUserController::class,'index'])->name('users.index');
