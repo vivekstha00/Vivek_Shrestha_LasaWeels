@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+# Railway uses command overrides for pre-deploy migrations and cron services.
+if [ "$#" -eq 1 ]; then
+    exec /bin/sh -c "$1"
+elif [ "$#" -gt 1 ]; then
+    exec "$@"
+fi
+
 runtime_port="${PORT:-8080}"
 
 sed -i "s/^Listen .*/Listen ${runtime_port}/" /etc/apache2/ports.conf
