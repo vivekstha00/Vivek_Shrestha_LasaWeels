@@ -29,6 +29,14 @@ class AdminVehicleController extends Controller
     // Approve a vehicle
     public function approve(Vehicle $vehicle)
     {
+        if (! $vehicle->hasValidCompliance()) {
+            return back()->with(
+                'error',
+                'This vehicle cannot be approved until its compliance documents are renewed: '
+                    . implode(', ', $vehicle->complianceIssues()) . '.'
+            );
+        }
+
         $vehicle->update([
             'status'       => 'approved',
             'approved_by'  => Auth::id(),
@@ -75,14 +83,26 @@ class AdminVehicleController extends Controller
 
     public function toggleActive(Vehicle $vehicle)
     {
-        if ($vehicle->status !== 'approved' && !$vehicle->is_active) {
+        if ($vehicle->is_active) {
+            $vehicle->update(['is_active' => false]);
+
+            return back()->with('success', 'Vehicle deactivated successfully.');
+        }
+
+        if ($vehicle->status !== 'approved') {
             return back()->with('error', 'Only approved vehicles can be activated.');
         }
 
-        $vehicle->update([
-            'is_active' => !$vehicle->is_active,
-        ]);
+        if (! $vehicle->hasValidCompliance()) {
+            return back()->with(
+                'error',
+                'This vehicle cannot be activated until its compliance documents are renewed: '
+                    . implode(', ', $vehicle->complianceIssues()) . '.'
+            );
+        }
 
-        return back()->with('success', 'Vehicle active status updated.');
+        $vehicle->update(['is_active' => true]);
+
+        return back()->with('success', 'Vehicle activated successfully.');
     }
 }

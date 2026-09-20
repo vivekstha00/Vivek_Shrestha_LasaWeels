@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -84,6 +85,41 @@ class Vehicle extends Model
         'insurance_expiry_reminder_sent_on' => 'date',
         'road_tax_expiry_reminder_sent_on' => 'date',
     ];
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->where(function (Builder $query) {
+                $query->whereNull('insurance_expiry_date')
+                    ->orWhereDate('insurance_expiry_date', '>=', today()->toDateString());
+            })
+            ->where(function (Builder $query) {
+                $query->whereNull('road_tax_expiry_date')
+                    ->orWhereDate('road_tax_expiry_date', '>=', today()->toDateString());
+            });
+    }
+
+    public function complianceIssues(): array
+    {
+        $issues = [];
+
+        if ($this->insurance_expiry_date?->isBefore(today())) {
+            $issues[] = 'Insurance expired';
+        }
+
+        if ($this->road_tax_expiry_date?->isBefore(today())) {
+            $issues[] = 'Road tax expired';
+        }
+
+        return $issues;
+    }
+
+    public function hasValidCompliance(): bool
+    {
+        return $this->complianceIssues() === [];
+    }
 
     public function vendor(): BelongsTo
     {

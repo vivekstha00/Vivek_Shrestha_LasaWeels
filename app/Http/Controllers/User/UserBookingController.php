@@ -101,16 +101,7 @@ class UserBookingController extends Controller
 
         $vehicles = Vehicle::query()
             ->with(['primaryImage', 'images'])
-            ->where('status', 'approved')
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('insurance_expiry_date')
-                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
-            })
-            ->where(function ($q) {
-                $q->whereNull('road_tax_expiry_date')
-                    ->orWhereDate('road_tax_expiry_date', '>=', now()->toDateString());
-            })
+            ->publiclyVisible()
             ->when($data['service'] === 'driver', fn ($q) =>
                 $q->where('wheel_type', '!=', '2_wheeler')
             )

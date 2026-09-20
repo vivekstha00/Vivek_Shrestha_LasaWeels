@@ -8,26 +8,11 @@ use Illuminate\Http\Request;
 
 class UserVehicleController extends Controller
 {
-    private function applyPublicVisibilityFilters($query)
-    {
-        return $query
-            ->where('status', 'approved')
-            ->where('is_active', 1)
-            ->where(function ($q) {
-                $q->whereNull('insurance_expiry_date')
-                    ->orWhereDate('insurance_expiry_date', '>=', now()->toDateString());
-            })
-            ->where(function ($q) {
-                $q->whereNull('road_tax_expiry_date')
-                    ->orWhereDate('road_tax_expiry_date', '>=', now()->toDateString());
-            });
-    }
-
     public function index(Request $request)
     {
-        $query = $this->applyPublicVisibilityFilters(
-            Vehicle::with(['images', 'primaryImage'])
-        );
+        $query = Vehicle::query()
+            ->with(['images', 'primaryImage'])
+            ->publiclyVisible();
 
         if ($request->filled('wheel_type')) {
             $query->where('wheel_type', $request->wheel_type);

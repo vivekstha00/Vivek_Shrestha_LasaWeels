@@ -30,6 +30,23 @@ services:
     networks:
       - lasawheels
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lasawheels_scheduler
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    command: php artisan schedule:work --verbose --no-interaction
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/var/www
+    networks:
+      - lasawheels
+
   db:
     image: mysql:8.0
     container_name: lasawheels_db

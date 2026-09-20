@@ -231,6 +231,18 @@
                 <h5 class="fw-bold {{ $statusConfig['color'] }} mb-0">{{ $statusConfig['label'] }}</h5>
                 <div class="text-muted small">Active: {{ $vehicle->is_active ? 'Yes' : 'No' }}</div>
 
+                @if(! $vehicle->hasValidCompliance())
+                    <div class="alert alert-danger mt-3 mb-0 small text-start">
+                        <strong>Hidden from users:</strong>
+                        {{ implode(', ', $vehicle->complianceIssues()) }}.
+                        The vendor must upload renewed documents and future expiry dates.
+                    </div>
+                @elseif($vehicle->status === 'approved' && $vehicle->is_active)
+                    <div class="alert alert-success mt-3 mb-0 small">
+                        This vehicle is visible in the user panel.
+                    </div>
+                @endif
+
                 @if($vehicle->reject_reason)
                     <div class="alert alert-danger mt-2 mb-0 small text-start">
                         <strong>Reason:</strong> {{ $vehicle->reject_reason }}
@@ -302,7 +314,8 @@
 
                 <form method="POST" action="{{ route('admin.vehicles.toggleActive', $vehicle) }}" class="mt-2">
                     @csrf
-                    <button type="submit" class="btn btn-outline-primary w-100">
+                    <button type="submit" class="btn btn-outline-primary w-100"
+                        @disabled(!$vehicle->is_active && ($vehicle->status !== 'approved' || ! $vehicle->hasValidCompliance()))>
                         {{ $vehicle->is_active ? 'Deactivate' : 'Activate' }}
                     </button>
                 </form>

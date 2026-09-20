@@ -20,11 +20,18 @@
                     <th>Price/Day</th>
                     <th>Status</th>
                     <th>Active</th>
+                    <th>Public Listing</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($vehicles as $vehicle)
+                    @php
+                        $complianceIssues = $vehicle->complianceIssues();
+                        $isPubliclyListed = $vehicle->status === 'approved'
+                            && $vehicle->is_active
+                            && empty($complianceIssues);
+                    @endphp
                     <tr onclick="window.location='{{ route('admin.vehicles.show', $vehicle) }}'" style="cursor:pointer;">
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $vehicle->vendor?->company_name ?? $vehicle->vendor?->name ?? '—' }}</td>
@@ -44,6 +51,18 @@
                             </span>
                         </td>
                         <td>{{ $vehicle->is_active ? 'Yes' : 'No' }}</td>
+                        <td>
+                            @if($isPubliclyListed)
+                                <span class="badge bg-success">Listed</span>
+                            @elseif(!empty($complianceIssues))
+                                <span class="badge bg-danger">Hidden</span>
+                                <div class="small text-danger mt-1">{{ implode(', ', $complianceIssues) }}</div>
+                            @elseif($vehicle->status !== 'approved')
+                                <span class="badge bg-secondary">Not approved</span>
+                            @else
+                                <span class="badge bg-secondary">Inactive</span>
+                            @endif
+                        </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
                                 @if($vehicle->status === 'pending')
@@ -58,9 +77,11 @@
                                     </form>
                                 @endif
 
-                                <form method="POST" action="{{ route('admin.vehicles.toggleActive', $vehicle) }}">
+                                <form method="POST" action="{{ route('admin.vehicles.toggleActive', $vehicle) }}" onclick="event.stopPropagation()">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary"
+                                        @disabled(!$vehicle->is_active && ($vehicle->status !== 'approved' || !empty($complianceIssues)))
+                                        @if(!$vehicle->is_active && !empty($complianceIssues)) title="Renew expired compliance documents before activation" @endif>
                                         {{ $vehicle->is_active ? 'Deactivate' : 'Activate' }}
                                     </button>
                                 </form>
@@ -69,7 +90,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">No vehicles found.</td>
+                        <td colspan="9" class="text-center py-5 text-muted">No vehicles found.</td>
                     </tr>
                 @endforelse
             </tbody>
