@@ -23,6 +23,11 @@ mkdir -p \
 
 chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
+# PHP's Apache module requires prefork. Remove any conflicting MPM links that
+# may have been enabled by the runtime environment before Apache starts.
+rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.*
+a2enmod mpm_prefork >/dev/null
+
 php artisan storage:link --force
 php artisan config:cache
 php artisan route:cache
