@@ -8,6 +8,5 @@ storage/framework/sessions/*
 storage/framework/views/*
 .env
 .env.*
-!.env.docker
 docker-compose.override.yml
 .DS_Store
